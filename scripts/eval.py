@@ -15,24 +15,20 @@ import time
 import pickle
 import logging
 import sys
-from tqdm import tqdm
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
 
-sys.path.insert(0, ".")
-sys.path.insert(0, "./adversarial_robustness_toolbox")
+# sys.path.insert(0, ".")
+# sys.path.insert(0, "./research")
+# sys.path.insert(0, "./adversarial_robustness_toolbox")
 
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor
 from research.datasets.utils import get_mini_dataset_inds, get_ensemble_dir, get_dump_dir
-from research.utils import boolean_string, pytorch_evaluate, pytorch_evaluate_v2, set_logger, get_ensemble_paths, \
+from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ensemble_paths, \
     majority_vote, convert_tensor_to_image, print_Linf_dists, calc_attack_rate, get_image_shape
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_glove_p1', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_dim_200', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--method', default='knn', type=str, help='softmax, knn')
 parser.add_argument('--attack_dir', default='', type=str, help='attack directory, or None for normal images')
@@ -42,7 +38,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--norm', default=2, help='1/2/inf')
 
 # dump
-parser.add_argument('--dump_dir', default='knn_p1', type=str, help='dump dir for logs and data')
+parser.add_argument('--dump_dir', default='knn_p2', type=str, help='dump dir for logs and data')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -104,7 +100,7 @@ global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
     global_state = global_state['best_net']
 net = get_model(train_args['net'])(num_classes=len(classes), activation=train_args['activation'], conv1=conv1,
-                                   strides=strides, ext_linear=train_args['glove_dim'])
+                                   strides=strides, ext_linear=train_args.get('glove_dim', None))
 net = net.to(device)
 net.load_state_dict(global_state)
 net.eval()  # frozen
@@ -113,24 +109,18 @@ if device == 'cuda':
     # net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 
-# setting classifier
-# classifier = PyTorchClassifier(model=net, clip_values=(0, 1), loss=None,
-#                                optimizer=None, input_shape=(img_shape[2], img_shape[0], img_shape[1]), nb_classes=len(classes))
-
 y_gt = y_test[test_inds]
 
 if args.method == 'softmax':
-    #y_preds = pytorch_evaluate(net, test_loader, ['probs'])[0].argmax(axis=1)[test_inds]
-    y_preds = pytorch_evaluate_v2(net, X, ['probs'], batch_size)[0].argmax(axis=1)[test_inds]
+    y_preds = pytorch_evaluate(net, X, ['probs'], batch_size)[0].argmax(axis=1)[test_inds]
 
 elif args.method == 'knn':
     if args.norm == 'inf':
         args.norm = np.inf
     knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=args.norm)
     knn.fit(glove_vecs)
-    glove_embs = pytorch_evaluate_v2(net, X, ['glove_embeddings'], batch_size)[0].argmax(axis=1)[test_inds]
-
-
+    glove_embs = pytorch_evaluate(net, X, ['glove_embeddings'], batch_size)[0][test_inds]
+    y_preds = knn.kneighbors(glove_embs, return_distance=False).squeeze()
 
 acc = np.mean(y_preds == y_gt)
 logger.info('Test accuracy: {}%'.format(100 * acc))
