@@ -137,6 +137,7 @@ logger.info('Test accuracy: {}%'.format(100 * acc))
 logger.handlers[0].flush()
 
 exit(0)
+
 # debug:
 # clipping
 x_clipped = torch.clip(x, 0.0, 1.0)
