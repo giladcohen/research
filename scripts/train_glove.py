@@ -18,8 +18,6 @@ import logging
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 
-# sys.path.insert(0, ".")
-
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
@@ -37,7 +35,7 @@ parser.add_argument('--factor', default=0.9, type=float, help='LR schedule facto
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
-parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=10, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
@@ -238,7 +236,7 @@ def validate():
     logger.info('Epoch #{} (VAL): loss={}\tacc={:.2f}\tbest_metric({})={}'.format(epoch + 1, val_loss, val_acc, args.metric, best_metric))
 
     # updating learning rate if we see no improvement
-    lr_scheduler.step(metrics=metric, epoch=epoch)
+    lr_scheduler.step(metrics=metric)
 
 def test():
     global global_step

@@ -138,6 +138,47 @@ def pytorch_evaluate(net: nn.Module, data_loader: data.DataLoader, fetch_keys: L
 
     return tuple(fetches)
 
+
+def pytorch_evaluate_v2(net: nn.Module, x: np.ndarray, fetch_keys: List, batch_size: int, x_shape: Tuple = None,
+                        output_shapes: Dict = None, to_tensor: bool=False) -> Tuple:
+
+    if output_shapes is not None:
+        for key in fetch_keys:
+            assert key in output_shapes
+
+    fetches_dict = {}
+    fetches = []
+    for key in fetch_keys:
+        fetches_dict[key] = []
+
+    net.eval()
+    num_batch = int(np.ceil(x.shape[0]) / batch_size)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    for m in range(num_batch):
+        # Batch indexes
+        begin, end = (m * batch_size, min((m + 1) * batch_size, x.shape[0]))
+        input = x[begin:end]
+        if x_shape is not None:
+            input = input.reshape(x_shape)
+        with torch.no_grad():
+            outputs_dict = net(torch.from_numpy(input).to(device))
+        for key in fetch_keys:
+            fetches_dict[key].append(outputs_dict[key].data.cpu().detach().numpy())
+
+    # stack variables together
+    for key in fetch_keys:
+        fetch = np.vstack(fetches_dict[key])
+        if output_shapes is not None:
+            fetch = fetch.reshape(output_shapes[key])
+        if to_tensor:
+            fetch = torch.as_tensor(fetch, device=torch.device(device))
+        fetches.append(fetch)
+
+    assert fetches[0].shape[0] == x.shape[0]
+    return tuple(fetches)
+
+
 def validate_new_inds(selected_inds: list, inds_dict: dict):
     """Validate that selected_inds are not in the train/val_inds.
        On the other hand, validate that selected_inds are all in the unlabeled_inds
