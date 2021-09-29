@@ -148,7 +148,7 @@ elif args.attack == 'pgd':
         norm=np.inf,
         eps=args.eps,
         eps_step=args.eps_step,
-        targeted=args.targeted,
+        targeted=targeted,
         batch_size=batch_size
     )
 elif args.attack == 'deepfool':
@@ -170,7 +170,7 @@ elif args.attack == 'cw':
     attack = CarliniL2Method(
         classifier=classifier,
         confidence=0.8,
-        targeted=args.targeted,
+        targeted=targeted,
         initial_const=0.1,
         batch_size=batch_size
     )
@@ -178,7 +178,7 @@ elif args.attack == 'cw_Linf':
     attack = CarliniLInfMethod(
         classifier=classifier,
         confidence=0.8,
-        targeted=args.targeted,
+        targeted=targeted,
         batch_size=batch_size,
         eps=args.eps
     )
