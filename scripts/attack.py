@@ -18,7 +18,7 @@ from cleverhans.utils import random_targets, to_categorical
 
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
-
+from research.losses.losses import LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor
 from research.datasets.utils import get_mini_dataset_inds
@@ -33,6 +33,7 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robust
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_dim_200', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
+parser.add_argument('--attack_loss', default='cross_entropy', type=str, help='The loss used for attacking')
 parser.add_argument('--attack_dir', default='debug', type=str, help='attack directory')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
@@ -80,6 +81,8 @@ testloader = get_test_loader(
 )
 img_shape = get_image_shape(dataset)
 classes = testloader.dataset.classes
+glove_vecs = testloader.dataset.idx_to_glove_vec
+num_classes = len(classes)
 
 # Model
 logger.info('==> Building model..')
@@ -88,8 +91,9 @@ strides = get_strides(dataset)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
     global_state = global_state['best_net']
-net = get_model(train_args['net'])(num_classes=len(classes), activation=train_args['activation'],
-                                   conv1=conv1, strides=strides, ext_linear=train_args.get('glove_dim', None))
+glove_dim = train_args.get('glove_dim', None)
+net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'],
+                                   conv1=conv1, strides=strides, ext_linear=glove_dim)
 net = net.to(device)
 net.load_state_dict(global_state)
 net.eval()
@@ -105,10 +109,30 @@ optimizer = optim.SGD(
     weight_decay=0.0,  # train_args['wd'],
     nesterov=train_args['mom'] > 0)
 
-criterion = nn.CrossEntropyLoss()
-classifier = PyTorchClassifierSpecific(model=net, clip_values=(0, 1), loss=criterion,
+if args.attack_loss == 'cross_entropy':
+    loss = nn.CrossEntropyLoss()
+    field = 'logits'
+elif args.attack_loss == 'l1':
+    loss = nn.L1Loss()
+    field = 'glove_embeddings'
+elif args.attack_loss == 'sl1':
+    loss = nn.SmoothL1Loss()
+    field = 'glove_embeddings'
+elif args.attack_loss == 'l2':
+    loss = nn.MSELoss()
+    field = 'glove_embeddings'
+elif args.attack_loss == 'linf':
+    loss = LinfLoss()
+    field = 'glove_embeddings'
+elif args.attack_loss == 'cosine':
+    loss = CosineEmbeddingLossV2()
+    field = 'glove_embeddings'
+else:
+    raise AssertionError('Unknown value args.attack_loss = {}'.format(args.attack_loss))
+
+classifier = PyTorchClassifierSpecific(model=net, clip_values=(0, 1), loss=loss,
                                        optimizer=optimizer, input_shape=(img_shape[2], img_shape[0], img_shape[1]),
-                                       nb_classes=len(classes), field='logits')
+                                       nb_classes=num_classes, field=field)
 
 X_test = get_normalized_tensor(testloader, img_shape, batch_size)
 y_test = np.asarray(testloader.dataset.targets)
@@ -122,15 +146,21 @@ logger.info('Accuracy on benign test examples: {}%'.format(test_acc * 100))
 if targeted:
     tgt_file = os.path.join(ATTACK_DIR, 'y_test_adv.npy')
     if not os.path.isfile(tgt_file):
-        y_test_targets = random_targets(y_test, len(classes))
+        y_test_targets = random_targets(y_test, num_classes)
         y_test_adv = y_test_targets.argmax(axis=1)
         np.save(os.path.join(ATTACK_DIR, 'y_test_adv.npy'), y_test_adv)
     else:
         y_test_adv = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy'))
-        y_test_targets = to_categorical(y_test_adv, nb_classes=len(classes))
+
+    if args.field != 'logits':
+        # converting y_test_adv from vector to matrix of embeddings
+        assert glove_dim is not None
+        y_adv_vec = np.empty((test_size, glove_dim))
+        for i in range(test_size):
+            y_adv_vec[i] = glove_vecs[y_test_adv[i]]
+        y_test_adv = y_adv_vec
 else:
     y_test_adv = None
-    y_test_targets = None
 
 if args.attack == 'fgsm':
     attack = FastGradientMethod(
@@ -156,7 +186,7 @@ elif args.attack == 'deepfool':
         classifier=classifier,
         max_iter=50,
         epsilon=0.02,
-        nb_grads=len(classes),
+        nb_grads=num_classes,
         batch_size=batch_size
     )
 elif args.attack == 'jsma':
@@ -182,6 +212,8 @@ elif args.attack == 'cw_Linf':
         batch_size=batch_size,
         eps=args.eps
     )
+else:
+    raise AssertionError('Invalid args.attack = {}'.format(args.attack))
 
 dump_args = args.__dict__.copy()
 dump_args['attack_params'] = {}
@@ -192,7 +224,7 @@ with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(dump_args, f, indent=2)
 
 if not os.path.exists(os.path.join(ATTACK_DIR, 'X_test_adv.npy')):
-    X_test_adv = attack.generate(x=X_test, y=y_test_targets)
+    X_test_adv = attack.generate(x=X_test, y=y_test_adv)
     test_adv_logits = classifier.predict(X_test_adv, batch_size=batch_size)
     y_test_adv_preds = np.argmax(test_adv_logits, axis=1)
     np.save(os.path.join(ATTACK_DIR, 'X_test_adv.npy'), X_test_adv)
