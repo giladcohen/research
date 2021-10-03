@@ -155,6 +155,8 @@ if targeted:
         for i in range(test_size):
             y_adv_vec[i] = glove_vecs[y_test_adv[i]]
         y_test_adv = y_adv_vec
+
+    y_test_adv = y_test_adv.astype(np.float32)
 else:
     y_test_adv = None
 
