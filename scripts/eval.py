@@ -126,27 +126,27 @@ if args.method == 'softmax':
     y_preds = y_probs.argmax(axis=1)
 
     # confusion mat
-    cm = confusion_matrix(y_gt, y_preds, labels=np.arange(num_classes), normalize='true')
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
-    f, axs = plt.subplots(figsize=(50, 50))
-    disp.plot(ax=axs, xticks_rotation='vertical')
-    plt.savefig(os.path.join(PLOTS_DIR, 'confusion.png'), dpi=300)
-
-    plt.close('all')
-
-    # projection:
-    projection_mat = np.zeros((test_size, num_classes))
-    projection_mat = y_probs  # in case of softmax
-
-    projection_stats = np.zeros((num_classes, num_classes))
-    for i in range(num_classes):
-        projections = projection_mat[labels_dict[i]]
-        projection_stats[i] = projections.mean(axis=0)
-    projection_stats = np.round(projection_stats, 2)
-    f, axs = plt.subplots(figsize=(50, 50))
-    disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
-    disp.plot(ax=axs, xticks_rotation='vertical')
-    plt.savefig(os.path.join(PLOTS_DIR, 'projections.png'), dpi=300)
+    # cm = confusion_matrix(y_gt, y_preds, labels=np.arange(num_classes), normalize='true')
+    # disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
+    # f, axs = plt.subplots(figsize=(50, 50))
+    # disp.plot(ax=axs, xticks_rotation='vertical')
+    # plt.savefig(os.path.join(PLOTS_DIR, 'confusion.png'), dpi=300)
+    #
+    # plt.close('all')
+    #
+    # # projection:
+    # projection_mat = np.zeros((test_size, num_classes))
+    # projection_mat = y_probs  # in case of softmax
+    #
+    # projection_stats = np.zeros((num_classes, num_classes))
+    # for i in range(num_classes):
+    #     projections = projection_mat[labels_dict[i]]
+    #     projection_stats[i] = projections.mean(axis=0)
+    # projection_stats = np.round(projection_stats, 2)
+    # f, axs = plt.subplots(figsize=(50, 50))
+    # disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
+    # disp.plot(ax=axs, xticks_rotation='vertical')
+    # plt.savefig(os.path.join(PLOTS_DIR, 'projections.png'), dpi=300)
 
 elif args.method == 'knn':
     if args.norm == 'inf':
@@ -157,82 +157,77 @@ elif args.method == 'knn':
     y_preds = knn.kneighbors(glove_embs, return_distance=False).squeeze()
 
     # confusion mat
-    cm = confusion_matrix(y_gt, y_preds, labels=np.arange(num_classes), normalize='true')
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
-    f, axs = plt.subplots(figsize=(50, 50))
-    disp.plot(ax=axs, xticks_rotation='vertical')
-    plt.savefig(os.path.join(PLOTS_DIR, 'confusion.png'), dpi=300)
-
-    plt.close('all')
-
-    # projection
-    if args.norm == 1:
-        norm_str = 'l1'
-    elif args.norm == 2:
-        norm_str = 'l2'
-    elif args.norm == np.inf:
-        norm_str = 'max'
-    else:
-        raise AssertionError('impossible')
-    glove_embs_unit = normalize(glove_embs, axis=1, norm=norm_str)
-    glove_vecs_unit = normalize(glove_vecs, axis=1, norm=norm_str)
-    projection_mat = np.zeros((test_size, num_classes))
-    for k in range(test_size):
-        for i in range(num_classes):
-            projection_mat[k, i] = np.dot(glove_embs_unit[k], glove_vecs_unit[i])
-
-    projection_stats = np.zeros((num_classes, num_classes))
-    for i in range(num_classes):
-        projections = projection_mat[labels_dict[i]]
-        projection_stats[i] = projections.mean(axis=0)
-    projection_stats = np.round(projection_stats, 2)
-    f, axs = plt.subplots(figsize=(50, 50))
-    disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
-    disp.plot(ax=axs, xticks_rotation='vertical')
-    plt.savefig(os.path.join(PLOTS_DIR, 'projections.png'), dpi=300)
-
-    # unbiased projection
-    glove_embs_unbiased = np.nan * np.ones_like(glove_embs)
-    for k in range(test_size):
-        label = y_gt[k]
-        glove_embs_unbiased[k] = glove_embs[k] - glove_vecs[label]
-    assert not np.isnan(glove_embs_unbiased).any()
-    glove_embs_unbiased_unit = normalize(glove_embs_unbiased, axis=1, norm=norm_str)
-
-    projection_mat = np.zeros((test_size, num_classes))
-    for k in range(test_size):
-        for i in range(num_classes):
-            projection_mat[k, i] = np.dot(glove_embs_unbiased_unit[k], glove_vecs_unit[i])
-    projection_stats = np.zeros((num_classes, num_classes))
-    for i in range(num_classes):
-        projections = projection_mat[labels_dict[i]]
-        projection_stats[i] = projections.mean(axis=0)
-    projection_stats = np.round(projection_stats, 2)
-    f, axs = plt.subplots(figsize=(50, 50))
-    disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
-    disp.plot(ax=axs, xticks_rotation='vertical')
-    plt.savefig(os.path.join(PLOTS_DIR, 'unbiased_projections.png'), dpi=300)
-
-    # pca for each class
-    for class_ind in range(num_classes):
-        pca = PCA(n_components=2)
-        glove_embs_unbiased_tmp = glove_embs_unbiased[labels_dict[class_ind]]
-        glove_embs_unbiased_tmp_2d = pca.fit_transform(glove_embs_unbiased_tmp)
-        plt.figure(class_ind, (8, 8))
-        plt.scatter(glove_embs_unbiased_tmp_2d[:, 0], glove_embs_unbiased_tmp_2d[:, 1], s=2)
-        plt.title('PCA for class {}'.format(classes[class_ind]))
-        plt.savefig(os.path.join(PLOTS_DIR, 'pca', '{}.png'.format(classes[class_ind])), dpi=300)
+    # cm = confusion_matrix(y_gt, y_preds, labels=np.arange(num_classes), normalize='true')
+    # disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
+    # f, axs = plt.subplots(figsize=(50, 50))
+    # disp.plot(ax=axs, xticks_rotation='vertical')
+    # plt.savefig(os.path.join(PLOTS_DIR, 'confusion.png'), dpi=300)
+    #
+    # plt.close('all')
+    #
+    # # projection
+    # if args.norm == 1:
+    #     norm_str = 'l1'
+    # elif args.norm == 2:
+    #     norm_str = 'l2'
+    # elif args.norm == np.inf:
+    #     norm_str = 'max'
+    # else:
+    #     raise AssertionError('impossible')
+    # glove_embs_unit = normalize(glove_embs, axis=1, norm=norm_str)
+    # glove_vecs_unit = normalize(glove_vecs, axis=1, norm=norm_str)
+    # projection_mat = np.zeros((test_size, num_classes))
+    # for k in range(test_size):
+    #     for i in range(num_classes):
+    #         projection_mat[k, i] = np.dot(glove_embs_unit[k], glove_vecs_unit[i])
+    #
+    # projection_stats = np.zeros((num_classes, num_classes))
+    # for i in range(num_classes):
+    #     projections = projection_mat[labels_dict[i]]
+    #     projection_stats[i] = projections.mean(axis=0)
+    # projection_stats = np.round(projection_stats, 2)
+    # f, axs = plt.subplots(figsize=(50, 50))
+    # disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
+    # disp.plot(ax=axs, xticks_rotation='vertical')
+    # plt.savefig(os.path.join(PLOTS_DIR, 'projections.png'), dpi=300)
+    #
+    # # unbiased projection
+    # glove_embs_unbiased = np.nan * np.ones_like(glove_embs)
+    # for k in range(test_size):
+    #     label = y_gt[k]
+    #     glove_embs_unbiased[k] = glove_embs[k] - glove_vecs[label]
+    # assert not np.isnan(glove_embs_unbiased).any()
+    # glove_embs_unbiased_unit = normalize(glove_embs_unbiased, axis=1, norm=norm_str)
+    #
+    # projection_mat = np.zeros((test_size, num_classes))
+    # for k in range(test_size):
+    #     for i in range(num_classes):
+    #         projection_mat[k, i] = np.dot(glove_embs_unbiased_unit[k], glove_vecs_unit[i])
+    # projection_stats = np.zeros((num_classes, num_classes))
+    # for i in range(num_classes):
+    #     projections = projection_mat[labels_dict[i]]
+    #     projection_stats[i] = projections.mean(axis=0)
+    # projection_stats = np.round(projection_stats, 2)
+    # f, axs = plt.subplots(figsize=(50, 50))
+    # disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
+    # disp.plot(ax=axs, xticks_rotation='vertical')
+    # plt.savefig(os.path.join(PLOTS_DIR, 'unbiased_projections.png'), dpi=300)
+    #
+    # # pca for each class
+    # for class_ind in range(num_classes):
+    #     pca = PCA(n_components=2)
+    #     glove_embs_unbiased_tmp = glove_embs_unbiased[labels_dict[class_ind]]
+    #     glove_embs_unbiased_tmp_2d = pca.fit_transform(glove_embs_unbiased_tmp)
+    #     plt.figure(class_ind, (8, 8))
+    #     plt.scatter(glove_embs_unbiased_tmp_2d[:, 0], glove_embs_unbiased_tmp_2d[:, 1], s=2)
+    #     plt.title('PCA for class {}'.format(classes[class_ind]))
+    #     plt.savefig(os.path.join(PLOTS_DIR, 'pca', '{}.png'.format(classes[class_ind])), dpi=300)
 
 acc = np.mean(y_gt == y_preds)
 logger.info('Test accuracy: {}%'.format(100 * acc))
 logger.handlers[0].flush()
 
 exit(0)
-
-centers = np.zeros((num_classes, num_classes))
-for i in range(num_classes):
-    centers[i, i] = 1.0
-
 
 # debug:
 # clipping
