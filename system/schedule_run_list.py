@@ -31,7 +31,7 @@ with open(yml_command_file) as f:
 # top of the list first
 COMMANDS = d['commands']
 
-WORKING_DIR = '/home/gilad/python3_workspace'
+WORKING_DIR = '/home/gilad/workspace'
 os.chdir(WORKING_DIR)
 
 # Whenever a GPU is used, we documented the timestamp here and compare it later with SAFE_TIME
