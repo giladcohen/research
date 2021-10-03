@@ -225,4 +225,6 @@ with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'w') as f:
 
 if not os.path.exists(os.path.join(ATTACK_DIR, 'X_test_adv.npy')):
     X_test_adv = attack.generate(x=X_test, y=y_test_adv)
+    np.save(os.path.join(ATTACK_DIR, 'X_test_adv.npy'), X_test_adv)
+
 logger.handlers[0].flush()
