@@ -30,10 +30,10 @@ from art.attacks.evasion import FastGradientMethod, ProjectedGradientDescent, De
     CarliniL2Method, CarliniLInfMethod, ElasticNet
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robustness testing')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_dim_200', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
-parser.add_argument('--attack_loss', default='cross_entropy', type=str, help='The loss used for attacking')
+parser.add_argument('--attack_loss', default='l1', type=str, help='The loss used for attacking')
 parser.add_argument('--attack_dir', default='debug', type=str, help='attack directory')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
@@ -152,7 +152,7 @@ if targeted:
     else:
         y_test_adv = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy'))
 
-    if args.field != 'logits':
+    if field != 'logits':
         # converting y_test_adv from vector to matrix of embeddings
         assert glove_dim is not None
         y_adv_vec = np.empty((test_size, glove_dim))
@@ -225,14 +225,4 @@ with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'w') as f:
 
 if not os.path.exists(os.path.join(ATTACK_DIR, 'X_test_adv.npy')):
     X_test_adv = attack.generate(x=X_test, y=y_test_adv)
-    test_adv_logits = classifier.predict(X_test_adv, batch_size=batch_size)
-    y_test_adv_preds = np.argmax(test_adv_logits, axis=1)
-    np.save(os.path.join(ATTACK_DIR, 'X_test_adv.npy'), X_test_adv)
-    np.save(os.path.join(ATTACK_DIR, 'y_test_adv_preds.npy'), y_test_adv_preds)
-else:
-    X_test_adv       = np.load(os.path.join(ATTACK_DIR, 'X_test_adv.npy'))
-    y_test_adv_preds = np.load(os.path.join(ATTACK_DIR, 'y_test_adv_preds.npy'))
-
-test_adv_accuracy = np.mean(y_test_adv_preds == y_test)
-logger.info('Accuracy on adversarial test examples: {}%'.format(test_adv_accuracy * 100))
 logger.handlers[0].flush()
