@@ -136,10 +136,6 @@ classifier = PyTorchClassifierSpecific(model=net, clip_values=(0, 1), loss=loss,
 
 X_test = get_normalized_tensor(testloader, img_shape, batch_size)
 y_test = np.asarray(testloader.dataset.targets)
-y_test_logits = classifier.predict(X_test, batch_size=batch_size)
-y_test_preds = y_test_logits.argmax(axis=1)
-test_acc = np.mean(y_test_preds == y_test)
-logger.info('Accuracy on benign test examples: {}%'.format(test_acc * 100))
 
 # attack
 # creating targeted labels
