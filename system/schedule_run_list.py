@@ -26,7 +26,7 @@ ALLOWED_GPUS_INDS = args.gpus
 yml_command_file = args.c
 
 with open(yml_command_file) as f:
-    d = yaml.load(f.read())
+    d = yaml.safe_load(f.read())
 # list of (command, required memory in GB). List the command by priority. The script will always try to clear up the
 # top of the list first
 COMMANDS = d['commands']
