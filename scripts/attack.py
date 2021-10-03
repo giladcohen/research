@@ -33,8 +33,8 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robust
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
-parser.add_argument('--attack_loss', default='l1', type=str, help='The loss used for attacking')
-parser.add_argument('--attack_dir', default='debug', type=str, help='attack directory')
+parser.add_argument('--attack_loss', default='Linf', type=str, help='The loss used for attacking')
+parser.add_argument('--attack_dir', default='debug3', type=str, help='attack directory')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 
@@ -112,16 +112,16 @@ optimizer = optim.SGD(
 if args.attack_loss == 'cross_entropy':
     loss = nn.CrossEntropyLoss()
     field = 'logits'
-elif args.attack_loss == 'l1':
+elif args.attack_loss == 'L1':
     loss = nn.L1Loss()
     field = 'glove_embeddings'
-elif args.attack_loss == 'sl1':
+elif args.attack_loss == 'SL1':
     loss = nn.SmoothL1Loss()
     field = 'glove_embeddings'
-elif args.attack_loss == 'l2':
+elif args.attack_loss == 'L2':
     loss = nn.MSELoss()
     field = 'glove_embeddings'
-elif args.attack_loss == 'linf':
+elif args.attack_loss == 'Linf':
     loss = LinfLoss()
     field = 'glove_embeddings'
 elif args.attack_loss == 'cosine':
