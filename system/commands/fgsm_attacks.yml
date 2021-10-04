@@ -1,0 +1,7 @@
+commands:
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_dim_200    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm        , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2   --attack fgsm    --attack_loss L1              --attack_dir fgsm_L1     , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2   --attack fgsm    --attack_loss SL1             --attack_dir fgsm_SL1    , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2   --attack fgsm    --attack_loss L2              --attack_dir fgsm_L2     , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2   --attack fgsm    --attack_loss Linf            --attack_dir fgsm_Linf   , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2   --attack fgsm    --attack_loss cosine          --attack_dir fgsm_cosine , 11000]
