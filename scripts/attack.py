@@ -18,6 +18,7 @@ from cleverhans.utils import random_targets, to_categorical
 
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
+from research.attacks.carlini_wagner_glove import CarliniLinfGlove
 from research.losses.losses import LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor
@@ -25,17 +26,16 @@ from research.datasets.utils import get_mini_dataset_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape
 from research.models.utils import get_strides, get_conv1_params, get_model
 from research.classifiers.pytorch_classifier_specific import PyTorchClassifierSpecific
-# from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import FastGradientMethod, ProjectedGradientDescent, DeepFool, SaliencyMapMethod, \
-    CarliniL2Method, CarliniLInfMethod, ElasticNet
+    CarliniL2Method, CarliniLInfMethod
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robustness testing')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
-parser.add_argument('--attack_loss', default='Linf', type=str,
+parser.add_argument('--attack', default='cw_glove', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
+parser.add_argument('--attack_loss', default='L2', type=str,
                     help='The loss used for attacking: cross_entropy/L1/SL1/L2/Linf/cosine')
-parser.add_argument('--attack_dir', default='debug', type=str, help='attack directory')
+parser.add_argument('--attack_dir', default='debuggg', type=str, help='attack directory')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 
@@ -112,28 +112,29 @@ optimizer = optim.SGD(
 
 if args.attack_loss == 'cross_entropy':
     loss = nn.CrossEntropyLoss()
-    field = 'logits'
 elif args.attack_loss == 'L1':
     loss = nn.L1Loss()
-    field = 'glove_embeddings'
 elif args.attack_loss == 'SL1':
     loss = nn.SmoothL1Loss()
-    field = 'glove_embeddings'
 elif args.attack_loss == 'L2':
     loss = nn.MSELoss()
-    field = 'glove_embeddings'
 elif args.attack_loss == 'Linf':
     loss = LinfLoss()
-    field = 'glove_embeddings'
 elif args.attack_loss == 'cosine':
     loss = CosineEmbeddingLossV2()
-    field = 'glove_embeddings'
 else:
     raise AssertionError('Unknown value args.attack_loss = {}'.format(args.attack_loss))
 
+if args.attack_loss == 'cross_entropy':
+    fields = ['logits']
+elif args.attack != 'cw_glove':
+    fields = ['glove_embeddings']
+else:
+    fields = ['logits', 'glove_embeddings']
+
 classifier = PyTorchClassifierSpecific(model=net, clip_values=(0, 1), loss=loss,
                                        optimizer=optimizer, input_shape=(img_shape[2], img_shape[0], img_shape[1]),
-                                       nb_classes=num_classes, field=field)
+                                       nb_classes=num_classes, fields=fields)
 
 X_test = get_normalized_tensor(testloader, img_shape, batch_size)
 y_test = np.asarray(testloader.dataset.targets)
@@ -149,15 +150,16 @@ if targeted:
     else:
         y_test_adv = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy'))
 
-    if field != 'logits':
+    if fields != 'logits':
         # converting y_test_adv from vector to matrix of embeddings
         assert glove_dim is not None
-        y_adv_vec = np.empty((test_size, glove_dim))
+        y_adv_vec = np.empty((test_size, glove_dim), dtype=np.float32)
         for i in range(test_size):
             y_adv_vec[i] = glove_vecs[y_test_adv[i]]
-        y_test_adv = y_adv_vec
-
-    y_test_adv = y_test_adv.astype(np.float32)
+        if args.attack != 'cw_glove':
+            y_test_adv = y_adv_vec
+        else:
+            y_test_adv = list(zip(y_test_adv, y_adv_vec))
 else:
     y_test_adv = None
 
@@ -206,6 +208,14 @@ elif args.attack == 'cw':
     )
 elif args.attack == 'cw_Linf':
     attack = CarliniLInfMethod(
+        classifier=classifier,
+        confidence=0.8,
+        targeted=targeted,
+        batch_size=batch_size,
+        eps=args.eps
+    )
+elif args.attack == 'cw_glove':
+    attack = CarliniLinfGlove(
         classifier=classifier,
         confidence=0.8,
         targeted=targeted,
