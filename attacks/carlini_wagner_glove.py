@@ -2,9 +2,11 @@
 
 import logging
 from typing import Optional, Tuple, TYPE_CHECKING
-
 import numpy as np
 from tqdm.auto import trange
+import sys
+
+sys.path.insert(0, "./adversarial_robustness_toolbox")
 
 from art.config import ART_NUMPY_DTYPE
 from art.estimators.estimator import BaseEstimator
