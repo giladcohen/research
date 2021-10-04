@@ -89,8 +89,8 @@ else:
     X = np.load(os.path.join(ATTACK_DIR, 'X_test_adv.npy'))
     with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'r') as f:
         attack_args = json.load(f)
-    targeted = attack_args['targeted']
-    y_adv = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy')) if attack_args['targeted'] else None
+    targeted = attack_args['attack'] != 'deepfool'
+    y_adv = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy')) if targeted else None
     print_Linf_dists(X[test_inds], X_test[test_inds])
 
 y_test = np.asarray(test_loader.dataset.targets)
