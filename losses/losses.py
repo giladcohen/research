@@ -6,7 +6,7 @@ from torch.nn.modules.loss import _Loss
 
 
 class CosineEmbeddingLossV2(nn.CosineEmbeddingLoss):
-    def forward(self, input1: Tensor, input2: Tensor, target=torch.tensor(1)) -> Tensor:
+    def forward(self, input1: Tensor, input2: Tensor, target=None) -> Tensor:
         return super(CosineEmbeddingLossV2, self).forward(input1, input2, torch.ones(input1.size(0), device=input1.device))
 
 class LinfLoss(_Loss):

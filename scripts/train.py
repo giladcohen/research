@@ -18,6 +18,7 @@ import logging
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 
+from research.losses.losses import LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
@@ -48,7 +49,9 @@ parser.add_argument('--step_size', default=0.007, type=float, help='step size fo
 
 # GloVe settings
 parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings')
-parser.add_argument('--norm', default="2", type=str, help='Norm in loss: 1/2/inf')
+parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
+parser.add_argument('--glove_loss', default='L2', type=str,
+                    help='The loss used for embedding training: L1/SL1/L2/Linf/cosine')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -134,7 +137,7 @@ if device == 'cuda':
     # net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 
-criterion = nn.CrossEntropyLoss()
+ce_criterion = nn.CrossEntropyLoss()
 y_train    = np.asarray(trainloader.dataset.targets)
 y_val      = np.asarray(valloader.dataset.targets)
 y_test     = np.asarray(testloader.dataset.targets)
@@ -159,18 +162,31 @@ def reset_optim():
         cooldown=args.cooldown
     )
 
+
+if args.glove_loss == 'L1':
+    glove_loss = nn.L1Loss()
+elif args.glove_loss == 'L2':
+    glove_loss = nn.MSELoss()
+elif args.glove_loss == 'Linf':
+    glove_loss = LinfLoss()
+elif args.glove_loss == 'cosine':
+    glove_loss = CosineEmbeddingLossV2()
+else:
+    raise AssertionError('Unknown value args.attack_loss = {}'.format(args.glove_loss))
+
+
 def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
     return trades_loss(net, inputs, targets, optimizer, args.step_size, args.epsilon, is_training=is_training)
 
 def output_loss_glove(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
     embs = torch.from_numpy(glove_vecs[targets.cpu()]).to(device)
     outputs = net(inputs)
-    loss = torch.linalg.norm(outputs['glove_embeddings'] - embs, ord=args.norm, dim=1).mean()
+    loss = glove_loss(outputs['glove_embeddings'], embs)
     return outputs, loss
 
 def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
     outputs = net(inputs)
-    loss = criterion(outputs['logits'], targets)
+    loss = ce_criterion(outputs['logits'], targets)
     return outputs, loss
 
 def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
