@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
+from research.trades import trades_loss
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
@@ -28,7 +29,7 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
 parser.add_argument('--net', default='resnet34', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/globe_emb/debug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
 parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
@@ -38,6 +39,7 @@ parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of va
 parser.add_argument('--num_workers', default=5, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
+parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 
 # TRADES params
@@ -45,7 +47,7 @@ parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TR
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
 
 # GloVe settings
-parser.add_argument('--glove_dim', default=None, type=int, help='Size of the words embeddings')
+parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings')
 parser.add_argument('--norm', default=2, help='Norm in loss')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -112,14 +114,18 @@ test_size  = len(testloader.dataset)
 logger.info('==> Building model..')
 conv1 = get_conv1_params(args.dataset)
 strides = get_strides(args.dataset)
+ext_linear = args.glove_dim if args.glove else None
 net = get_model(args.net)(num_classes=len(classes), activation=args.activation, conv1=conv1, strides=strides,
-                          ext_linear=args.glove_dim)
+                          ext_linear=ext_linear)
 net = net.to(device)
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-# knn model
-knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=args.norm)
-knn.fit(glove_vecs)
+if args.glove:
+    # knn model
+    knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=args.norm)
+    knn.fit(glove_vecs)
+else:
+    knn = None
 
 if device == 'cuda':
     # net = torch.nn.DataParallel(net)
@@ -150,6 +156,40 @@ def reset_optim():
         cooldown=args.cooldown
     )
 
+def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    return trades_loss(net, inputs, targets, optimizer, args.step_size, args.epsilon, is_training=is_training)
+
+def output_loss_glove(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    embs = torch.from_numpy(glove_vecs[targets]).to(device)
+    outputs = net(inputs)
+    loss = torch.linalg.norm(outputs['glove_embeddings'] - embs, ord=args.norm, dim=1).mean()
+    return outputs, loss
+
+def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    outputs = net(inputs)
+    loss = criterion(outputs['logits'], targets)
+    return outputs, loss
+
+def softmax_pred(outputs: Dict[torch.Tensor]) -> np.ndarray:
+    _, preds = outputs['logits'].max(1)
+    preds = preds.cpu().numpy()
+    return preds
+
+def knn_pred(outputs: Dict[torch.Tensor]) -> np.ndarray:
+    preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
+    return preds
+
+
+if args.adv_trades:
+    loss_func = output_loss_robust
+    pred_func = softmax_pred
+elif args.glove:
+    loss_func = output_loss_glove
+    pred_func = knn_pred
+else:
+    loss_func = output_loss_normal
+    pred_func = softmax_pred
+
 def train():
     """Train and validate"""
     # Training
@@ -162,16 +202,15 @@ def train():
     predicted = []
     labels = []
     for batch_idx, (inputs, targets) in enumerate(trainloader):  # train a single step
-        embs = torch.from_numpy(glove_vecs[targets])
-        inputs, targets, embs = inputs.to(device), targets.to(device), embs.to(device)
+        inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = torch.linalg.norm(outputs['glove_embeddings'] - embs, ord=args.norm, dim=1).mean()
+        outputs, loss = loss_func(inputs, targets, is_training=True)
+
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
 
-        preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
+        preds = pred_func(outputs)
         targets_np = targets.cpu().numpy()
         predicted.extend(preds)
         labels.extend(targets_np)
@@ -205,11 +244,9 @@ def validate():
 
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(valloader):
-            embs = torch.from_numpy(glove_vecs[targets])
-            inputs, targets, embs = inputs.to(device), targets.to(device), embs.to(device)
-            outputs = net(inputs)
-            loss = torch.linalg.norm(outputs['glove_embeddings'] - embs, ord=args.norm, dim=1).mean()
-            preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs, loss = loss_func(inputs, targets, is_training=False)
+            preds = pred_func(outputs)
 
             val_loss += loss.item()
             predicted.extend(preds)
@@ -219,7 +256,7 @@ def validate():
     predicted = np.asarray(predicted)
     val_acc = 100.0 * np.mean(predicted == y_val)
 
-    val_writer.add_scalar('losses/loss',    val_loss,    global_step)
+    val_writer.add_scalar('losses/loss', val_loss, global_step)
     val_writer.add_scalar('metrics/acc', val_acc, global_step)
 
     if args.metric == 'accuracy':
@@ -243,18 +280,15 @@ def test():
     global epoch
     global net
 
-    with torch.no_grad():
-        # test
-        net.eval()
-        test_loss = 0
-        predicted = []
+    net.eval()
+    test_loss = 0
+    predicted = []
 
+    with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            embs = torch.from_numpy(glove_vecs[targets])
-            inputs, targets, embs = inputs.to(device), targets.to(device), embs.to(device)
-            outputs = net(inputs)
-            loss = torch.linalg.norm(outputs['glove_embeddings'] - embs, ord=args.norm, dim=1).mean()
-            preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs, loss = loss_func(inputs, targets, is_training=False)
+            preds = pred_func(outputs)
 
             test_loss += loss.item()
             predicted.extend(preds)
@@ -264,7 +298,7 @@ def test():
     predicted = np.asarray(predicted)
     test_acc = 100.0 * np.mean(predicted == y_test)
 
-    test_writer.add_scalar('losses/loss',    test_loss,    global_step)
+    test_writer.add_scalar('losses/loss', test_loss, global_step)
     test_writer.add_scalar('metrics/acc', test_acc, global_step)
 
     logger.info('Epoch #{} (TEST): loss={}\tacc={:.2f}'.format(epoch + 1, test_loss, test_acc))
