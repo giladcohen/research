@@ -163,7 +163,7 @@ def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict, torch.
     return trades_loss(net, inputs, targets, optimizer, args.step_size, args.epsilon, is_training=is_training)
 
 def output_loss_glove(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
-    embs = torch.from_numpy(glove_vecs[targets]).to(device)
+    embs = torch.from_numpy(glove_vecs[targets.cpu()]).to(device)
     outputs = net(inputs)
     loss = torch.linalg.norm(outputs['glove_embeddings'] - embs, ord=args.norm, dim=1).mean()
     return outputs, loss
