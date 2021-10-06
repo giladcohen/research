@@ -51,7 +51,7 @@ parser.add_argument('--step_size', default=0.007, type=float, help='step size fo
 parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings')
 parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 parser.add_argument('--glove_loss', default='L2', type=str,
-                    help='The loss used for embedding training: L1/SL1/L2/Linf/cosine')
+                    help='The loss used for embedding training: L1/L2/Linf/cosine')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
