@@ -42,6 +42,7 @@ class MyCIFAR10(CIFAR10):
                 else:
                     raise AssertionError('target={} should have been deleted by now'.format(target))
         self.idx_to_class = inverse_map(self.class_to_idx)
+        self.idx_to_glove_vec = self.set_glove_vecs()
 
     @staticmethod
     def parse_vec(s: str):

@@ -23,10 +23,6 @@ class MyCIFAR100(MyCIFAR10):
         'md5': '7973b15100ade9c7d40fb424638fde48',
     }
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.idx_to_glove_vec = self.set_glove_vecs()
-
     def set_glove_vecs(self):
         embs = np.empty((100, 200), dtype=np.float32)
 
