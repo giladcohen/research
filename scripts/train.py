@@ -48,7 +48,7 @@ parser.add_argument('--step_size', default=0.007, type=float, help='step size fo
 
 # GloVe settings
 parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings')
-parser.add_argument('--norm', default=2, help='Norm in loss')
+parser.add_argument('--norm', default="2", type=str, help='Norm in loss: 1/2/inf')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -60,8 +60,12 @@ os.makedirs(args.checkpoint_dir, exist_ok=True)
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
-if args.norm == 'inf':
+if args.norm in ['1', '2']:
+    args.norm = int(args.norm)
+elif args.norm == 'inf':
     args.norm = np.inf
+else:
+    raise AssertionError('Unsupported norm {}'.format(args.norm))
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
