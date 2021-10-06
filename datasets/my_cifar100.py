@@ -27,10 +27,6 @@ class MyCIFAR100(MyCIFAR10):
         super().__init__(*args, **kwargs)
         self.idx_to_glove_vec = self.set_glove_vecs()
 
-    @staticmethod
-    def parse_vec(s: str):
-        return np.asarray(list(map(float, s.split())))
-
     def set_glove_vecs(self):
         embs = np.empty((100, 200), dtype=np.float32)
 
