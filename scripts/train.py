@@ -170,12 +170,12 @@ def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict, torch.
     loss = criterion(outputs['logits'], targets)
     return outputs, loss
 
-def softmax_pred(outputs: Dict[torch.Tensor]) -> np.ndarray:
+def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     _, preds = outputs['logits'].max(1)
     preds = preds.cpu().numpy()
     return preds
 
-def knn_pred(outputs: Dict[torch.Tensor]) -> np.ndarray:
+def knn_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
     return preds
 
