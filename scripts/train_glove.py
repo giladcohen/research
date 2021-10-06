@@ -45,7 +45,7 @@ parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TR
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
 
 # GloVe settings
-parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings')
+parser.add_argument('--glove_dim', default=None, type=int, help='Size of the words embeddings')
 parser.add_argument('--norm', default=2, help='Norm in loss')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
