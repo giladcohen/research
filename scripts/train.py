@@ -36,7 +36,7 @@ parser.add_argument('--factor', default=0.9, type=float, help='LR schedule facto
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
-parser.add_argument('--num_workers', default=5, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
