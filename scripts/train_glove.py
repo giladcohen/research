@@ -23,10 +23,10 @@ from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
-parser.add_argument('--dataset', default='cifar100', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
+parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
-parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
+parser.add_argument('--net', default='resnet34', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/globe_emb/debug', type=str, help='checkpoint dir')
 parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
@@ -35,7 +35,7 @@ parser.add_argument('--factor', default=0.9, type=float, help='LR schedule facto
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
-parser.add_argument('--num_workers', default=10, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=5, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
