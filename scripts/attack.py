@@ -150,7 +150,7 @@ if targeted:
     else:
         y_test_adv = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy'))
 
-    if fields != 'logits':
+    if args.attack_loss != 'cross_entropy':
         # converting y_test_adv from vector to matrix of embeddings
         assert glove_dim is not None
         y_adv_vec = np.empty((test_size, glove_dim), dtype=np.float32)

@@ -52,7 +52,7 @@ class PyTorchClassifierSpecific(PyTorchClassifier):  # lgtm [py/missing-call-to-
 
         return predictions
 
-    def class_gradient(  # pylint: disable=W0221
+    def class_gradient_specific(  # pylint: disable=W0221
             self, x: np.ndarray, label: Union[int, List[int], None] = None, field: str = 'logits', training_mode: bool = False, **kwargs
     ) -> np.ndarray:
 
