@@ -102,11 +102,12 @@ glove_vecs = test_loader.dataset.idx_to_glove_vec
 logger.info('==> Building model..')
 conv1 = get_conv1_params(dataset)
 strides = get_strides(dataset)
+glove_dim = train_args.get('glove_dim', None)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
     global_state = global_state['best_net']
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
-                                   strides=strides, ext_linear=train_args.get('glove_dim', None))
+                                   strides=strides, ext_linear=glove_dim)
 net = net.to(device)
 net.load_state_dict(global_state)
 net.eval()  # frozen
