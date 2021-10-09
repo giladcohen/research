@@ -26,7 +26,7 @@ import sys
 
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor
-from research.datasets.utils import get_mini_dataset_inds, get_ensemble_dir, get_dump_dir
+from research.datasets.utils import get_robustness_inds, get_ensemble_dir, get_dump_dir
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ensemble_paths, \
     majority_vote, convert_tensor_to_image, print_Linf_dists, calc_attack_rate, get_image_shape
 from research.models.utils import get_strides, get_conv1_params, get_model
@@ -70,7 +70,7 @@ logger = logging.getLogger()
 rand_gen = np.random.RandomState(seed=12345)
 
 dataset = train_args['dataset']
-val_inds, test_inds = get_mini_dataset_inds(dataset)
+val_inds, test_inds = get_robustness_inds(dataset)
 val_size = len(val_inds)
 test_size = len(test_inds)
 

@@ -22,7 +22,7 @@ from research.attacks.carlini_wagner_glove import CarliniLinfGlove
 from research.losses.losses import LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor
-from research.datasets.utils import get_mini_dataset_inds
+from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape
 from research.models.utils import get_strides, get_conv1_params, get_model
 from research.classifiers.pytorch_classifier_specific import PyTorchClassifierSpecific
@@ -69,7 +69,7 @@ set_logger(log_file)
 logger = logging.getLogger()
 
 dataset = train_args['dataset']
-_, test_inds = get_mini_dataset_inds(dataset)
+_, test_inds = get_robustness_inds(dataset)
 test_size = len(test_inds)
 
 # Data
