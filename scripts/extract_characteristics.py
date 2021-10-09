@@ -428,7 +428,7 @@ if args.detect_method == 'mahalanobis':
 
     # for val set
     characteristics, label = get_Mahalanobis(X_val, X_noisy_val, X_adv_val, y_val, magnitude, sample_mean, precision, 'train')
-    logger.info("Mahalanobis train: [characteristic shape: ", characteristics.shape, ", label shape: ", label.shape)
+    logger.info("Mahalanobis train: [characteristic shape: {}, label shape: ".format(characteristics.shape, label.shape))
     file_name = os.path.join(DUMP_DIR, 'magnitude_{}_train.npy'.format(magnitude))
     data = np.concatenate((characteristics, label), axis=1)
     np.save(file_name, data)
@@ -437,7 +437,7 @@ if args.detect_method == 'mahalanobis':
 
     # for test set
     characteristics, label = get_Mahalanobis(X_test, X_noisy_test, X_adv_test, y_test, magnitude, sample_mean, precision, 'test')
-    logger.info("Mahalanobis test: [characteristic shape: ", characteristics.shape, ", label shape: ", label.shape)
+    logger.info("Mahalanobis test: [characteristic shape: {}, label shape: ".format(characteristics.shape, label.shape))
     file_name = os.path.join(DUMP_DIR, 'magnitude_{}_test.npy'.format(magnitude))
     data = np.concatenate((characteristics, label), axis=1)
     np.save(file_name, data)
