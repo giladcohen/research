@@ -25,7 +25,7 @@ import sys
 # sys.path.insert(0, "./research")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
-    get_loader_with_specific_inds, get_normalized_tensor
+    get_loader_with_specific_inds, get_normalized_tensor, get_all_data_loader
 from research.datasets.utils import get_detection_inds, get_ensemble_dir, get_dump_dir
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ensemble_paths, \
     majority_vote, convert_tensor_to_image, print_Linf_dists, calc_attack_rate, get_image_shape
@@ -37,6 +37,7 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 parser.add_argument('--attack_dir', default='fgsm_L2', type=str, help='attack directory')
 parser.add_argument('--eval_method', default='knn', type=str, help='softmax/knn/cosine')
 parser.add_argument('--detect_method', default='mahalanobis', type=str, help='lid/mahalanobis/dknn')
+parser.add_argument('--only_last', default=True, type=boolean_string, help='Using just the last layer, the embedding vector')
 parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and characteristics')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
@@ -54,6 +55,8 @@ parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm 
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
 args = parser.parse_args()
+
+assert args.only_last  # TODO: support all layers
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
@@ -88,33 +91,40 @@ val_size = len(val_inds)
 test_size = len(test_inds)
 
 # get data:
+train_loader = get_all_data_loader(
+    dataset=dataset,
+    batch_size=batch_size,
+    num_workers=0,
+    pin_memory=False,
+)
 test_loader = get_test_loader(
     dataset=dataset,
     batch_size=batch_size,
-    num_workers=1,
-    pin_memory=device=='cuda')
+    num_workers=0,
+    pin_memory=False)
 img_shape = get_image_shape(dataset)
 
+X_train      = get_normalized_tensor(train_loader, img_shape, batch_size)
+y_train      = np.asarray(train_loader.dataset.targets)
+
 X_normal     = get_normalized_tensor(test_loader, img_shape, batch_size)
+y_normal     = np.asarray(test_loader.dataset.targets)
+
+X_adv        = np.load(os.path.join(ATTACK_DIR, 'X_test_adv.npy'))
+y_adv        = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy')) if targeted else None
+
+# separating to val and test:
 X_val        = X_normal[val_inds]
 X_test       = X_normal[test_inds]
 
-y_normal     = np.asarray(test_loader.dataset.targets)
 y_val        = y_normal[val_inds]
 y_test       = y_normal[test_inds]
 
-X_adv        = np.load(os.path.join(ATTACK_DIR, 'X_test_adv.npy'))
 X_adv_val    = X_adv[val_inds]
 X_adv_test   = X_adv[test_inds]
 
-if targeted:
-    y_adv = np.load(os.path.join(ATTACK_DIR, 'y_test_adv.npy'))
-    y_adv_val  = y_adv[val_inds]
-    y_adv_test = y_adv[test_inds]
-else:
-    y_adv = None
-    y_adv_val = None
-    y_adv_test = None
+y_adv_val    = y_adv[val_inds] if targeted else None
+y_adv_test   = y_adv[test_inds] if targeted else None
 
 classes = test_loader.dataset.classes
 num_classes = len(classes)
@@ -213,6 +223,16 @@ X_noisy_test = X_noisy_test[test_inds_correct]
 y_test       = y_test[test_inds_correct]
 y_adv_test   = y_adv_test[test_inds_correct] if targeted else None
 logger.info('X_test: {}\nX_adv_test: {}\nX_noisy_test: {}'.format(X_test.shape, X_adv_test.shape, X_noisy_test.shape))
+
+start = time.time()
+
+def sample_estimator(num_classes, X, y):
+    pass
+
+
+if args.detect_method == 'mahalanobis':
+    logger.info('get sample mean and covariance of the training set...')
+    sample_mean, precision = sample_estimator(num_classes, X_train, y_train)
 
 
 logger.handlers[0].flush()
