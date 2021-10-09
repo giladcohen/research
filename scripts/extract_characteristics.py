@@ -57,7 +57,7 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-assert args.only_last  # TODO: support all layers
+assert args.only_last
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
@@ -239,11 +239,11 @@ def merge_and_generate_labels(X_pos, X_neg):
              y: generated labels (0/1): 2D ndarray same size as X
     """
     X_pos = np.asarray(X_pos, dtype=np.float32)
-    logger.info("X_pos: ", X_pos.shape)
+    logger.info("X_pos: {}".format(X_pos.shape))
     X_pos = X_pos.reshape((X_pos.shape[0], -1))
 
     X_neg = np.asarray(X_neg, dtype=np.float32)
-    logger.info("X_neg: ", X_neg.shape)
+    logger.info("X_neg: {}".format(X_neg.shape))
     X_neg = X_neg.reshape((X_neg.shape[0], -1))
 
     X = np.concatenate((X_pos, X_neg))
