@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
@@ -19,8 +20,8 @@ import time
 import pickle
 import logging
 from scipy.optimize import minimize
+from sklearn.covariance import EmpiricalCovariance
 import sys
-
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./research")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
@@ -28,7 +29,7 @@ from research.datasets.train_val_test_data_loaders import get_test_loader, get_t
     get_loader_with_specific_inds, get_normalized_tensor, get_all_data_loader
 from research.datasets.utils import get_detection_inds, get_ensemble_dir, get_dump_dir
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ensemble_paths, \
-    majority_vote, convert_tensor_to_image, print_Linf_dists, calc_attack_rate, get_image_shape
+    majority_vote, convert_tensor_to_image, print_Linf_dists, calc_attack_rate, get_image_shape, inverse_map
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
@@ -144,6 +145,9 @@ net = net.to(device)
 net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
+layer_to_idx = {'glove_embeddings': 0}
+idx_to_layer = inverse_map(layer_to_idx)
+layer_to_size = {'glove_embeddings': glove_dim}
 if device == 'cuda':
     # net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
@@ -226,13 +230,35 @@ logger.info('X_test: {}\nX_adv_test: {}\nX_noisy_test: {}'.format(X_test.shape, 
 
 start = time.time()
 
+def merge_and_generate_labels(X_pos, X_neg):
+    """
+    merge positve and nagative artifact and generate labels
+    :param X_pos: positive samples
+    :param X_neg: negative samples
+    :return: X: merged samples, 2D ndarray
+             y: generated labels (0/1): 2D ndarray same size as X
+    """
+    X_pos = np.asarray(X_pos, dtype=np.float32)
+    logger.info("X_pos: ", X_pos.shape)
+    X_pos = X_pos.reshape((X_pos.shape[0], -1))
+
+    X_neg = np.asarray(X_neg, dtype=np.float32)
+    logger.info("X_neg: ", X_neg.shape)
+    X_neg = X_neg.reshape((X_neg.shape[0], -1))
+
+    X = np.concatenate((X_pos, X_neg))
+    y = np.concatenate((np.ones(X_pos.shape[0]), np.zeros(X_neg.shape[0])))
+    y = y.reshape((X.shape[0], 1))
+
+    return X, y
+
 def sample_estimator(num_classes, X, y):
-    num_output = 1  # TODO: update if only_last is False
+    num_output = len(layer_to_idx)
     feature_list = np.zeros(num_output, dtype=np.int32)  # indicates the number of features in every layer
     num_sample_per_class = np.zeros(num_classes, dtype=np.int32)  # how many samples are per class
 
-    # TODO: update feature_list if only_last is False
-    feature_list[0] = glove_dim
+    for layer in range(num_output):
+        feature_list[layer] = layer_to_size[idx_to_layer[layer]]
 
     list_features = []  # list_features[<layer>][<label>] is a list that holds the features in a specific layer of a specific label
     # is it basically list_features[<num_of_layer>][<num_of_label>] = List
@@ -243,15 +269,10 @@ def sample_estimator(num_classes, X, y):
             temp_list.append([])
         list_features.append(temp_list)
 
-    out_features = pytorch_evaluate(net, X, ['glove_embeddings'], batch_size)
+    out_features = list(pytorch_evaluate(net, X, list(layer_to_idx.keys()), batch_size))
     for i in range(num_output):
-        if len(out_features[i].shape) == 4:
-            out_features[i] = np.asarray(out_features[i], dtype=np.float32).reshape((X.shape[0], out_features[i].shape[1], -1))
-            out_features[i] = np.mean(out_features[i], axis=2)
-        elif len(out_features[i].shape) == 2:
-            pass  # leave as is
-        else:
-            raise AssertionError('Expecting size of 2 or 4 but got {} for i={}'.format(len(out_features[i].shape), i))
+        out_features[i] = np.asarray(out_features[i], dtype=np.float32).reshape((out_features[i].shape[0], out_features[i].shape[1], -1))
+        out_features[i] = np.mean(out_features[i], 2)
 
     for i in range(X.shape[0]):
         label = y[i]
@@ -265,12 +286,163 @@ def sample_estimator(num_classes, X, y):
         for label in range(num_classes):
             list_features[layer][label] = np.stack(list_features[layer][label])
 
-    return 0, 0
+    sample_class_mean = []
+    for layer in range(num_output):
+        num_feature = feature_list[layer]
+        temp_list = np.zeros((num_classes, num_feature))
+        for i in range(num_classes):
+            temp_list[i] = np.mean(list_features[layer][i], axis=0)
+        sample_class_mean.append(temp_list)
+
+    precision = []
+    group_lasso = EmpiricalCovariance(assume_centered=False)
+    for layer in range(num_output):
+        D = 0
+        for i in range(num_classes):
+            if i == 0:
+                D = list_features[layer][i] - sample_class_mean[layer][i]
+            else:
+                D = np.concatenate((D, list_features[layer][i] - sample_class_mean[layer][i]), 0)
+
+        # find inverse
+        group_lasso.fit(D)
+        temp_precision = group_lasso.precision_
+        precision.append(temp_precision)
+
+    return sample_class_mean, precision
+
+def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, layer, magnitude, batch_size):
+    '''
+    Compute the proposed Mahalanobis confidence score on adversarial samples
+    return: Mahalanobis score from layer_index
+    '''
+
+    layer_index = layer_to_idx[layer]
+    # converting to tensors:
+    X = torch.from_numpy(X)
+    y = torch.from_numpy(y)
+    precision_mat = torch.from_numpy(precision[layer_index]).cuda()
+    sample_mean_tensor = torch.from_numpy(sample_mean[layer_index]).cuda()
+
+    net.eval()
+    Mahalanobis = []
+    num_batch = int(np.ceil(X.shape[0]) / batch_size)
+
+    for m in range(num_batch):
+        # Batch indexes
+        begin, end = (m * batch_size, min((m + 1) * batch_size, X.shape[0]))
+        data = X[begin:end].cuda()
+        target = y[begin:end].cuda()
+        data.requires_grad = True
+
+        out_features = net(data)[layer]
+        out_features = out_features.view(out_features.size(0), out_features.size(1), -1)
+        out_features = torch.mean(out_features, 2)
+
+        for i in range(num_classes):
+            batch_sample_mean = sample_mean_tensor[i]
+            zero_f = out_features - batch_sample_mean
+            term_gau = -0.5 * torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
+            if i == 0:
+                gaussian_score = term_gau.view(-1, 1)
+            else:
+                gaussian_score = torch.cat((gaussian_score, term_gau.view(-1, 1)), 1)
+
+        # Input_processing
+        sample_pred = gaussian_score.max(1)[1]
+        batch_sample_mean = sample_mean_tensor.index_select(0, sample_pred)
+        zero_f = out_features - batch_sample_mean
+        pure_gau = -0.5 * torch.mm(torch.mm(zero_f, Variable(precision_mat)), zero_f.t()).diag()
+        loss = torch.mean(-pure_gau)
+        loss.backward()
+
+        gradient = torch.ge(data.grad, 0)
+        gradient = (gradient.float() - 0.5) * 2
+
+        # scale hyper params given from the official deep_Mahalanobis_detector repo:
+        RED_SCALE   = 0.2023 * args.rgb_scale
+        GREEN_SCALE = 0.1994 * args.rgb_scale
+        BLUE_SCALE  = 0.2010 * args.rgb_scale
+        gradient.index_copy_(1, torch.LongTensor([0]).cuda(), gradient.index_select(1, torch.LongTensor([0]).cuda()) / RED_SCALE)
+        gradient.index_copy_(1, torch.LongTensor([1]).cuda(), gradient.index_select(1, torch.LongTensor([1]).cuda()) / GREEN_SCALE)
+        gradient.index_copy_(1, torch.LongTensor([2]).cuda(), gradient.index_select(1, torch.LongTensor([2]).cuda()) / BLUE_SCALE)
+        tempInputs = torch.add(data.data, gradient, alpha=-magnitude)
+
+        with torch.no_grad():
+            noise_out_features = net(tempInputs)[layer]
+        noise_out_features = noise_out_features.view(noise_out_features.size(0), noise_out_features.size(1), -1)
+        noise_out_features = torch.mean(noise_out_features, 2)
+        for i in range(num_classes):
+            batch_sample_mean = sample_mean_tensor[i]
+            zero_f = noise_out_features - batch_sample_mean
+            term_gau = -0.5*torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
+            if i == 0:
+                noise_gaussian_score = term_gau.view(-1, 1)
+            else:
+                noise_gaussian_score = torch.cat((noise_gaussian_score, term_gau.view(-1, 1)), 1)
+
+        noise_gaussian_score, _ = torch.max(noise_gaussian_score, dim=1)
+        Mahalanobis.extend(noise_gaussian_score.cpu().numpy())
+
+    return Mahalanobis
+
+def get_Mahalanobis(X, X_noisy, X_adv, y, magnitude, sample_mean, precision, set):
+    first_pass = True
+    for layer in layer_to_idx.keys():
+        logger.info('Calculating Mahalanobis characteristics for set {}, for layer {}'.format(set, layer))
+
+        # val
+        M_in = get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, layer, magnitude, batch_size)
+        M_in = np.asarray(M_in, dtype=np.float32)
+
+        M_out = get_Mahalanobis_score_adv(net, X_adv, y, num_classes, sample_mean, precision, layer, magnitude, batch_size)
+        M_out = np.asarray(M_out, dtype=np.float32)
+
+        M_noisy = get_Mahalanobis_score_adv(net, X_noisy, y, num_classes, sample_mean, precision, layer, magnitude, batch_size)
+        M_noisy = np.asarray(M_noisy, dtype=np.float32)
+
+        if first_pass:
+            Mahalanobis_in    = M_in.reshape((M_in.shape[0], -1))
+            Mahalanobis_out   = M_out.reshape((M_out.shape[0], -1))
+            Mahalanobis_noisy = M_noisy.reshape((M_noisy.shape[0], -1))
+            first_pass = False
+        else:
+            Mahalanobis_in    = np.concatenate((Mahalanobis_in, M_in.reshape((M_in.shape[0], -1))), axis=1)
+            Mahalanobis_out   = np.concatenate((Mahalanobis_out, M_out.reshape((M_out.shape[0], -1))), axis=1)
+            Mahalanobis_noisy = np.concatenate((Mahalanobis_noisy, M_noisy.reshape((M_noisy.shape[0], -1))), axis=1)
+
+    Mahalanobis_neg = np.concatenate((Mahalanobis_in, Mahalanobis_noisy))
+    Mahalanobis_pos = Mahalanobis_out
+    characteristics, labels = merge_and_generate_labels(Mahalanobis_pos, Mahalanobis_neg)
+
+    return characteristics, labels
+
 
 if args.detect_method == 'mahalanobis':
     logger.info('get sample mean and covariance of the training set...')
     sample_mean, precision = sample_estimator(num_classes, X_train, y_train)
-    logger.info('done')
+    logger.info('Done calculating: sample_mean, precision.')
+
+    magnitude = 0.00001  # TODO: run with vector
+    logger.info('Extracting Mahalanobis characteristics for magnitude={}'.format(magnitude))
+
+    # for val set
+    characteristics, label = get_Mahalanobis(X_val, X_noisy_val, X_adv_val, y_val, magnitude, sample_mean, precision, 'train')
+    logger.info("Mahalanobis train: [characteristic shape: ", characteristics.shape, ", label shape: ", label.shape)
+    file_name = os.path.join(DUMP_DIR, 'magnitude_{}_train.npy'.format(magnitude))
+    data = np.concatenate((characteristics, label), axis=1)
+    np.save(file_name, data)
+    end_val = time.time()
+    logger.info('total feature extraction time for val: {} sec'.format(end_val - start))
+
+    # for test set
+    characteristics, label = get_Mahalanobis(X_test, X_noisy_test, X_adv_test, y_test, magnitude, sample_mean, precision, 'test')
+    logger.info("Mahalanobis test: [characteristic shape: ", characteristics.shape, ", label shape: ", label.shape)
+    file_name = os.path.join(DUMP_DIR, 'magnitude_{}_test.npy'.format(magnitude))
+    data = np.concatenate((characteristics, label), axis=1)
+    np.save(file_name, data)
+    end_test = time.time()
+    logger.info('total feature extraction time for test: {} sec'.format(end_test - end_val))
 
 logger.handlers[0].flush()
 exit(0)
