@@ -227,13 +227,50 @@ logger.info('X_test: {}\nX_adv_test: {}\nX_noisy_test: {}'.format(X_test.shape, 
 start = time.time()
 
 def sample_estimator(num_classes, X, y):
-    pass
+    num_output = 1  # TODO: update if only_last is False
+    feature_list = np.zeros(num_output, dtype=np.int32)  # indicates the number of features in every layer
+    num_sample_per_class = np.zeros(num_classes, dtype=np.int32)  # how many samples are per class
 
+    # TODO: update feature_list if only_last is False
+    feature_list[0] = glove_dim
+
+    list_features = []  # list_features[<layer>][<label>] is a list that holds the features in a specific layer of a specific label
+    # is it basically list_features[<num_of_layer>][<num_of_label>] = List
+
+    for i in range(num_output):
+        temp_list = []
+        for j in range(num_classes):
+            temp_list.append([])
+        list_features.append(temp_list)
+
+    out_features = pytorch_evaluate(net, X, ['glove_embeddings'], batch_size)
+    for i in range(num_output):
+        if len(out_features[i].shape) == 4:
+            out_features[i] = np.asarray(out_features[i], dtype=np.float32).reshape((X.shape[0], out_features[i].shape[1], -1))
+            out_features[i] = np.mean(out_features[i], axis=2)
+        elif len(out_features[i].shape) == 2:
+            pass  # leave as is
+        else:
+            raise AssertionError('Expecting size of 2 or 4 but got {} for i={}'.format(len(out_features[i].shape), i))
+
+    for i in range(X.shape[0]):
+        label = y[i]
+        for layer in range(num_output):
+            list_features_temp = out_features[layer][i].reshape(1, -1)
+            list_features[layer][label].extend(list_features_temp)
+        num_sample_per_class[label] += 1
+
+    # stacking everything
+    for layer in range(num_output):
+        for label in range(num_classes):
+            list_features[layer][label] = np.stack(list_features[layer][label])
+
+    return 0, 0
 
 if args.detect_method == 'mahalanobis':
     logger.info('get sample mean and covariance of the training set...')
     sample_mean, precision = sample_estimator(num_classes, X_train, y_train)
-
+    logger.info('done')
 
 logger.handlers[0].flush()
 exit(0)
