@@ -38,7 +38,6 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 parser.add_argument('--attack_dir', default='fgsm_L2', type=str, help='attack directory')
 parser.add_argument('--eval_method', default='knn', type=str, help='softmax/knn/cosine')
 parser.add_argument('--detect_method', default='mahalanobis', type=str, help='lid/mahalanobis/dknn')
-parser.add_argument('--only_last', default=True, type=boolean_string, help='Using just the last layer, the embedding vector')
 parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and characteristics')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
@@ -56,8 +55,6 @@ parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm 
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
 args = parser.parse_args()
-
-assert args.only_last
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
@@ -423,26 +420,31 @@ if args.detect_method == 'mahalanobis':
     sample_mean, precision = sample_estimator(num_classes, X_train, y_train)
     logger.info('Done calculating: sample_mean, precision.')
 
-    magnitude = 0.00001  # TODO: run with vector
-    logger.info('Extracting Mahalanobis characteristics for magnitude={}'.format(magnitude))
+    if args.magnitude == -1:
+        magnitude_vec = [0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1]
+    else:
+        magnitude_vec = [args.magnitude]
 
-    # for val set
-    characteristics, label = get_Mahalanobis(X_val, X_noisy_val, X_adv_val, y_val, magnitude, sample_mean, precision, 'train')
-    logger.info("Mahalanobis train: [characteristic shape: {}, label shape: {}".format(characteristics.shape, label.shape))
-    file_name = os.path.join(DUMP_DIR, 'magnitude_{}_train.npy'.format(magnitude))
-    data = np.concatenate((characteristics, label), axis=1)
-    np.save(file_name, data)
-    end_val = time.time()
-    logger.info('total feature extraction time for val: {} sec'.format(end_val - start))
+    for magnitude in magnitude_vec:
+        logger.info('Extracting Mahalanobis characteristics for magnitude={}'.format(magnitude))
 
-    # for test set
-    characteristics, label = get_Mahalanobis(X_test, X_noisy_test, X_adv_test, y_test, magnitude, sample_mean, precision, 'test')
-    logger.info("Mahalanobis test: [characteristic shape: {}, label shape: {}".format(characteristics.shape, label.shape))
-    file_name = os.path.join(DUMP_DIR, 'magnitude_{}_test.npy'.format(magnitude))
-    data = np.concatenate((characteristics, label), axis=1)
-    np.save(file_name, data)
-    end_test = time.time()
-    logger.info('total feature extraction time for test: {} sec'.format(end_test - end_val))
+        # for val set
+        characteristics, label = get_Mahalanobis(X_val, X_noisy_val, X_adv_val, y_val, magnitude, sample_mean, precision, 'train')
+        logger.info("Mahalanobis train: [characteristic shape: {}, label shape: {}".format(characteristics.shape, label.shape))
+        file_name = os.path.join(DUMP_DIR, 'magnitude_{:6f}_train.npy'.format(magnitude))
+        data = np.concatenate((characteristics, label), axis=1)
+        np.save(file_name, data)
+        end_val = time.time()
+        logger.info('total feature extraction time for val: {} sec'.format(end_val - start))
+
+        # for test set
+        characteristics, label = get_Mahalanobis(X_test, X_noisy_test, X_adv_test, y_test, magnitude, sample_mean, precision, 'test')
+        logger.info("Mahalanobis test: [characteristic shape: {}, label shape: {}".format(characteristics.shape, label.shape))
+        file_name = os.path.join(DUMP_DIR, 'magnitude_{:6f}_test.npy'.format(magnitude))
+        data = np.concatenate((characteristics, label), axis=1)
+        np.save(file_name, data)
+        end_test = time.time()
+        logger.info('total feature extraction time for test: {} sec'.format(end_test - end_val))
 
 logger.handlers[0].flush()
 exit(0)
