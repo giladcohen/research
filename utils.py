@@ -21,7 +21,7 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.utils.data as data
 import logging
-
+from collections import OrderedDict
 import scipy
 from scipy.spatial.distance import pdist, cdist, squareform
 from sklearn.metrics import roc_curve, auc, roc_auc_score
@@ -494,7 +494,7 @@ def inverse_map(x: dict) -> dict:
     :param x: dictionary
     :return: inverse mapping, showing for each val its key
     """
-    inv_map = {}
+    inv_map = OrderedDict()
     for k, v in x.items():
         inv_map[v] = k
     return inv_map

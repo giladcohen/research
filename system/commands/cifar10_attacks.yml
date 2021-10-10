@@ -1,10 +1,18 @@
 commands:
-  # baseline - fgsm/pgd w. ce:
-#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack fgsm        --attack_loss cross_entropy   --attack_dir fgsm      , 11000]
-#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack pgd         --attack_loss cross_entropy   --attack_dir pgd       , 11000]
+  # baseline1 - with ce:
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack fgsm        --attack_loss cross_entropy   --attack_dir fgsm      , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack pgd         --attack_loss cross_entropy   --attack_dir pgd       , 11000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack deepfool    --attack_loss cross_entropy   --attack_dir deepfool  , 11000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack cw          --attack_loss cross_entropy   --attack_dir cw_L2     , 11000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack cw_Linf     --attack_loss cross_entropy   --attack_dir cw_Linf   , 11000]
+
+
+#  # baseline2 - with ce:
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack fgsm        --attack_loss cross_entropy   --attack_dir fgsm      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack pgd         --attack_loss cross_entropy   --attack_dir pgd       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack deepfool    --attack_loss cross_entropy   --attack_dir deepfool  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack cw          --attack_loss cross_entropy   --attack_dir cw_L2     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200      --attack cw_Linf     --attack_loss cross_entropy   --attack_dir cw_Linf   , 11000]
 
 
 #  # glove - fgsm

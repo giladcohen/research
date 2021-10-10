@@ -121,8 +121,9 @@ test_size  = len(testloader.dataset)
 logger.info('==> Building model..')
 conv1 = get_conv1_params(args.dataset)
 strides = get_strides(args.dataset)
+ext_linear = args.glove_dim if args.glove else None
 net = get_model(args.net)(num_classes=len(classes), activation=args.activation, conv1=conv1, strides=strides,
-                          ext_linear=args.glove_dim)
+                          ext_linear=ext_linear)
 net = net.to(device)
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
