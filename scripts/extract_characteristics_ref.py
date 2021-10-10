@@ -443,7 +443,7 @@ if args.detect_method == 'mahalanobis':
     logger.info('Done calculating: sample_mean, precision.')
 
     if args.magnitude == -1:
-        magnitude_vec = [0.002, 0.003, 0.005, 0.007, 0.0005, 0.0007, 0.0009]
+        magnitude_vec = [0.0006, 0.0008, 0.00055, 0.00065, 0.00075, 0.00085]
     else:
         magnitude_vec = [args.magnitude]
 
