@@ -1,6 +1,7 @@
-# baseline1 - with ce:
-- [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack fgsm        --attack_loss cross_entropy   --attack_dir fgsm      , 11000]
-- [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack pgd         --attack_loss cross_entropy   --attack_dir pgd       , 11000]
-- [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack deepfool    --attack_loss cross_entropy   --attack_dir deepfool  , 11000]
-- [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack cw          --attack_loss cross_entropy   --attack_dir cw_L2     , 11000]
-- [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack cw_Linf     --attack_loss cross_entropy   --attack_dir cw_Linf   , 11000]
+commands:
+  # baseline1 - with ce:
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack fgsm        --attack_loss cross_entropy   --attack_dir fgsm      , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack pgd         --attack_loss cross_entropy   --attack_dir pgd       , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack deepfool    --attack_loss cross_entropy   --attack_dir deepfool  , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack cw          --attack_loss cross_entropy   --attack_dir cw_L2     , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet34_ref      --attack cw_Linf     --attack_loss cross_entropy   --attack_dir cw_Linf   , 11000]
