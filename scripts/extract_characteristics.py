@@ -356,9 +356,9 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         loss = torch.mean(-pure_gau)
         loss.backward()
 
-        gradient = torch.ge(data.grad, 0)
-        gradient = (gradient.float() - 0.5) * 2
-        # gradient = data.grad
+        # gradient = torch.ge(data.grad, 0)
+        # gradient = (gradient.float() - 0.5) * 2
+        gradient = data.grad
 
         # scale hyper params given from the official deep_Mahalanobis_detector repo:
         RED_SCALE   = 0.2023 * args.rgb_scale
