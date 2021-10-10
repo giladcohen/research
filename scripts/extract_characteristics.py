@@ -355,7 +355,6 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         zero_f = out_features - batch_sample_mean
         pure_gau = -0.5 * torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
         loss = torch.mean(-pure_gau)
-        net.zero_grad()
         loss.backward()
 
         if args.use_raw_grads:
