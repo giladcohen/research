@@ -421,7 +421,7 @@ if args.detect_method == 'mahalanobis':
     logger.info('Done calculating: sample_mean, precision.')
 
     if args.magnitude == -1:
-        magnitude_vec = [0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1]
+        magnitude_vec = [0.0000001, 0.00000001]
     else:
         magnitude_vec = [args.magnitude]
 
@@ -431,7 +431,7 @@ if args.detect_method == 'mahalanobis':
         # for val set
         characteristics, label = get_Mahalanobis(X_val, X_noisy_val, X_adv_val, y_val, magnitude, sample_mean, precision, 'train')
         logger.info("Mahalanobis train: [characteristic shape: {}, label shape: {}".format(characteristics.shape, label.shape))
-        file_name = os.path.join(DUMP_DIR, 'magnitude_{:6f}_train.npy'.format(magnitude))
+        file_name = os.path.join(DUMP_DIR, 'magnitude_{:8f}_train.npy'.format(magnitude))
         data = np.concatenate((characteristics, label), axis=1)
         np.save(file_name, data)
         end_val = time.time()
@@ -440,7 +440,7 @@ if args.detect_method == 'mahalanobis':
         # for test set
         characteristics, label = get_Mahalanobis(X_test, X_noisy_test, X_adv_test, y_test, magnitude, sample_mean, precision, 'test')
         logger.info("Mahalanobis test: [characteristic shape: {}, label shape: {}".format(characteristics.shape, label.shape))
-        file_name = os.path.join(DUMP_DIR, 'magnitude_{:6f}_test.npy'.format(magnitude))
+        file_name = os.path.join(DUMP_DIR, 'magnitude_{:8f}_test.npy'.format(magnitude))
         data = np.concatenate((characteristics, label), axis=1)
         np.save(file_name, data)
         end_test = time.time()

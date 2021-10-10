@@ -53,8 +53,8 @@ dataset = train_args['dataset']
 
 
 if args.detect_method == 'mahalanobis':
-    train_characteristics_file = os.path.join(SEEN_DUMP_DIR, 'magnitude_{:6f}_train.npy'.format(args.magnitude))
-    test_characteristics_file  = os.path.join(DUMP_DIR, 'magnitude_{:6f}_test.npy'.format(args.magnitude))
+    train_characteristics_file = os.path.join(SEEN_DUMP_DIR, 'magnitude_{:8f}_train.npy'.format(args.magnitude))
+    test_characteristics_file  = os.path.join(DUMP_DIR, 'magnitude_{:8f}_test.npy'.format(args.magnitude))
 else:
     raise AssertionError('{} is not supported'.format(args.detect_method))
 
