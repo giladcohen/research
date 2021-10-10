@@ -38,7 +38,8 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 parser.add_argument('--attack_dir', default='fgsm_L2', type=str, help='attack directory')
 parser.add_argument('--eval_method', default='knn', type=str, help='softmax/knn/cosine')
 parser.add_argument('--detect_method', default='mahalanobis', type=str, help='lid/mahalanobis/dknn')
-parser.add_argument('--dump_dir', default='debug2', type=str, help='dump dir for logs and characteristics')
+parser.add_argument('--include_noise', default=True, type=boolean_string, help='include X_noise in characteristics')
+parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and characteristics')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
 # for knn norm
@@ -142,6 +143,7 @@ net = net.to(device)
 net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
+
 layer_to_idx = {'glove_embeddings': 0}
 idx_to_layer = inverse_map(layer_to_idx)
 layer_to_size = {'glove_embeddings': glove_dim}
@@ -353,9 +355,9 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         loss = torch.mean(-pure_gau)
         loss.backward()
 
-        # gradient = torch.ge(data.grad, 0)
-        # gradient = (gradient.float() - 0.5) * 2
-        gradient = data.grad
+        gradient = torch.ge(data.grad, 0)
+        gradient = (gradient.float() - 0.5) * 2
+        # gradient = data.grad
 
         # scale hyper params given from the official deep_Mahalanobis_detector repo:
         RED_SCALE   = 0.2023 * args.rgb_scale
@@ -409,7 +411,10 @@ def get_Mahalanobis(X, X_noisy, X_adv, y, magnitude, sample_mean, precision, set
             Mahalanobis_out   = np.concatenate((Mahalanobis_out, M_out.reshape((M_out.shape[0], -1))), axis=1)
             Mahalanobis_noisy = np.concatenate((Mahalanobis_noisy, M_noisy.reshape((M_noisy.shape[0], -1))), axis=1)
 
-    Mahalanobis_neg = np.concatenate((Mahalanobis_in, Mahalanobis_noisy))
+    if args.include_noise:
+        Mahalanobis_neg = np.concatenate((Mahalanobis_in, Mahalanobis_noisy))
+    else:
+        Mahalanobis_neg = Mahalanobis_in
     Mahalanobis_pos = Mahalanobis_out
     characteristics, labels = merge_and_generate_labels(Mahalanobis_pos, Mahalanobis_neg)
 
