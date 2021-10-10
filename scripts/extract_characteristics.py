@@ -45,11 +45,11 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 # for lid/dknn
-parser.add_argument('--k_nearest', default=-1, help='number of nearest neighbors to use for LID/dknn detection')
+parser.add_argument('--k_nearest', default=-1, type=int, help='number of nearest neighbors to use for LID/dknn detection')
 
 # for mahalanobis
-parser.add_argument('--magnitude', default=-1, help='magnitude for mahalanobis detection')
-parser.add_argument('--rgb_scale', default=1, help='scale for mahalanobis')
+parser.add_argument('--magnitude', default=-1, type=float, help='magnitude for mahalanobis detection')
+parser.add_argument('--rgb_scale', default=1, type=float, help='scale for mahalanobis')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')

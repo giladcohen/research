@@ -22,11 +22,11 @@ parser.add_argument('--detect_method', default='mahalanobis', type=str, help='li
 parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and characteristics')
 
 # for lid/dknn
-parser.add_argument('--k_nearest', default=-1, help='number of nearest neighbors to use for LID/dknn detection')
+parser.add_argument('--k_nearest', default=-1, type=int, help='number of nearest neighbors to use for LID/dknn detection')
 
 # for mahalanobis
-parser.add_argument('--magnitude', default=0.000001, help='magnitude for mahalanobis detection')
-parser.add_argument('--rgb_scale', default=1, help='scale for mahalanobis')
+parser.add_argument('--magnitude', default=0.000001, type=float, help='magnitude for mahalanobis detection')
+parser.add_argument('--rgb_scale', default=1, type=float, help='scale for mahalanobis')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
