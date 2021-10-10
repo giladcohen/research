@@ -38,7 +38,7 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 parser.add_argument('--attack_dir', default='fgsm_L2', type=str, help='attack directory')
 parser.add_argument('--eval_method', default='knn', type=str, help='softmax/knn/cosine')
 parser.add_argument('--detect_method', default='mahalanobis', type=str, help='lid/mahalanobis/dknn')
-parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and characteristics')
+parser.add_argument('--dump_dir', default='debug2', type=str, help='dump dir for logs and characteristics')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
 # for knn norm
@@ -268,15 +268,15 @@ def sample_estimator(num_classes, X, y):
 
     out_features = list(pytorch_evaluate(net, X, list(layer_to_idx.keys()), batch_size))
     for i in range(num_output):
-        out_features[i] = np.asarray(out_features[i], dtype=np.float32).reshape((out_features[i].shape[0], out_features[i].shape[1], -1))
+        out_features[i] = np.asarray(out_features[i]).reshape((out_features[i].shape[0], out_features[i].shape[1], -1))
         out_features[i] = np.mean(out_features[i], 2)
 
     for i in range(X.shape[0]):
         label = y[i]
+        num_sample_per_class[label] += 1
         for layer in range(num_output):
             list_features_temp = out_features[layer][i].reshape(1, -1)
             list_features[layer][label].extend(list_features_temp)
-        num_sample_per_class[label] += 1
 
     # stacking everything
     for layer in range(num_output):
@@ -313,7 +313,7 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
     Compute the proposed Mahalanobis confidence score on adversarial samples
     return: Mahalanobis score from layer_index
     '''
-
+    torch.autograd.set_detect_anomaly(True)
     layer_index = layer_to_idx[layer]
     # converting to tensors:
     X = torch.from_numpy(X)
@@ -349,12 +349,13 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         sample_pred = gaussian_score.max(1)[1]
         batch_sample_mean = sample_mean_tensor.index_select(0, sample_pred)
         zero_f = out_features - batch_sample_mean
-        pure_gau = -0.5 * torch.mm(torch.mm(zero_f, Variable(precision_mat)), zero_f.t()).diag()
+        pure_gau = -0.5 * torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
         loss = torch.mean(-pure_gau)
         loss.backward()
 
-        gradient = torch.ge(data.grad, 0)
-        gradient = (gradient.float() - 0.5) * 2
+        # gradient = torch.ge(data.grad, 0)
+        # gradient = (gradient.float() - 0.5) * 2
+        gradient = data.grad
 
         # scale hyper params given from the official deep_Mahalanobis_detector repo:
         RED_SCALE   = 0.2023 * args.rgb_scale
@@ -363,7 +364,7 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         gradient.index_copy_(1, torch.LongTensor([0]).cuda(), gradient.index_select(1, torch.LongTensor([0]).cuda()) / RED_SCALE)
         gradient.index_copy_(1, torch.LongTensor([1]).cuda(), gradient.index_select(1, torch.LongTensor([1]).cuda()) / GREEN_SCALE)
         gradient.index_copy_(1, torch.LongTensor([2]).cuda(), gradient.index_select(1, torch.LongTensor([2]).cuda()) / BLUE_SCALE)
-        tempInputs = torch.add(data.data, gradient, alpha=-magnitude)
+        tempInputs = torch.add(data, gradient, alpha=-magnitude)
 
         with torch.no_grad():
             noise_out_features = net(tempInputs)[layer]
@@ -372,7 +373,7 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         for i in range(num_classes):
             batch_sample_mean = sample_mean_tensor[i]
             zero_f = noise_out_features - batch_sample_mean
-            term_gau = -0.5*torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
+            term_gau = -0.5 * torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
             if i == 0:
                 noise_gaussian_score = term_gau.view(-1, 1)
             else:
