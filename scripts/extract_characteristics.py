@@ -52,7 +52,6 @@ parser.add_argument('--k_nearest', default=-1, type=int, help='number of nearest
 parser.add_argument('--magnitude', default=-1, type=float, help='magnitude for mahalanobis detection')
 parser.add_argument('--use_raw_grads', default=False, type=boolean_string, help='Use raw grads without taking their sign values')
 parser.add_argument('--rgb_scale', default=1, type=float, help='scale for mahalanobis')
-parser.add_argument('--precision_scale', default=1, type=float, help='scale for precision mat')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -429,8 +428,6 @@ def get_Mahalanobis(X, X_noisy, X_adv, y, magnitude, sample_mean, precision, set
 if args.detect_method == 'mahalanobis':
     logger.info('get sample mean and covariance of the training set...')
     sample_mean, precision = sample_estimator(num_classes, X_train, y_train)
-    for layer in range(len(layer_to_idx)):
-        precision[layer] *= args.precision_scale
 
     logger.info('Done calculating: sample_mean, precision.')
 
