@@ -376,8 +376,12 @@ def get_Mahalanobis_score_adv(model, test_data, test_label, num_classes, sample_
         loss = torch.mean(-pure_gau)
         loss.backward()
 
-        gradient =  torch.ge(data.grad.data, 0)
-        gradient = (gradient.float() - 0.5) * 2
+        if args.use_raw_grads:
+            gradient = data.grad.data
+        else:
+            gradient = torch.ge(data.grad.data, 0)
+            gradient = (gradient.float() - 0.5) * 2
+
         gradient.index_copy_(1, torch.LongTensor([0]).cuda(), gradient.index_select(1, torch.LongTensor([0]).cuda()) / (0.2023))
         gradient.index_copy_(1, torch.LongTensor([1]).cuda(), gradient.index_select(1, torch.LongTensor([1]).cuda()) / (0.1994))
         gradient.index_copy_(1, torch.LongTensor([2]).cuda(), gradient.index_select(1, torch.LongTensor([2]).cuda()) / (0.2010))
@@ -443,7 +447,7 @@ if args.detect_method == 'mahalanobis':
     logger.info('Done calculating: sample_mean, precision.')
 
     if args.magnitude == -1:
-        magnitude_vec = [0.0006, 0.0008, 0.00055, 0.00065, 0.00075, 0.00085]
+        magnitude_vec = [1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
     else:
         magnitude_vec = [args.magnitude]
 
