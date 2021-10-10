@@ -69,7 +69,7 @@ with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
 with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'r') as f:
     attack_args = json.load(f)
 # dumping args to txt file
-with open(os.path.join(DUMP_DIR, 'eval_args.txt'), 'w') as f:
+with open(os.path.join(DUMP_DIR, 'extract_characteristics_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
 if args.norm in ['1', '2']:
