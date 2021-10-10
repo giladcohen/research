@@ -146,10 +146,10 @@ net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1)])
-layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)), ('glove_embeddings', glove_dim)])
-# layer_to_idx = OrderedDict([('embeddings', 0)])
-# layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0))])
+# layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1)])
+# layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)), ('glove_embeddings', glove_dim)])
+layer_to_idx = OrderedDict([('embeddings', 0)])
+layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0))])
 idx_to_layer = inverse_map(layer_to_idx)
 
 if device == 'cuda':
