@@ -145,8 +145,9 @@ net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
 layer_to_idx = {'glove_embeddings': 0}
-idx_to_layer = inverse_map(layer_to_idx)
 layer_to_size = {'glove_embeddings': glove_dim}
+idx_to_layer = inverse_map(layer_to_idx)
+
 if device == 'cuda':
     # net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
