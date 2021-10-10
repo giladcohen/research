@@ -34,13 +34,13 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ens
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_dim_200', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/adv_robustness/cifar10/resnet34/regular/resnet34_00', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack_dir', default='deepfool', type=str, help='attack directory')
 parser.add_argument('--eval_method', default='softmax', type=str, help='softmax/knn/cosine')
 parser.add_argument('--detect_method', default='mahalanobis', type=str, help='lid/mahalanobis/dknn')
 parser.add_argument('--include_noise', default=False, type=boolean_string, help='include X_noise in characteristics')
-parser.add_argument('--dump_dir', default='debug2', type=str, help='dump dir for logs and characteristics')
+parser.add_argument('--dump_dir', default='mahalanobis_ref_no_noise', type=str, help='dump dir for logs and characteristics')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
 # for knn norm
@@ -146,8 +146,12 @@ net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1), ('logits', 2)])
-layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)), ('glove_embeddings', glove_dim), ('logits', num_classes)])
+# layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1), ('logits', 2)])
+# layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)), ('glove_embeddings', glove_dim), ('logits', num_classes)])
+# idx_to_layer = inverse_map(layer_to_idx)
+
+layer_to_idx = OrderedDict([('embeddings', 0)])
+layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0))])
 idx_to_layer = inverse_map(layer_to_idx)
 
 if device == 'cuda':
@@ -344,15 +348,16 @@ def get_Mahalanobis_score_adv(model, test_data, test_label, num_classes, sample_
     model.eval()
     Mahalanobis = []
     batch_size = 100
-    total = 0
     layer_index = layer_to_idx[layer]
     test_data = torch.from_numpy(test_data)
     test_label = torch.from_numpy(test_label)
+    num_batch = int(np.ceil(test_data.size(0) / batch_size))
 
-    for data_index in range(int(np.floor(test_data.size(0)/batch_size))):
-        target = test_label[total : total + batch_size].cuda()
-        data = test_data[total : total + batch_size].cuda()
-        total += batch_size
+    for m in range(num_batch):
+        # Batch indexes
+        begin, end = (m * batch_size, min((m + 1) * batch_size, test_data.size(0)))
+        target = test_label[begin:end].cuda()
+        data = test_data[begin:end].cuda()
         data, target = Variable(data, requires_grad = True), Variable(target)
 
         out_features = model(data)[layer]
