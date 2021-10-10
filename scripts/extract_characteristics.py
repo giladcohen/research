@@ -1,4 +1,5 @@
 '''Extract fetures for adversarial detection.'''
+from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -145,8 +146,10 @@ net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-layer_to_idx = {'glove_embeddings': 0}
-layer_to_size = {'glove_embeddings': glove_dim}
+layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1)])
+layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)), ('glove_embeddings', glove_dim)])
+# layer_to_idx = OrderedDict([('embeddings', 0)])
+# layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0))])
 idx_to_layer = inverse_map(layer_to_idx)
 
 if device == 'cuda':
@@ -253,13 +256,14 @@ def merge_and_generate_labels(X_pos, X_neg):
 
     return X, y
 
-def sample_estimator(num_classes, X, y):
+def sample_estimator():
     num_output = len(layer_to_idx)
     feature_list = np.zeros(num_output, dtype=np.int32)  # indicates the number of features in every layer
     num_sample_per_class = np.zeros(num_classes, dtype=np.int32)  # how many samples are per class
+    net.eval()
 
-    for layer in range(num_output):
-        feature_list[layer] = layer_to_size[idx_to_layer[layer]]
+    for layer_index in range(num_output):
+        feature_list[layer_index] = layer_to_size[idx_to_layer[layer_index]]
 
     list_features = []  # list_features[<layer>][<label>] is a list that holds the features in a specific layer of a specific label
     # is it basically list_features[<num_of_layer>][<num_of_label>] = List
@@ -270,62 +274,75 @@ def sample_estimator(num_classes, X, y):
             temp_list.append([])
         list_features.append(temp_list)
 
-    out_features = list(pytorch_evaluate(net, X, list(layer_to_idx.keys()), batch_size))
-    for i in range(num_output):
-        out_features[i] = np.asarray(out_features[i]).reshape((out_features[i].shape[0], out_features[i].shape[1], -1))
-        out_features[i] = np.mean(out_features[i], 2)
+    for data, target in train_loader:
+        data = data.cuda()
+        data.requires_grad = True
+        outputs = net(data)
+        out_features = []
+        for layer in layer_to_idx:
+            out_features.append(outputs[layer])
 
-    for i in range(X.shape[0]):
-        label = y[i]
-        num_sample_per_class[label] += 1
-        for layer in range(num_output):
-            list_features_temp = out_features[layer][i].reshape(1, -1)
-            list_features[layer][label].extend(list_features_temp)
+        # get hidden features
+        for i in range(num_output):
+            out_features[i] = out_features[i].view(out_features[i].size(0), out_features[i].size(1), -1)
+            out_features[i] = torch.mean(out_features[i].data, 2)
 
-    # stacking everything
-    for layer in range(num_output):
-        for label in range(num_classes):
-            list_features[layer][label] = np.stack(list_features[layer][label])
+        # construct the sample matrix
+        for i in range(data.size(0)):
+            label = target[i]
+            if num_sample_per_class[label] == 0:
+                out_count = 0
+                for out in out_features:
+                    list_features[out_count][label] = out[i].view(1, -1)
+                    out_count += 1
+            else:
+                out_count = 0
+                for out in out_features:
+                    list_features[out_count][label] \
+                        = torch.cat((list_features[out_count][label], out[i].view(1, -1)), 0)
+                    out_count += 1
+            num_sample_per_class[label] += 1
+
 
     sample_class_mean = []
-    for layer in range(num_output):
-        num_feature = feature_list[layer]
-        temp_list = np.zeros((num_classes, num_feature))
-        for i in range(num_classes):
-            temp_list[i] = np.mean(list_features[layer][i], axis=0)
+    out_count = 0
+    for num_feature in feature_list:
+        temp_list = torch.Tensor(num_classes, int(num_feature)).cuda()
+        for j in range(num_classes):
+            temp_list[j] = torch.mean(list_features[out_count][j], 0)
         sample_class_mean.append(temp_list)
+        out_count += 1
 
     precision = []
     group_lasso = EmpiricalCovariance(assume_centered=False)
-    for layer in range(num_output):
-        D = 0
+    for k in range(num_output):
+        X = 0
         for i in range(num_classes):
             if i == 0:
-                D = list_features[layer][i] - sample_class_mean[layer][i]
+                X = list_features[k][i] - sample_class_mean[k][i]
             else:
-                D = np.concatenate((D, list_features[layer][i] - sample_class_mean[layer][i]), 0)
+                X = torch.cat((X, list_features[k][i] - sample_class_mean[k][i]), 0)
 
         # find inverse
-        group_lasso.fit(D)
+        group_lasso.fit(X.cpu().numpy())
         temp_precision = group_lasso.precision_
+        temp_precision = torch.from_numpy(temp_precision).float().cuda()
         precision.append(temp_precision)
 
     return sample_class_mean, precision
 
-def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, layer, magnitude, batch_size):
+def get_Mahalanobis_score_adv(net, X, y, sample_mean, precision, layer, magnitude):
     '''
     Compute the proposed Mahalanobis confidence score on adversarial samples
     return: Mahalanobis score from layer_index
     '''
+    net.eval()
     torch.autograd.set_detect_anomaly(True)
     layer_index = layer_to_idx[layer]
     # converting to tensors:
     X = torch.from_numpy(X)
     y = torch.from_numpy(y)
-    precision_mat = torch.from_numpy(precision[layer_index]).cuda()
-    sample_mean_tensor = torch.from_numpy(sample_mean[layer_index]).cuda()
 
-    net.eval()
     Mahalanobis = []
     num_batch = int(np.ceil(X.shape[0] / batch_size))
 
@@ -341,9 +358,9 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         out_features = torch.mean(out_features, 2)
 
         for i in range(num_classes):
-            batch_sample_mean = sample_mean_tensor[i]
+            batch_sample_mean = sample_mean[layer_index][i]
             zero_f = out_features - batch_sample_mean
-            term_gau = -0.5 * torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
+            term_gau = -0.5 * torch.mm(torch.mm(zero_f, precision[layer_index]), zero_f.t()).diag()
             if i == 0:
                 gaussian_score = term_gau.view(-1, 1)
             else:
@@ -351,9 +368,9 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
 
         # Input_processing
         sample_pred = gaussian_score.max(1)[1]
-        batch_sample_mean = sample_mean_tensor.index_select(0, sample_pred)
+        batch_sample_mean = sample_mean[layer_index].index_select(0, sample_pred)
         zero_f = out_features - batch_sample_mean
-        pure_gau = -0.5 * torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
+        pure_gau = -0.5 * torch.mm(torch.mm(zero_f, precision[layer_index]), zero_f.t()).diag()
         loss = torch.mean(-pure_gau)
         loss.backward()
 
@@ -377,9 +394,9 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         noise_out_features = noise_out_features.view(noise_out_features.size(0), noise_out_features.size(1), -1)
         noise_out_features = torch.mean(noise_out_features, 2)
         for i in range(num_classes):
-            batch_sample_mean = sample_mean_tensor[i]
+            batch_sample_mean = sample_mean[layer_index][i]
             zero_f = noise_out_features - batch_sample_mean
-            term_gau = -0.5 * torch.mm(torch.mm(zero_f, precision_mat), zero_f.t()).diag()
+            term_gau = -0.5 * torch.mm(torch.mm(zero_f, precision[layer_index]), zero_f.t()).diag()
             if i == 0:
                 noise_gaussian_score = term_gau.view(-1, 1)
             else:
@@ -396,13 +413,13 @@ def get_Mahalanobis(X, X_noisy, X_adv, y, magnitude, sample_mean, precision, set
         logger.info('Calculating Mahalanobis characteristics for set {}, for layer {}'.format(set, layer))
 
         # val
-        M_in = get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, layer, magnitude, batch_size)
+        M_in = get_Mahalanobis_score_adv(net, X, y, sample_mean, precision, layer, magnitude)
         M_in = np.asarray(M_in, dtype=np.float32)
 
-        M_out = get_Mahalanobis_score_adv(net, X_adv, y, num_classes, sample_mean, precision, layer, magnitude, batch_size)
+        M_out = get_Mahalanobis_score_adv(net, X_adv, y, sample_mean, precision, layer, magnitude)
         M_out = np.asarray(M_out, dtype=np.float32)
 
-        M_noisy = get_Mahalanobis_score_adv(net, X_noisy, y, num_classes, sample_mean, precision, layer, magnitude, batch_size)
+        M_noisy = get_Mahalanobis_score_adv(net, X_noisy, y, sample_mean, precision, layer, magnitude)
         M_noisy = np.asarray(M_noisy, dtype=np.float32)
 
         if first_pass:
@@ -427,7 +444,7 @@ def get_Mahalanobis(X, X_noisy, X_adv, y, magnitude, sample_mean, precision, set
 
 if args.detect_method == 'mahalanobis':
     logger.info('get sample mean and covariance of the training set...')
-    sample_mean, precision = sample_estimator(num_classes, X_train, y_train)
+    sample_mean, precision = sample_estimator()
 
     logger.info('Done calculating: sample_mean, precision.')
 
