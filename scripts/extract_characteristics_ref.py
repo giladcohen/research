@@ -145,8 +145,8 @@ net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-layer_to_idx = {'glove_embeddings': 0}
-layer_to_size = {'glove_embeddings': glove_dim}
+layer_to_idx = {'probs': 0}
+layer_to_size = {'probs': num_classes}
 idx_to_layer = inverse_map(layer_to_idx)
 
 if device == 'cuda':
