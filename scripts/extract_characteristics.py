@@ -50,6 +50,7 @@ parser.add_argument('--k_nearest', default=-1, type=int, help='number of nearest
 
 # for mahalanobis
 parser.add_argument('--magnitude', default=-1, type=float, help='magnitude for mahalanobis detection')
+parser.add_argument('--use_raw_grads', default=False, type=boolean_string, help='Use raw grads without taking their sign values')
 parser.add_argument('--rgb_scale', default=1, type=float, help='scale for mahalanobis')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -356,9 +357,11 @@ def get_Mahalanobis_score_adv(net, X, y, num_classes, sample_mean, precision, la
         loss = torch.mean(-pure_gau)
         loss.backward()
 
-        # gradient = torch.ge(data.grad, 0)
-        # gradient = (gradient.float() - 0.5) * 2
-        gradient = data.grad
+        if args.use_raw_grads:
+            gradient = data.grad
+        else:
+            gradient = torch.ge(data.grad, 0)
+            gradient = (gradient.float() - 0.5) * 2
 
         # scale hyper params given from the official deep_Mahalanobis_detector repo:
         RED_SCALE   = 0.2023 * args.rgb_scale
