@@ -25,7 +25,7 @@ parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for 
 parser.add_argument('--k_nearest', default=-1, type=int, help='number of nearest neighbors to use for LID/dknn detection')
 
 # for mahalanobis
-parser.add_argument('--magnitude', default=0.000001, type=float, help='magnitude for mahalanobis detection')
+parser.add_argument('--magnitude', default=0.0000001, type=float, help='magnitude for mahalanobis detection')
 parser.add_argument('--rgb_scale', default=1, type=float, help='scale for mahalanobis')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -53,8 +53,8 @@ dataset = train_args['dataset']
 
 
 if args.detect_method == 'mahalanobis':
-    train_characteristics_file = os.path.join(SEEN_DUMP_DIR, 'magnitude_{:8f}_train.npy'.format(args.magnitude))
-    test_characteristics_file  = os.path.join(DUMP_DIR, 'magnitude_{:8f}_test.npy'.format(args.magnitude))
+    train_characteristics_file = os.path.join(SEEN_DUMP_DIR, 'magnitude_{}_train.npy'.format(args.magnitude))
+    test_characteristics_file  = os.path.join(DUMP_DIR, 'magnitude_{}_test.npy'.format(args.magnitude))
 else:
     raise AssertionError('{} is not supported'.format(args.detect_method))
 
