@@ -19,7 +19,7 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifa
 parser.add_argument('--seen_attack_dir', default='', type=str, help='Seen attack when training detector')
 parser.add_argument('--attack_dir', default='fgsm_L2', type=str, help='attack directory')
 parser.add_argument('--detect_method', default='mahalanobis', type=str, help='lid/mahalanobis/dknn')
-parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and characteristics')
+parser.add_argument('--dump_dir', default='debug2', type=str, help='dump dir for logs and characteristics')
 
 # for lid/dknn
 parser.add_argument('--k_nearest', default=-1, type=int, help='number of nearest neighbors to use for LID/dknn detection')
