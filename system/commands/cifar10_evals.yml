@@ -1,0 +1,215 @@
+commands:
+  ################################################### FGSM attack #################################################
+  # Glove(trained w L1), FGSM_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir fgsm_L1, 11000]
+
+  # Glove(trained w L1), FGSM_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir fgsm_L2, 11000]
+
+  # Glove(trained w L1), FGSM_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir fgsm_Linf, 11000]
+
+  # Glove(trained w L1), FGSM_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir fgsm_cosine, 11000]
+
+
+
+
+  # Glove(trained w L2), FGSM_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method cosine --dump_dir cosine                --attack_dir fgsm_L1, 11000]
+
+  # Glove(trained w L2), FGSM_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method cosine --dump_dir cosine                --attack_dir fgsm_L2, 11000]
+
+  # Glove(trained w L2), FGSM_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method cosine --dump_dir cosine                --attack_dir fgsm_Linf, 11000]
+
+  # Glove(trained w L2), FGSM_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method cosine --dump_dir cosine                --attack_dir fgsm_cosine, 11000]
+
+
+
+
+  # Glove(trained w Linf), FGSM_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir fgsm_L1, 11000]
+
+  # Glove(trained w Linf), FGSM_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir fgsm_L2, 11000]
+
+  # Glove(trained w Linf), FGSM_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir fgsm_Linf, 11000]
+
+  # Glove(trained w Linf), FGSM_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir fgsm_cosine, 11000]
+
+
+
+
+  # Glove(trained w cosine), FGSM_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir fgsm_L1, 11000]
+
+  # Glove(trained w cosine), FGSM_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir fgsm_L2, 11000]
+
+  # Glove(trained w cosine), FGSM_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir fgsm_Linf, 11000]
+
+  # Glove(trained w cosine), FGSM_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir fgsm_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir fgsm_cosine, 11000]
+
+
+################################################### PGD attack #################################################
+
+
+  # Glove(trained w L1), pgd_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir pgd_L1, 11000]
+
+  # Glove(trained w L1), pgd_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir pgd_L2, 11000]
+
+  # Glove(trained w L1), pgd_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir pgd_Linf, 11000]
+
+  # Glove(trained w L1), pgd_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1     --method cosine --dump_dir cosine                --attack_dir pgd_cosine, 11000]
+
+
+
+
+  # Glove(trained w L2), pgd_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method cosine --dump_dir cosine                --attack_dir pgd_L1, 11000]
+
+  # Glove(trained w L2), pgd_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2     --method cosine --dump_dir cosine                --attack_dir pgd_L2, 11000]
+
+  # Glove(trained w L2), pgd_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method cosine --dump_dir cosine                --attack_dir pgd_Linf, 11000]
+
+  # Glove(trained w L2), pgd_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2    --method cosine --dump_dir cosine                --attack_dir pgd_cosine, 11000]
+
+
+
+
+  # Glove(trained w Linf), pgd_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir pgd_L1, 11000]
+
+  # Glove(trained w Linf), pgd_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir pgd_L2, 11000]
+
+  # Glove(trained w Linf), pgd_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir pgd_Linf, 11000]
+
+  # Glove(trained w Linf), pgd_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf  --method cosine --dump_dir cosine                --attack_dir pgd_cosine, 11000]
+
+
+
+
+  # Glove(trained w cosine), pgd_L1
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L1, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir pgd_L1, 11000]
+
+  # Glove(trained w cosine), pgd_L2
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_L2, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir pgd_L2, 11000]
+
+  # Glove(trained w cosine), pgd_Linf
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_Linf, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir pgd_Linf, 11000]
+
+  # Glove(trained w cosine), pgd_cosine
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p1    --norm 1    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_p2    --norm 2    --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method knn    --dump_dir knn_pinf  --norm inf  --attack_dir pgd_cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine  --method cosine --dump_dir cosine                --attack_dir pgd_cosine, 11000]
