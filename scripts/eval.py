@@ -39,7 +39,7 @@ parser.add_argument('--attack_dir', default='', type=str, help='attack directory
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
 # for knn
-parser.add_argument('--norm', default=2, help='1/2/inf')
+parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 # dump
 parser.add_argument('--dump_dir', default='knn_p2', type=str, help='dump dir for logs and data')
@@ -48,11 +48,17 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+if args.norm in ['1', '2']:
+    args.norm = int(args.norm)
+elif args.norm == 'inf':
+    args.norm = np.inf
+else:
+    raise AssertionError('Unsupported norm {}'.format(args.norm))
+
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
     train_args = json.load(f)
 is_attacked = args.attack_dir != ''
-
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
 batch_size = args.batch_size
 
@@ -103,11 +109,12 @@ logger.info('==> Building model..')
 conv1 = get_conv1_params(dataset)
 strides = get_strides(dataset)
 glove_dim = train_args.get('glove_dim', None)
+ext_linear = glove_dim if train_args['glove'] else None
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
     global_state = global_state['best_net']
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
-                                   strides=strides, ext_linear=glove_dim)
+                                   strides=strides, ext_linear=ext_linear)
 net = net.to(device)
 net.load_state_dict(global_state)
 net.eval()  # frozen
@@ -126,103 +133,11 @@ if args.method == 'softmax':
     y_probs = pytorch_evaluate(net, X, ['probs'], batch_size)[0][test_inds]
     y_preds = y_probs.argmax(axis=1)
 
-    # confusion mat
-    # cm = confusion_matrix(y_gt, y_preds, labels=np.arange(num_classes), normalize='true')
-    # disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
-    # f, axs = plt.subplots(figsize=(50, 50))
-    # disp.plot(ax=axs, xticks_rotation='vertical')
-    # plt.savefig(os.path.join(PLOTS_DIR, 'confusion.png'), dpi=300)
-    #
-    # plt.close('all')
-    #
-    # # projection:
-    # projection_mat = np.zeros((test_size, num_classes))
-    # projection_mat = y_probs  # in case of softmax
-    #
-    # projection_stats = np.zeros((num_classes, num_classes))
-    # for i in range(num_classes):
-    #     projections = projection_mat[labels_dict[i]]
-    #     projection_stats[i] = projections.mean(axis=0)
-    # projection_stats = np.round(projection_stats, 2)
-    # f, axs = plt.subplots(figsize=(50, 50))
-    # disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
-    # disp.plot(ax=axs, xticks_rotation='vertical')
-    # plt.savefig(os.path.join(PLOTS_DIR, 'projections.png'), dpi=300)
-
 elif args.method == 'knn':
-    if args.norm == 'inf':
-        args.norm = np.inf
     knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=args.norm)
     knn.fit(glove_vecs)
     glove_embs = pytorch_evaluate(net, X, ['glove_embeddings'], batch_size)[0][test_inds]
     y_preds = knn.kneighbors(glove_embs, return_distance=False).squeeze()
-
-    # confusion mat
-    # cm = confusion_matrix(y_gt, y_preds, labels=np.arange(num_classes), normalize='true')
-    # disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
-    # f, axs = plt.subplots(figsize=(50, 50))
-    # disp.plot(ax=axs, xticks_rotation='vertical')
-    # plt.savefig(os.path.join(PLOTS_DIR, 'confusion.png'), dpi=300)
-    #
-    # plt.close('all')
-    #
-    # # projection
-    # if args.norm == 1:
-    #     norm_str = 'l1'
-    # elif args.norm == 2:
-    #     norm_str = 'l2'
-    # elif args.norm == np.inf:
-    #     norm_str = 'max'
-    # else:
-    #     raise AssertionError('impossible')
-    # glove_embs_unit = normalize(glove_embs, axis=1, norm=norm_str)
-    # glove_vecs_unit = normalize(glove_vecs, axis=1, norm=norm_str)
-    # projection_mat = np.zeros((test_size, num_classes))
-    # for k in range(test_size):
-    #     for i in range(num_classes):
-    #         projection_mat[k, i] = np.dot(glove_embs_unit[k], glove_vecs_unit[i])
-    #
-    # projection_stats = np.zeros((num_classes, num_classes))
-    # for i in range(num_classes):
-    #     projections = projection_mat[labels_dict[i]]
-    #     projection_stats[i] = projections.mean(axis=0)
-    # projection_stats = np.round(projection_stats, 2)
-    # f, axs = plt.subplots(figsize=(50, 50))
-    # disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
-    # disp.plot(ax=axs, xticks_rotation='vertical')
-    # plt.savefig(os.path.join(PLOTS_DIR, 'projections.png'), dpi=300)
-    #
-    # # unbiased projection
-    # glove_embs_unbiased = np.nan * np.ones_like(glove_embs)
-    # for k in range(test_size):
-    #     label = y_gt[k]
-    #     glove_embs_unbiased[k] = glove_embs[k] - glove_vecs[label]
-    # assert not np.isnan(glove_embs_unbiased).any()
-    # glove_embs_unbiased_unit = normalize(glove_embs_unbiased, axis=1, norm=norm_str)
-    #
-    # projection_mat = np.zeros((test_size, num_classes))
-    # for k in range(test_size):
-    #     for i in range(num_classes):
-    #         projection_mat[k, i] = np.dot(glove_embs_unbiased_unit[k], glove_vecs_unit[i])
-    # projection_stats = np.zeros((num_classes, num_classes))
-    # for i in range(num_classes):
-    #     projections = projection_mat[labels_dict[i]]
-    #     projection_stats[i] = projections.mean(axis=0)
-    # projection_stats = np.round(projection_stats, 2)
-    # f, axs = plt.subplots(figsize=(50, 50))
-    # disp = ConfusionMatrixDisplay(confusion_matrix=projection_stats, display_labels=classes)
-    # disp.plot(ax=axs, xticks_rotation='vertical')
-    # plt.savefig(os.path.join(PLOTS_DIR, 'unbiased_projections.png'), dpi=300)
-    #
-    # # pca for each class
-    # for class_ind in range(num_classes):
-    #     pca = PCA(n_components=2)
-    #     glove_embs_unbiased_tmp = glove_embs_unbiased[labels_dict[class_ind]]
-    #     glove_embs_unbiased_tmp_2d = pca.fit_transform(glove_embs_unbiased_tmp)
-    #     plt.figure(class_ind, (8, 8))
-    #     plt.scatter(glove_embs_unbiased_tmp_2d[:, 0], glove_embs_unbiased_tmp_2d[:, 1], s=2)
-    #     plt.title('PCA for class {}'.format(classes[class_ind]))
-    #     plt.savefig(os.path.join(PLOTS_DIR, 'pca', '{}.png'.format(classes[class_ind])), dpi=300)
 
 acc = np.mean(y_gt == y_preds)
 logger.info('Test accuracy: {}%'.format(100 * acc))

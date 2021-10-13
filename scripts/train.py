@@ -58,17 +58,17 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-# dumping args to txt file
-os.makedirs(args.checkpoint_dir, exist_ok=True)
-with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'w') as f:
-    json.dump(args.__dict__, f, indent=2)
-
 if args.norm in ['1', '2']:
     args.norm = int(args.norm)
 elif args.norm == 'inf':
     args.norm = np.inf
 else:
     raise AssertionError('Unsupported norm {}'.format(args.norm))
+
+# dumping args to txt file
+os.makedirs(args.checkpoint_dir, exist_ok=True)
+with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'w') as f:
+    json.dump(args.__dict__, f, indent=2)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')

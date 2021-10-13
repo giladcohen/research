@@ -54,10 +54,10 @@ args = parser.parse_args()
 # np.random.seed(9)
 # rand_gen = np.random.RandomState(seed=12345)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
     train_args = json.load(f)
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
 ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
 targeted = args.attack != 'deepfool'
