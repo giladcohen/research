@@ -30,12 +30,12 @@ from art.attacks.evasion import FastGradientMethod, ProjectedGradientDescent, De
     CarliniL2Method, CarliniLInfMethod
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robustness testing')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_ref', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--attack', default='cw_glove', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
-parser.add_argument('--attack_loss', default='L2', type=str,
+parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
+parser.add_argument('--attack_loss', default='cross_entropy', type=str,
                     help='The loss used for attacking: cross_entropy/L1/SL1/L2/Linf/cosine')
-parser.add_argument('--attack_dir', default='debuggg', type=str, help='attack directory')
+parser.add_argument('--attack_dir', default='debug', type=str, help='attack directory')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 
@@ -95,7 +95,7 @@ if 'best_net' in global_state:
 glove_dim = train_args.get('glove_dim', None)
 ext_linear = glove_dim if train_args['glove'] else None
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'],
-                                   conv1=conv1, strides=strides, ext_linear=glove_dim)
+                                   conv1=conv1, strides=strides, ext_linear=ext_linear)
 net = net.to(device)
 net.load_state_dict(global_state)
 net.eval()
