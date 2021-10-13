@@ -57,6 +57,10 @@ else:
 
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
     train_args = json.load(f)
+
+if args.method != 'softmax':
+    assert (train_args['glove_dim'] is not None) and (train_args['glove_dim'] != -1), 'glove_dim must be > 0'
+
 is_attacked = args.attack_dir != ''
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
@@ -108,14 +112,17 @@ glove_vecs = test_loader.dataset.idx_to_glove_vec
 logger.info('==> Building model..')
 conv1 = get_conv1_params(dataset)
 strides = get_strides(dataset)
-glove_dim = train_args.get('glove_dim', None)
-ext_linear = glove_dim if train_args['glove'] else None
-global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
-if 'best_net' in global_state:
-    global_state = global_state['best_net']
+glove_dim = train_args.get('glove_dim', -1)
+if glove_dim != -1:
+    ext_linear = glove_dim
+else:
+    ext_linear = None
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
                                    strides=strides, ext_linear=ext_linear)
 net = net.to(device)
+global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
+if 'best_net' in global_state:
+    global_state = global_state['best_net']
 net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))

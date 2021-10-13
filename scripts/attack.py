@@ -18,7 +18,6 @@ from cleverhans.utils import random_targets, to_categorical
 
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
-from research.attacks.carlini_wagner_glove import CarliniLinfGlove
 from research.losses.losses import LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor
@@ -57,6 +56,9 @@ args = parser.parse_args()
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
     train_args = json.load(f)
 
+if args.attack_loss != 'cross_entropy':
+    assert (train_args['glove_dim'] is not None) and (train_args['glove_dim'] != -1), 'glove_dim must be > 0'
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
 ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
@@ -89,14 +91,17 @@ num_classes = len(classes)
 logger.info('==> Building model..')
 conv1 = get_conv1_params(dataset)
 strides = get_strides(dataset)
-global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
-if 'best_net' in global_state:
-    global_state = global_state['best_net']
-glove_dim = train_args.get('glove_dim', None)
-ext_linear = glove_dim if train_args['glove'] else None
+glove_dim = train_args.get('glove_dim', -1)
+if glove_dim != -1:
+    ext_linear = glove_dim
+else:
+    ext_linear = None
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'],
                                    conv1=conv1, strides=strides, ext_linear=ext_linear)
 net = net.to(device)
+global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
+if 'best_net' in global_state:
+    global_state = global_state['best_net']
 net.load_state_dict(global_state)
 net.eval()
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
@@ -128,10 +133,8 @@ else:
 
 if args.attack_loss == 'cross_entropy':
     fields = ['logits']
-elif args.attack != 'cw_glove':
-    fields = ['glove_embeddings']
 else:
-    fields = ['logits', 'glove_embeddings']
+    fields = ['glove_embeddings']
 
 classifier = PyTorchClassifierSpecific(model=net, clip_values=(0, 1), loss=loss,
                                        optimizer=optimizer, input_shape=(img_shape[2], img_shape[0], img_shape[1]),
@@ -153,14 +156,10 @@ if targeted:
 
     if args.attack_loss != 'cross_entropy':
         # converting y_test_adv from vector to matrix of embeddings
-        assert glove_dim is not None
         y_adv_vec = np.empty((test_size, glove_dim), dtype=np.float32)
         for i in range(test_size):
             y_adv_vec[i] = glove_vecs[y_test_adv[i]]
-        if args.attack != 'cw_glove':
             y_test_adv = y_adv_vec
-        else:
-            y_test_adv = list(zip(y_test_adv, y_adv_vec))
 else:
     y_test_adv = None
 
@@ -209,14 +208,6 @@ elif args.attack == 'cw':
     )
 elif args.attack == 'cw_Linf':
     attack = CarliniLInfMethod(
-        classifier=classifier,
-        confidence=0.8,
-        targeted=targeted,
-        batch_size=batch_size,
-        eps=args.eps
-    )
-elif args.attack == 'cw_glove':
-    attack = CarliniLinfGlove(
         classifier=classifier,
         confidence=0.8,
         targeted=targeted,

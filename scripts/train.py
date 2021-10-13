@@ -48,7 +48,7 @@ parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TR
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
 
 # GloVe settings
-parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings')
+parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
 parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 parser.add_argument('--glove_loss', default='L2', type=str,
                     help='The loss used for embedding training: L1/L2/Linf/cosine')
@@ -64,6 +64,9 @@ elif args.norm == 'inf':
     args.norm = np.inf
 else:
     raise AssertionError('Unsupported norm {}'.format(args.norm))
+
+if args.glove:
+    assert args.glove != -1, 'glove_dim must be set when traiing with gove embeddings'
 
 # dumping args to txt file
 os.makedirs(args.checkpoint_dir, exist_ok=True)
@@ -121,7 +124,10 @@ test_size  = len(testloader.dataset)
 logger.info('==> Building model..')
 conv1 = get_conv1_params(args.dataset)
 strides = get_strides(args.dataset)
-ext_linear = args.glove_dim if args.glove else None
+if args.glove_dim != -1:
+    ext_linear = args.glove_dim
+else:
+    ext_linear = None
 net = get_model(args.net)(num_classes=len(classes), activation=args.activation, conv1=conv1, strides=strides,
                           ext_linear=ext_linear)
 net = net.to(device)

@@ -51,7 +51,6 @@ dataset = train_args['dataset']
 # seen_targeted = seen_attack_args['attack'] != 'deepfool'
 # targeted = attack_args['attack'] != 'deepfool'
 
-
 if args.detect_method == 'mahalanobis':
     train_characteristics_file = os.path.join(SEEN_DUMP_DIR, 'magnitude_{}_train.npy'.format(args.magnitude))
     test_characteristics_file  = os.path.join(DUMP_DIR, 'magnitude_{}_test.npy'.format(args.magnitude))

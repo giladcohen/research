@@ -59,28 +59,32 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
-ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
-DUMP_DIR = os.path.join(ATTACK_DIR, args.dump_dir)
-PLOTS_DIR = os.path.join(DUMP_DIR, 'plots')
-os.makedirs(PLOTS_DIR, exist_ok=True)
-batch_size = args.batch_size
-log_file = os.path.join(DUMP_DIR, 'log.log')
-with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
-    train_args = json.load(f)
-with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'r') as f:
-    attack_args = json.load(f)
-# dumping args to txt file
-with open(os.path.join(DUMP_DIR, 'extract_characteristics_args.txt'), 'w') as f:
-    json.dump(args.__dict__, f, indent=2)
-
 if args.norm in ['1', '2']:
     args.norm = int(args.norm)
 elif args.norm == 'inf':
     args.norm = np.inf
 else:
     raise AssertionError('Unsupported norm {}'.format(args.norm))
+
+ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
+with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
+    train_args = json.load(f)
+with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'r') as f:
+    attack_args = json.load(f)
+
+if args.eval_method != 'softmax':
+    assert (train_args['glove_dim'] is not None) and (train_args['glove_dim'] != -1), 'glove_dim must be > 0'
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
+DUMP_DIR = os.path.join(ATTACK_DIR, args.dump_dir)
+PLOTS_DIR = os.path.join(DUMP_DIR, 'plots')
+os.makedirs(PLOTS_DIR, exist_ok=True)
+batch_size = args.batch_size
+log_file = os.path.join(DUMP_DIR, 'log.log')
+# dumping args to txt file
+with open(os.path.join(DUMP_DIR, 'extract_characteristics_args.txt'), 'w') as f:
+    json.dump(args.__dict__, f, indent=2)
 
 set_logger(log_file)
 logger = logging.getLogger()
@@ -135,13 +139,17 @@ glove_vecs = test_loader.dataset.idx_to_glove_vec
 logger.info('==> Building model..')
 conv1 = get_conv1_params(dataset)
 strides = get_strides(dataset)
-glove_dim = train_args.get('glove_dim', None)
-global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
-if 'best_net' in global_state:
-    global_state = global_state['best_net']
+glove_dim = train_args.get('glove_dim', -1)
+if glove_dim != -1:
+    ext_linear = glove_dim
+else:
+    ext_linear = None
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
                                    strides=strides, ext_linear=glove_dim)
 net = net.to(device)
+global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
+if 'best_net' in global_state:
+    global_state = global_state['best_net']
 net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
