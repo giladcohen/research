@@ -32,9 +32,9 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ens
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar100/resnet34_glove_p2', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--method', default='knn', type=str, help='softmax, knn')
+parser.add_argument('--method', default='cosine', type=str, help='softmax/knn/cosine')
 parser.add_argument('--attack_dir', default='', type=str, help='attack directory, or None for normal images')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
@@ -42,7 +42,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 # dump
-parser.add_argument('--dump_dir', default='knn_p2', type=str, help='dump dir for logs and data')
+parser.add_argument('--dump_dir', default='cosine', type=str, help='dump dir for logs and data')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -145,6 +145,17 @@ elif args.method == 'knn':
     knn.fit(glove_vecs)
     glove_embs = pytorch_evaluate(net, X, ['glove_embeddings'], batch_size)[0][test_inds]
     y_preds = knn.kneighbors(glove_embs, return_distance=False).squeeze()
+
+elif args.method == 'cosine':
+    cos = nn.CosineSimilarity()
+    glove_embs = pytorch_evaluate(net, X, ['glove_embeddings'], batch_size, to_tensor=True)[0][test_inds]
+    distance_mat = torch.zeros((glove_embs.shape[0], num_classes)).to(device)
+    for cls_idx in range(num_classes):
+        embs = np.tile(glove_vecs[cls_idx], (10000, 1))
+        embs = torch.from_numpy(embs).to(device)
+        distance_mat[:, cls_idx] = cos(glove_embs, embs)
+    distance_mat = distance_mat.cpu().numpy()
+    y_preds = distance_mat.argmax(1)
 
 acc = np.mean(y_gt == y_preds)
 logger.info('Test accuracy: {}%'.format(100 * acc))
