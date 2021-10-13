@@ -93,6 +93,7 @@ global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
     global_state = global_state['best_net']
 glove_dim = train_args.get('glove_dim', None)
+ext_linear = glove_dim if train_args['glove'] else None
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'],
                                    conv1=conv1, strides=strides, ext_linear=glove_dim)
 net = net.to(device)
