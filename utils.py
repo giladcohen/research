@@ -506,3 +506,13 @@ def get_image_shape(dataset: str) -> Tuple[int, int, int]:
         return 64, 64, 3
     else:
         raise AssertionError('Unsupported dataset {}'.format(dataset))
+
+def load_characteristics(characteristics_file):
+    X, Y = None, None
+    data = np.load(characteristics_file)
+    if X is None:
+        X = data[:, :-1]
+    if Y is None:
+        Y = data[:, -1]  # labels only need to load once
+
+    return X, Y
