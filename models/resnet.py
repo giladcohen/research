@@ -70,6 +70,8 @@ class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10, activation='relu', conv1=None, strides=None, ext_linear=None):
         super(ResNet, self).__init__()
         self.in_planes = 64
+        self.use_ext_linear = ext_linear is not None
+
         if activation == 'relu':
             self.activation = F.relu
         elif activation == 'softplus':
@@ -86,7 +88,6 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=strides[3])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        self.use_ext_linear = ext_linear is not None
         if self.use_ext_linear:
             self.ext_linear = nn.Linear(512*block.expansion, ext_linear)
             self.linear = nn.Linear(ext_linear, num_classes)
