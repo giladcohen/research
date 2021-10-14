@@ -148,7 +148,7 @@ if glove_dim != -1:
 else:
     ext_linear = None
 net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
-                                   strides=strides, ext_linear=glove_dim)
+                                   strides=strides, ext_linear=ext_linear)
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
