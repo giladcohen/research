@@ -157,12 +157,14 @@ net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-if train_args['glove']: # using glove training. Use embeddings and glove_embeddings only
-    layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1)])
-elif glove_dim != -1:  # not training with GloVe, but using extended architecture
-    layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1), ('logits', 2)])
-else:  # not training with Glove, with standard architecture
-    layer_to_idx = OrderedDict([('embeddings', 0), ('logits', 1)])
+
+# if train_args['glove']: # using glove training. Use embeddings and glove_embeddings only
+#     layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1)])
+# elif glove_dim != -1:  # not training with GloVe, but using extended architecture
+#     layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1), ('logits', 2)])
+# else:  # not training with Glove, with standard architecture
+#     layer_to_idx = OrderedDict([('embeddings', 0), ('logits', 1)])
+layer_to_idx = OrderedDict([('glove_embeddings', 1)])
 layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)),
                              ('glove_embeddings', glove_dim),
                              ('logits', num_classes)])
