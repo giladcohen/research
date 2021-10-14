@@ -164,7 +164,7 @@ net.eval()  # frozen
 #     layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1), ('logits', 2)])
 # else:  # not training with Glove, with standard architecture
 #     layer_to_idx = OrderedDict([('embeddings', 0), ('logits', 1)])
-layer_to_idx = OrderedDict([('glove_embeddings', 1)])
+layer_to_idx = OrderedDict([('glove_embeddings', 0)])
 layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)),
                              ('glove_embeddings', glove_dim),
                              ('logits', num_classes)])
