@@ -34,10 +34,10 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ens
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_dim_200', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--attack_dir', default='fgsm_L2', type=str, help='attack directory')
-parser.add_argument('--eval_method', default='knn', type=str, help='softmax/knn/cosine')
+parser.add_argument('--attack_dir', default='pgd', type=str, help='attack directory')
+parser.add_argument('--eval_method', default='softmax', type=str, help='softmax/knn/cosine')
 parser.add_argument('--detect_method', default='mahalanobis', type=str, help='lid/mahalanobis/dknn')
 parser.add_argument('--include_noise', default=True, type=boolean_string, help='include X_noise in characteristics')
 parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and characteristics')
@@ -72,7 +72,10 @@ with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
 with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'r') as f:
     attack_args = json.load(f)
 
-if args.eval_method != 'softmax':
+if args.eval_method == 'softmax':
+    assert not train_args['glove'], 'softmax evaluation can only be done for non GloVe training'
+else:  # knn/cosine
+    assert train_args['glove'], 'knn/cosine evaluation can only be done for GloVe training'
     assert (train_args['glove_dim'] is not None) and (train_args['glove_dim'] != -1), 'glove_dim must be > 0'
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -154,10 +157,15 @@ net.load_state_dict(global_state)
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-# layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1)])
-# layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)), ('glove_embeddings', glove_dim)])
-layer_to_idx = OrderedDict([('embeddings', 0)])
-layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0))])
+if train_args['glove']: # using glove training. Use embeddings and glove_embeddings only
+    layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1)])
+elif glove_dim != -1:  # not training with GloVe, but using extended architecture
+    layer_to_idx = OrderedDict([('embeddings', 0), ('glove_embeddings', 1), ('logits', 2)])
+else:  # not training with Glove, with standard architecture
+    layer_to_idx = OrderedDict([('embeddings', 0), ('logits', 1)])
+layer_to_size = OrderedDict([('embeddings', net.layer4[2].bn2.weight.size(0)),
+                             ('glove_embeddings', glove_dim),
+                             ('logits', num_classes)])
 idx_to_layer = inverse_map(layer_to_idx)
 
 if device == 'cuda':
@@ -457,7 +465,8 @@ if args.detect_method == 'mahalanobis':
     logger.info('Done calculating: sample_mean, precision.')
 
     if args.magnitude == -1:
-        magnitude_vec = [0.0000001, 0.0000002, 0.0000003, 0.0000004, 0.0000005, 0.000001, 0.000002, 0.000003, 0.000004, 0.000005]
+        magnitude_vec = [0.00000001, 0.00000003, 0.0000001, 0.0000003, 0.000001, 0.000003, 0.00001, 0.00003,
+                         0.0001, 0.0003, 0.001, 0.003, 0.01]
     else:
         magnitude_vec = [args.magnitude]
 

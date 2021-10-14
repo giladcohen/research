@@ -1,0 +1,59 @@
+commands:
+  # baseline 1 - FGSM/PGD
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_ref               --attack_dir fgsm           --eval_method softmax    --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_ref               --attack_dir pgd            --eval_method softmax    --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # baseline 2 - FGSM/PGD
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200           --attack_dir fgsm           --eval_method softmax    --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_dim_200           --attack_dir pgd            --eval_method softmax    --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # Gloves
+  ################################################### FGSM attack #################################################
+  # Glove(trained w L1)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir fgsm_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir fgsm_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir fgsm_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir fgsm_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # Glove(trained w L2)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir fgsm_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir fgsm_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir fgsm_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir fgsm_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # Glove(trained w Linf)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir fgsm_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir fgsm_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir fgsm_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir fgsm_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # Glove(trained w cosing)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir fgsm_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir fgsm_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir fgsm_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir fgsm_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  ################################################### PGD attack #################################################
+  # Glove(trained w L1)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir pgd_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir pgd_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir pgd_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1          --attack_dir pgd_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # Glove(trained w L2)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir pgd_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir pgd_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir pgd_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_p2          --attack_dir pgd_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # Glove(trained w Linf)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir pgd_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir pgd_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir pgd_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_pinf        --attack_dir pgd_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+
+  # Glove(trained w cosing)
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir pgd_L1        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir pgd_L2        --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir pgd_Linf      --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
+  - [python research/scripts/extract_characteristics.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_cosine      --attack_dir pgd_cosine    --eval_method knn        --detect_method mahalanobis   --dump_dir mahalanobis, 11000]
