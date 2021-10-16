@@ -71,7 +71,7 @@ else:
     raise AssertionError('Unsupported norm {}'.format(args.norm))
 
 if args.glove:
-    assert args.glove != -1, 'glove_dim must be set when traiing with gove embeddings'
+    assert args.glove_dim != -1, 'glove_dim must be set when training with glove embeddings'
 
 # dumping args to txt file
 os.makedirs(args.checkpoint_dir, exist_ok=True)
@@ -123,6 +123,7 @@ testloader = get_test_loader(
 
 img_shape = get_image_shape(args.dataset)
 classes = trainloader.dataset.classes
+num_classes = len(classes)
 glove_vecs = trainloader.dataset.idx_to_glove_vec.astype(np.float32)
 testloader.dataset.overwrite_glove_vecs(glove_vecs)
 train_size = len(trainloader.dataset)
@@ -140,12 +141,12 @@ if args.glove_dim != -1:
     ext_linear = args.glove_dim
 else:
     ext_linear = None
-net = get_model(args.net)(num_classes=len(classes), activation=args.activation, conv1=conv1, strides=strides,
+net = get_model(args.net)(num_classes=num_classes, activation=args.activation, conv1=conv1, strides=strides,
                           ext_linear=ext_linear)
 net = net.to(device)
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-if args.glove:
+if args.glove and args.glove_loss != 'cosine':
     # knn model
     knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=args.norm)
     knn.fit(glove_vecs)
@@ -157,6 +158,7 @@ if device == 'cuda':
     cudnn.benchmark = True
 
 ce_criterion = nn.CrossEntropyLoss()
+cos = nn.CosineSimilarity()
 y_train    = np.asarray(trainloader.dataset.targets)
 y_val      = np.asarray(valloader.dataset.targets)
 y_test     = np.asarray(testloader.dataset.targets)
@@ -217,13 +219,28 @@ def knn_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
     return preds
 
+def cosine_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
+    glove_embs = outputs['glove_embeddings']
+    bs = glove_embs.size(0)
+    distance_mat = torch.zeros((bs, num_classes)).to(device)
+    for cls_idx in range(num_classes):
+        embs = np.tile(glove_vecs[cls_idx], (bs, 1))
+        embs = torch.from_numpy(embs).to(device)
+        distance_mat[:, cls_idx] = cos(glove_embs, embs)
+    distance_mat = distance_mat.detach().cpu().numpy()
+    preds = distance_mat.argmax(1)
+    return preds
+
 
 if args.adv_trades:
     loss_func = output_loss_robust
     pred_func = softmax_pred
 elif args.glove:
     loss_func = output_loss_glove
-    pred_func = knn_pred
+    if args.glove_loss != 'cosine':
+        pred_func = knn_pred
+    else:
+        pred_func = cosine_pred
 else:
     loss_func = output_loss_normal
     pred_func = softmax_pred

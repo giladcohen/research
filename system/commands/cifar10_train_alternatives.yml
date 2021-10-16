@@ -1,18 +1,18 @@
 commands:
   # random glove vecs
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_p1       --glove True --glove_dim 200 --emb_selection random      --glove_loss L1, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_p2       --glove True --glove_dim 200 --emb_selection random      --glove_loss L2, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_pinf     --glove True --glove_dim 200 --emb_selection random      --glove_loss Linf, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_cosine   --glove True --glove_dim 200 --emb_selection random      --glove_loss cosine, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_p1       --glove True --glove_dim 200 --emb_selection random      --norm 1    --glove_loss L1, 9000]
+#  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_p2       --glove True --glove_dim 200 --emb_selection random      --norm 2    --glove_loss L2, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_pinf     --glove True --glove_dim 200 --emb_selection random      --norm inf  --glove_loss Linf, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_random_cosine   --glove True --glove_dim 200 --emb_selection random                  --glove_loss cosine, 9000]
 
   # farthest points glove vecs
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_p1       --glove True --glove_dim 200 --emb_selection farthest_points      --glove_loss L1, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_p2       --glove True --glove_dim 200 --emb_selection farthest_points      --glove_loss L2, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_pinf     --glove True --glove_dim 200 --emb_selection farthest_points      --glove_loss Linf, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_cosine   --glove True --glove_dim 200 --emb_selection farthest_points      --glove_loss cosine, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_p1       --glove True --glove_dim 200 --emb_selection farthest_points      --norm 1    --glove_loss L1, 9000]
+#  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_p2       --glove True --glove_dim 200 --emb_selection farthest_points      --norm 2    --glove_loss L2, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_pinf     --glove True --glove_dim 200 --emb_selection farthest_points      --norm inf  --glove_loss Linf, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_farthest_points_cosine   --glove True --glove_dim 200 --emb_selection farthest_points                  --glove_loss cosine, 9000]
 
   # orthogonal glove vecs
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_p1       --glove True --glove_dim 200 --emb_selection orthogonal      --glove_loss L1, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_p2       --glove True --glove_dim 200 --emb_selection orthogonal      --glove_loss L2, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_pinf     --glove True --glove_dim 200 --emb_selection orthogonal      --glove_loss Linf, 9000]
-  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_cosine   --glove True --glove_dim 200 --emb_selection orthogonal      --glove_loss cosine, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_p1       --glove True --glove_dim 200 --emb_selection orthogonal      --norm 1     --glove_loss L1, 9000]
+#  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_p2       --glove True --glove_dim 200 --emb_selection orthogonal      --norm 2     --glove_loss L2, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_pinf     --glove True --glove_dim 200 --emb_selection orthogonal      --norm inf   --glove_loss Linf, 9000]
+  - [python research/scripts/train.py --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34_glove_orthogonal_cosine   --glove True --glove_dim 200 --emb_selection orthogonal                   --glove_loss cosine, 9000]
