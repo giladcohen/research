@@ -64,6 +64,7 @@ if args.method != 'softmax':
 is_attacked = args.attack_dir != ''
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
+GLOVE_VECS_PATH = os.path.join(args.checkpoint_dir, 'glove_vecs.npy')
 batch_size = args.batch_size
 
 DUMP_DIR = get_dump_dir(args.checkpoint_dir, args.dump_dir, args.attack_dir)
@@ -83,10 +84,12 @@ dataset = train_args['dataset']
 val_inds, test_inds = get_robustness_inds(dataset)
 val_size = len(val_inds)
 test_size = len(test_inds)
+dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('args.emb_selection', None)}
 
 # get data:
 test_loader = get_test_loader(
     dataset=dataset,
+    dataset_args=dataset_args,
     batch_size=batch_size,
     num_workers=1,
     pin_memory=device=='cuda')
@@ -106,6 +109,7 @@ else:
 y_test = np.asarray(test_loader.dataset.targets)
 classes = test_loader.dataset.classes
 num_classes = len(classes)
+test_loader.dataset.overwrite_glove_vecs(np.load(GLOVE_VECS_PATH))
 glove_vecs = test_loader.dataset.idx_to_glove_vec
 
 # Model

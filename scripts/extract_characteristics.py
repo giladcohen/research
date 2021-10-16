@@ -80,6 +80,7 @@ else:  # knn/cosine
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
+GLOVE_VECS_PATH = os.path.join(args.checkpoint_dir, 'glove_vecs.npy')
 DUMP_DIR = os.path.join(ATTACK_DIR, args.dump_dir)
 PLOTS_DIR = os.path.join(DUMP_DIR, 'plots')
 os.makedirs(PLOTS_DIR, exist_ok=True)
@@ -97,16 +98,19 @@ dataset = train_args['dataset']
 val_inds, test_inds = get_detection_inds(dataset)
 val_size = len(val_inds)
 test_size = len(test_inds)
+dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('args.emb_selection', None)}
 
 # get data:
 train_loader = get_all_data_loader(
     dataset=dataset,
+    dataset_args=dataset_args,
     batch_size=batch_size,
     num_workers=0,
     pin_memory=False,
 )
 test_loader = get_test_loader(
     dataset=dataset,
+    dataset_args=dataset_args,
     batch_size=batch_size,
     num_workers=0,
     pin_memory=False)
@@ -136,6 +140,8 @@ y_adv_test   = y_adv[test_inds] if targeted else None
 
 classes = test_loader.dataset.classes
 num_classes = len(classes)
+train_loader.dataset.overwrite_glove_vecs(np.load(GLOVE_VECS_PATH))
+test_loader.dataset.overwrite_glove_vecs(np.load(GLOVE_VECS_PATH))
 glove_vecs = test_loader.dataset.idx_to_glove_vec
 
 # Model

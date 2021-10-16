@@ -61,6 +61,7 @@ if args.attack_loss != 'cross_entropy':
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
+GLOVE_VECS_PATH = os.path.join(args.checkpoint_dir, 'glove_vecs.npy')
 ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
 targeted = args.attack != 'deepfool'
 os.makedirs(os.path.join(ATTACK_DIR), exist_ok=True)
@@ -73,17 +74,20 @@ logger = logging.getLogger()
 dataset = train_args['dataset']
 _, test_inds = get_robustness_inds(dataset)
 test_size = len(test_inds)
+dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('args.emb_selection', None)}
 
 # Data
 logger.info('==> Preparing data..')
 testloader = get_test_loader(
     dataset=dataset,
+    dataset_args=dataset_args,
     batch_size=batch_size,
     num_workers=args.num_workers,
     pin_memory=device=='cuda'
 )
 img_shape = get_image_shape(dataset)
 classes = testloader.dataset.classes
+testloader.dataset.overwrite_glove_vecs(np.load(GLOVE_VECS_PATH))
 glove_vecs = testloader.dataset.idx_to_glove_vec
 num_classes = len(classes)
 

@@ -65,13 +65,13 @@ def dataset_factory(dataset):
 
 
 def get_train_valid_loader(dataset,
+                           dataset_args,
                            batch_size,
                            rand_gen,
                            valid_size=0.1,
                            shuffle=True,
                            num_workers=4,
-                           pin_memory=False,
-                           cls_to_omit=None):
+                           pin_memory=False):
     """
     Utility function for loading and returning train and valid
     multi-process iterators over the CIFAR-10 train_dataset. A sample
@@ -80,6 +80,7 @@ def get_train_valid_loader(dataset,
     Params
     ------
     - dataset: name of the dataset.
+    - dataset_args: arguments for the dataset class
     - batch_size: how many samples per batch to load.
     - augment: whether to apply the data augmentation scheme
       mentioned in the paper. Only applied on the train split.
@@ -103,12 +104,12 @@ def get_train_valid_loader(dataset,
     # load the dataset
     train_dataset = database(
         root=data_dir, train=True,
-        download=True, transform=train_transform, cls_to_omit=cls_to_omit
+        download=True, transform=train_transform, **dataset_args
     )
 
     valid_dataset = database(
         root=data_dir, train=True,
-        download=True, transform=test_transform, cls_to_omit=cls_to_omit
+        download=True, transform=test_transform, **dataset_args
     )
 
     num_train_val = len(train_dataset)
@@ -138,6 +139,7 @@ def get_train_valid_loader(dataset,
     return train_loader, valid_loader, train_idx, val_idx
 
 def get_loader_with_specific_inds(dataset,
+                                  dataset_args,
                                   batch_size,
                                   is_training,
                                   indices,
@@ -156,7 +158,7 @@ def get_loader_with_specific_inds(dataset,
     # load the dataset
     dataset = database(
         root=data_dir, train=True,
-        download=True, transform=transform,
+        download=True, transform=transform, **dataset_args
     )
     dataset.data = dataset.data[indices]
     dataset.targets = np.asarray(dataset.targets)[indices]
@@ -168,10 +170,10 @@ def get_loader_with_specific_inds(dataset,
     return loader
 
 def get_all_data_loader(dataset,
-                   batch_size,
-                   num_workers=4,
-                   pin_memory=False,
-                   cls_to_omit=None):
+                        dataset_args,
+                        batch_size,
+                        num_workers=4,
+                        pin_memory=False):
     """
     Same like get_train_valid_loader but with exact indices for training and validation
     """
@@ -180,7 +182,7 @@ def get_all_data_loader(dataset,
     # load the dataset
     dataset = database(
         root=data_dir, train=True,
-        download=True, transform=test_transform, cls_to_omit=cls_to_omit
+        download=True, transform=test_transform, **dataset_args
     )
 
     loader = torch.utils.data.DataLoader(
@@ -191,11 +193,11 @@ def get_all_data_loader(dataset,
 
 
 def get_test_loader(dataset,
+                    dataset_args,
                     batch_size,
                     num_workers=4,
                     pin_memory=False,
-                    transforms=None,
-                    cls_to_omit=None):
+                    transforms=None):
     """
     Utility function for loading and returning a multi-process
     test iterator over the CIFAR-10 dataset.
@@ -219,7 +221,7 @@ def get_test_loader(dataset,
 
     dataset = database(
         root=data_dir, train=False,
-        download=True, transform=transforms, cls_to_omit=cls_to_omit
+        download=True, transform=transforms, **dataset_args
     )
 
     data_loader = torch.utils.data.DataLoader(
@@ -241,57 +243,3 @@ def get_normalized_tensor(loader: torch.utils.data.DataLoader, img_shape, batch_
         X[b:e] = inputs.cpu().numpy()
 
     return X
-
-def get_single_img_dataloader(dataset, x, targets, batch_size, tta_size, pin_memory=False, transform=None, index=None,
-                              use_one_hot=True):
-    data_dir, database, train_transform, test_transform = dataset_factory(dataset)
-    dataset = database(root=data_dir, train=False, download=False, transform=transform)  # just a dummy database
-
-    # overwrite:
-    if use_one_hot:
-        targets = to_categorical(targets, nb_classes=len(dataset.classes))
-    if index is not None:
-        x = np.expand_dims(x[index, ...], 0).repeat(tta_size, axis=0)
-        targets = np.expand_dims(targets[index, ...], 0).repeat(tta_size, axis=0)
-
-    x_tensor = torch.from_numpy(x.astype(np.float32))
-    targets_tensor = torch.from_numpy(targets.astype(np.float32))
-    dataset.data = x_tensor
-    dataset.targets = targets_tensor
-
-    #loader:
-    data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
-    )
-
-    return data_loader
-
-
-def get_explicit_train_loader(dataset,
-                              x,
-                              y,
-                              batch_size,
-                              transforms,
-                              num_workers=0,
-                              shuffle=False,
-                              pin_memory=False):
-
-    data_dir, database, _, _ = dataset_factory(dataset)
-
-    # load the dataset
-    train_dataset = database(
-        root=data_dir, train=True,
-        download=True, transform=transforms
-    )
-
-    train_dataset.data = torch.from_numpy(x.astype(np.float32))
-    train_dataset.targets = torch.from_numpy(y.astype(np.float32))
-    train_dataset.classes = ['normal', 'adv']
-    train_dataset.class_to_idx = {'normal': 0, 'adv': 1}
-
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=shuffle,
-        num_workers=num_workers, pin_memory=pin_memory
-    )
-
-    return train_loader
