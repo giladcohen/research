@@ -26,11 +26,24 @@ from research.trades import trades_loss
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
+parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
+parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
+
+# architecture:
 parser.add_argument('--net', default='resnet34', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
+parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
+
+# GloVe settings
+parser.add_argument('--emb_selection', default='glove', type=str, help='Selection of glove embeddings: glove/random/etf')
+parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
+parser.add_argument('--glove_loss', default='L2', type=str,
+                    help='The loss used for embedding training: L1/L2/Linf/cosine')
+
+# optimization:
+parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
 parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
@@ -40,18 +53,10 @@ parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of va
 parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
-parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
-parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 
 # TRADES params
 parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
-
-# GloVe settings
-parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
-parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
-parser.add_argument('--glove_loss', default='L2', type=str,
-                    help='The loss used for embedding training: L1/L2/Linf/cosine')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -75,6 +80,7 @@ with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'w') as f:
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
+GLOVE_VECS_PATH = os.path.join(args.checkpoint_dir, 'glove_vecs.npy')
 log_file = os.path.join(args.checkpoint_dir, 'log.log')
 batch_size = args.batch_size
 
@@ -97,9 +103,10 @@ test_writer  = SummaryWriter(os.path.join(args.checkpoint_dir, 'test'))
 
 # Data
 logger.info('==> Preparing data..')
-
+dataset_args = {'cls_to_omit': None, 'emb_selection': args.emb_selection}
 trainloader, valloader, train_inds, val_inds = get_train_valid_loader(
     dataset=args.dataset,
+    dataset_args=dataset_args,
     batch_size=batch_size,
     rand_gen=rand_gen,
     valid_size=args.val_size,
@@ -108,6 +115,7 @@ trainloader, valloader, train_inds, val_inds = get_train_valid_loader(
 )
 testloader = get_test_loader(
     dataset=args.dataset,
+    dataset_args=dataset_args,
     batch_size=batch_size,
     num_workers=args.num_workers,
     pin_memory=device=='cuda'
@@ -115,10 +123,14 @@ testloader = get_test_loader(
 
 img_shape = get_image_shape(args.dataset)
 classes = trainloader.dataset.classes
-glove_vecs = trainloader.dataset.idx_to_glove_vec
+glove_vecs = trainloader.dataset.idx_to_glove_vec.astype(np.float32)
+testloader.dataset.overwrite_glove_vecs(glove_vecs)
 train_size = len(trainloader.dataset)
 val_size   = len(valloader.dataset)
 test_size  = len(testloader.dataset)
+
+# saving glove_vecs for the classes:
+np.save(GLOVE_VECS_PATH, glove_vecs)
 
 # Model
 logger.info('==> Building model..')
