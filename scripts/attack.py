@@ -61,7 +61,7 @@ if args.attack_loss != 'cross_entropy':
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
-GLOVE_VECS_PATH = os.path.join(args.checkpoint_dir, 'glove_vecs.npy')
+CLASS_EMB_VECS = os.path.join(args.checkpoint_dir, 'class_emb_vecs.npy')
 ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
 targeted = args.attack != 'deepfool'
 os.makedirs(os.path.join(ATTACK_DIR), exist_ok=True)
@@ -87,8 +87,8 @@ testloader = get_test_loader(
 )
 img_shape = get_image_shape(dataset)
 classes = testloader.dataset.classes
-testloader.dataset.overwrite_glove_vecs(np.load(GLOVE_VECS_PATH))
-glove_vecs = testloader.dataset.idx_to_glove_vec
+testloader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+class_emb_vecs = testloader.dataset.idx_to_class_emb_vec
 num_classes = len(classes)
 
 # Model
@@ -162,7 +162,7 @@ if targeted:
         # converting y_test_adv from vector to matrix of embeddings
         y_adv_vec = np.empty((test_size, glove_dim), dtype=np.float32)
         for i in range(test_size):
-            y_adv_vec[i] = glove_vecs[y_test_adv[i]]
+            y_adv_vec[i] = class_emb_vecs[y_test_adv[i]]
             y_test_adv = y_adv_vec
 else:
     y_test_adv = None

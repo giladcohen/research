@@ -37,9 +37,9 @@ parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words
 
 # GloVe settings
 parser.add_argument('--emb_selection', default='glove', type=str, help='Selection of glove embeddings: glove/random/etf')
-parser.add_argument('--norm', default="2", type=str, help='Norm for knn: 1/2/inf')
-parser.add_argument('--glove_loss', default='L2', type=str,
-                    help='The loss used for embedding training: L1/L2/Linf/cosine')
+parser.add_argument('--emb_loss', default='L2', type=str, help='The loss used for embedding training: L1/L2/Linf/cosine')
+parser.add_argument('--eval_method', default='knn', type=str, help='eval method for embeddings: knn/cosine')
+parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -63,13 +63,6 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-if args.norm in ['1', '2']:
-    args.norm = int(args.norm)
-elif args.norm == 'inf':
-    args.norm = np.inf
-else:
-    raise AssertionError('Unsupported norm {}'.format(args.norm))
-
 if args.glove:
     assert args.glove_dim != -1, 'glove_dim must be set when training with glove embeddings'
 
@@ -78,9 +71,16 @@ os.makedirs(args.checkpoint_dir, exist_ok=True)
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
+if args.knn_norm in ['1', '2']:
+    knn_norm = int(args.knn_norm)
+elif args.knn_norm == 'inf':
+    knn_norm = np.inf
+else:
+    raise AssertionError('Unsupported norm {}'.format(args.knn_norm))
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
-GLOVE_VECS_PATH = os.path.join(args.checkpoint_dir, 'glove_vecs.npy')
+CLASS_EMB_VECS = os.path.join(args.checkpoint_dir, 'class_emb_vecs.npy')
 log_file = os.path.join(args.checkpoint_dir, 'log.log')
 batch_size = args.batch_size
 
@@ -124,14 +124,14 @@ testloader = get_test_loader(
 img_shape = get_image_shape(args.dataset)
 classes = trainloader.dataset.classes
 num_classes = len(classes)
-glove_vecs = trainloader.dataset.idx_to_glove_vec.astype(np.float32)
-testloader.dataset.overwrite_glove_vecs(glove_vecs)
+class_emb_vecs = trainloader.dataset.idx_to_class_emb_vec
+testloader.dataset.overwrite_emb_vecs(class_emb_vecs)
 train_size = len(trainloader.dataset)
 val_size   = len(valloader.dataset)
 test_size  = len(testloader.dataset)
 
 # saving glove_vecs for the classes:
-np.save(GLOVE_VECS_PATH, glove_vecs)
+np.save(CLASS_EMB_VECS, class_emb_vecs)
 
 # Model
 logger.info('==> Building model..')
@@ -146,10 +146,10 @@ net = get_model(args.net)(num_classes=num_classes, activation=args.activation, c
 net = net.to(device)
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-if args.glove and args.glove_loss != 'cosine':
+if args.glove and args.eval_method == 'knn':
     # knn model
-    knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=args.norm)
-    knn.fit(glove_vecs)
+    knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=knn_norm)
+    knn.fit(class_emb_vecs)
 else:
     knn = None
 
@@ -184,25 +184,25 @@ def reset_optim():
     )
 
 
-if args.glove_loss == 'L1':
-    glove_loss = nn.L1Loss()
-elif args.glove_loss == 'L2':
-    glove_loss = nn.MSELoss()
-elif args.glove_loss == 'Linf':
-    glove_loss = LinfLoss()
-elif args.glove_loss == 'cosine':
-    glove_loss = CosineEmbeddingLossV2()
+if args.emb_loss == 'L1':
+    emb_loss = nn.L1Loss()
+elif args.emb_loss == 'L2':
+    emb_loss = nn.MSELoss()
+elif args.emb_loss == 'Linf':
+    emb_loss = LinfLoss()
+elif args.emb_loss == 'cosine':
+    emb_loss = CosineEmbeddingLossV2()
 else:
-    raise AssertionError('Unknown value args.attack_loss = {}'.format(args.glove_loss))
+    raise AssertionError('Unknown value args.emb_loss = {}'.format(args.emb_loss))
 
 
 def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
     return trades_loss(net, inputs, targets, optimizer, args.step_size, args.epsilon, is_training=is_training)
 
-def output_loss_glove(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
-    embs = torch.from_numpy(glove_vecs[targets.cpu()]).to(device)
+def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    embs = torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
     outputs = net(inputs)
-    loss = glove_loss(outputs['glove_embeddings'], embs)
+    loss = emb_loss(outputs['glove_embeddings'], embs)
     return outputs, loss
 
 def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
@@ -224,26 +224,36 @@ def cosine_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     bs = glove_embs.size(0)
     distance_mat = torch.zeros((bs, num_classes)).to(device)
     for cls_idx in range(num_classes):
-        embs = np.tile(glove_vecs[cls_idx], (bs, 1))
+        embs = np.tile(class_emb_vecs[cls_idx], (bs, 1))
         embs = torch.from_numpy(embs).to(device)
         distance_mat[:, cls_idx] = cos(glove_embs, embs)
     distance_mat = distance_mat.detach().cpu().numpy()
     preds = distance_mat.argmax(1)
     return preds
 
-
-if args.adv_trades:
-    loss_func = output_loss_robust
-    pred_func = softmax_pred
-elif args.glove:
-    loss_func = output_loss_glove
-    if args.glove_loss != 'cosine':
-        pred_func = knn_pred
+def get_loss():
+    if args.adv_trades:
+        loss_func = output_loss_robust
+    elif args.glove:
+        loss_func = output_loss_emb
     else:
+        loss_func = output_loss_normal
+    return loss_func
+
+def get_pred():
+    if not args.glove:
+        pred_func = softmax_pred
+    elif args.eval_method == 'knn':
+        pred_func = knn_pred
+    elif args.eval_method == 'cosine':
         pred_func = cosine_pred
-else:
-    loss_func = output_loss_normal
-    pred_func = softmax_pred
+    else:
+        raise AssertionError('Unknown args.glove=True with unknown eval_method={}'.format(args.eval_method))
+    return pred_func
+
+
+loss_func = get_loss()
+pred_func = get_pred()
 
 def train():
     """Train and validate"""

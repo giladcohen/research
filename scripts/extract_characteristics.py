@@ -59,13 +59,6 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-if args.norm in ['1', '2']:
-    args.norm = int(args.norm)
-elif args.norm == 'inf':
-    args.norm = np.inf
-else:
-    raise AssertionError('Unsupported norm {}'.format(args.norm))
-
 ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
     train_args = json.load(f)
@@ -80,7 +73,7 @@ else:  # knn/cosine
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
-GLOVE_VECS_PATH = os.path.join(args.checkpoint_dir, 'glove_vecs.npy')
+CLASS_EMB_VECS = os.path.join(args.checkpoint_dir, 'class_emb_vecs.npy')
 DUMP_DIR = os.path.join(ATTACK_DIR, args.dump_dir)
 PLOTS_DIR = os.path.join(DUMP_DIR, 'plots')
 os.makedirs(PLOTS_DIR, exist_ok=True)
@@ -89,6 +82,13 @@ log_file = os.path.join(DUMP_DIR, 'log.log')
 # dumping args to txt file
 with open(os.path.join(DUMP_DIR, 'extract_characteristics_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
+
+if args.norm in ['1', '2']:
+    args.norm = int(args.norm)
+elif args.norm == 'inf':
+    args.norm = np.inf
+else:
+    raise AssertionError('Unsupported norm {}'.format(args.norm))
 
 set_logger(log_file)
 logger = logging.getLogger()
@@ -140,9 +140,9 @@ y_adv_test   = y_adv[test_inds] if targeted else None
 
 classes = test_loader.dataset.classes
 num_classes = len(classes)
-train_loader.dataset.overwrite_glove_vecs(np.load(GLOVE_VECS_PATH))
-test_loader.dataset.overwrite_glove_vecs(np.load(GLOVE_VECS_PATH))
-glove_vecs = test_loader.dataset.idx_to_glove_vec
+train_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+class_emb_vecs = test_loader.dataset.idx_to_class_emb_vec
 
 # Model
 logger.info('==> Building model..')
@@ -226,7 +226,7 @@ def eval(x):
         y_preds = y_probs.argmax(axis=1)
     elif args.eval_method == 'knn':
         knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=args.norm)
-        knn.fit(glove_vecs)
+        knn.fit(class_emb_vecs)
         glove_embs = pytorch_evaluate(net, x, ['glove_embeddings'], batch_size)[0]
         y_preds = knn.kneighbors(glove_embs, return_distance=False).squeeze()
     else:

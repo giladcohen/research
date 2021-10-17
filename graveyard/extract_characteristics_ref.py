@@ -129,7 +129,7 @@ y_adv_test   = y_adv[test_inds] if targeted else None
 
 classes = test_loader.dataset.classes
 num_classes = len(classes)
-glove_vecs = test_loader.dataset.idx_to_glove_vec
+glove_vecs = test_loader.dataset.idx_to_class_emb_vec
 
 # Model
 logger.info('==> Building model..')
