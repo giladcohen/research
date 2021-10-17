@@ -140,8 +140,9 @@ y_adv_test   = y_adv[test_inds] if targeted else None
 
 classes = test_loader.dataset.classes
 num_classes = len(classes)
-train_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
-test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+if os.path.exists(CLASS_EMB_VECS):
+    train_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+    test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
 class_emb_vecs = test_loader.dataset.idx_to_class_emb_vec
 
 # Model

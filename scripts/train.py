@@ -130,8 +130,9 @@ train_size = len(trainloader.dataset)
 val_size   = len(valloader.dataset)
 test_size  = len(testloader.dataset)
 
-# saving glove_vecs for the classes:
-np.save(CLASS_EMB_VECS, class_emb_vecs)
+if args.glove:
+    # saving glove_vecs for the classes:
+    np.save(CLASS_EMB_VECS, class_emb_vecs)
 
 # Model
 logger.info('==> Building model..')

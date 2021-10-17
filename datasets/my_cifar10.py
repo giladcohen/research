@@ -73,7 +73,7 @@ class MyCIFAR10(CIFAR10):
 
     def set_emb_vecs(self, emb_selection):
         if emb_selection is None:
-            embs = None
+            return None
         elif emb_selection == 'glove':
             embs = self.set_glove()
         elif emb_selection == 'random':

@@ -74,7 +74,7 @@ logger = logging.getLogger()
 dataset = train_args['dataset']
 _, test_inds = get_robustness_inds(dataset)
 test_size = len(test_inds)
-dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('args.emb_selection', None)}
+dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('emb_selection', None)}
 
 # Data
 logger.info('==> Preparing data..')
@@ -87,7 +87,8 @@ testloader = get_test_loader(
 )
 img_shape = get_image_shape(dataset)
 classes = testloader.dataset.classes
-testloader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+if os.path.exists(CLASS_EMB_VECS):
+    testloader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
 class_emb_vecs = testloader.dataset.idx_to_class_emb_vec
 num_classes = len(classes)
 
@@ -163,7 +164,7 @@ if targeted:
         y_adv_vec = np.empty((test_size, glove_dim), dtype=np.float32)
         for i in range(test_size):
             y_adv_vec[i] = class_emb_vecs[y_test_adv[i]]
-            y_test_adv = y_adv_vec
+        y_test_adv = y_adv_vec
 else:
     y_test_adv = None
 
