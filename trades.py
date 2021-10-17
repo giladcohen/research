@@ -25,7 +25,7 @@ def trades_loss(model,
                 distance='l_inf',
                 is_training=True):
     # define KL-loss
-    criterion_kl = nn.KLDivLoss(size_average=False)
+    criterion_kl = nn.KLDivLoss(reduction='batchmean')
     model.eval()
     batch_size = len(x_natural)
     # generate adversarial example
@@ -80,7 +80,7 @@ def trades_loss(model,
     outputs = model(x_natural)
     logits = outputs['logits']
     loss_natural = F.cross_entropy(logits, y)
-    loss_robust = (1.0 / batch_size) * criterion_kl(F.log_softmax(model(x_adv)['logits'], dim=1),
-                                                    F.softmax(model(x_natural)['logits'], dim=1))
+    loss_robust = criterion_kl(F.log_softmax(model(x_adv)['logits'], dim=1),
+                               F.softmax(model(x_natural)['logits'], dim=1))
     loss = loss_natural + beta * loss_robust
     return outputs, loss
