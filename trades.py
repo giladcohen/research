@@ -81,6 +81,6 @@ def trades_loss(model,
     logits = outputs['logits']
     loss_natural = F.cross_entropy(logits, y)
     loss_robust = criterion_kl(F.log_softmax(model(x_adv)['logits'], dim=1),
-                               F.softmax(model(x_natural)['logits'], dim=1))
+                               F.softmax(logits, dim=1))
     loss = loss_natural + beta * loss_robust
     return outputs, loss

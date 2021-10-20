@@ -18,22 +18,21 @@ import logging
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 
-from research.losses.losses import LinfLoss, CosineEmbeddingLossV2
+from research.losses.losses import LinfLoss, L2Loss, CosineEmbeddingLossV2, TradesLoss
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
-from research.trades import trades_loss
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
-parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
-parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
+parser.add_argument('--glove', default=True, type=boolean_string, help='Train using GloVe embeddings instead of CE')
+parser.add_argument('--adv_trades', default=True, type=boolean_string, help='Use adv robust training using TRADES')
 
 # architecture:
 parser.add_argument('--net', default='resnet34', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
-parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
+parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings. -1 for no layer')
 
 # GloVe settings
 parser.add_argument('--emb_selection', default='glove', type=str, help='Selection of glove embeddings: glove/random/etf')
@@ -171,24 +170,21 @@ np.save(os.path.join(args.checkpoint_dir, 'y_test.npy'), y_test)
 np.save(os.path.join(args.checkpoint_dir, 'train_inds.npy'), train_inds)
 np.save(os.path.join(args.checkpoint_dir, 'val_inds.npy'), val_inds)
 
-def reset_optim():
-    global optimizer
-    global lr_scheduler
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
-    lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode=metric_mode,
-        factor=args.factor,
-        patience=args.patience,
-        verbose=True,
-        cooldown=args.cooldown
-    )
+optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
+lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer,
+    mode=metric_mode,
+    factor=args.factor,
+    patience=args.patience,
+    verbose=True,
+    cooldown=args.cooldown
+)
 
 
 if args.emb_loss == 'L1':
     emb_loss = nn.L1Loss()
 elif args.emb_loss == 'L2':
-    emb_loss = nn.MSELoss()
+    emb_loss = L2Loss()
 elif args.emb_loss == 'Linf':
     emb_loss = LinfLoss()
 elif args.emb_loss == 'cosine':
@@ -196,12 +192,29 @@ elif args.emb_loss == 'cosine':
 else:
     raise AssertionError('Unknown value args.emb_loss = {}'.format(args.emb_loss))
 
+if args.adv_trades:
+    trades_loss = TradesLoss(
+        model=net,
+        optimizer=optimizer,
+        step_size=args.step_size,
+        epsilon=args.epsilon,
+        perturb_steps=10,
+        beta=1.0,
+        field='glove_embeddings' if args.glove else 'logits',
+        criterion=args.emb_loss if args.glove else 'ce',
+        adv_criterion=args.emb_loss if args.glove else 'kl'
+    )
+
+def targets_to_embs(targets):
+    return torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
 
 def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
-    return trades_loss(net, inputs, targets, optimizer, args.step_size, args.epsilon, is_training=is_training)
+    if args.glove:
+        targets = targets_to_embs(targets)
+    return trades_loss(inputs, targets, is_training)
 
 def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
-    embs = torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
+    embs = targets_to_embs(targets)
     outputs = net(inputs)
     loss = emb_loss(outputs['glove_embeddings'], embs)
     return outputs, loss
@@ -398,7 +411,6 @@ if __name__ == "__main__":
     global_step = 0
     global_state = {}
 
-    reset_optim()
     logger.info('Testing epoch #{}'.format(epoch + 1))
     test()
 
