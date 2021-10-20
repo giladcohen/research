@@ -26,8 +26,8 @@ from research.models.utils import get_strides, get_conv1_params, get_model
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
-parser.add_argument('--glove', default=True, type=boolean_string, help='Train using GloVe embeddings instead of CE')
-parser.add_argument('--adv_trades', default=True, type=boolean_string, help='Use adv robust training using TRADES')
+parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
+parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 
 # architecture:
 parser.add_argument('--net', default='resnet34', type=str, help='network architecture')

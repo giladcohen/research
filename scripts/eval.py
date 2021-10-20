@@ -84,7 +84,7 @@ dataset = train_args['dataset']
 val_inds, test_inds = get_robustness_inds(dataset)
 val_size = len(val_inds)
 test_size = len(test_inds)
-dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('args.emb_selection', None)}
+dataset_args = {'cls_to_omit': None, 'emb_selection': None}
 
 # get data:
 test_loader = get_test_loader(
@@ -109,9 +109,8 @@ else:
 y_test = np.asarray(test_loader.dataset.targets)
 classes = test_loader.dataset.classes
 num_classes = len(classes)
-if os.path.exists(CLASS_EMB_VECS):
-    logger.info('Loading embeddings vecs from {}'.format(CLASS_EMB_VECS))
-    test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+logger.info('Loading embeddings vecs from {}'.format(CLASS_EMB_VECS))
+test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
 class_emb_vecs = test_loader.dataset.idx_to_class_emb_vec
 
 # Model
