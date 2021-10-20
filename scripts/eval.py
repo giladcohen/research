@@ -110,6 +110,7 @@ y_test = np.asarray(test_loader.dataset.targets)
 classes = test_loader.dataset.classes
 num_classes = len(classes)
 if os.path.exists(CLASS_EMB_VECS):
+    logger.info('Loading embeddings vecs from {}'.format(CLASS_EMB_VECS))
     test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
 class_emb_vecs = test_loader.dataset.idx_to_class_emb_vec
 
