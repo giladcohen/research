@@ -34,8 +34,8 @@ from research.models.utils import get_strides, get_conv1_params, get_model
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--method', default='cosine', type=str, help='softmax/knn/cosine')
 parser.add_argument('--attack_dir', default='', type=str, help='attack directory, or None for normal images')
+parser.add_argument('--method', default='cosine', type=str, help='softmax/knn/cosine')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
 # for knn method
