@@ -1,0 +1,13 @@
+commands:
+  # farthest points vecs
+  - [python research/scripts/train.py --num_workers 5 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34/farthest_points_adv_robust/farthest_points_emb_Linf_e_Linf      --glove True --adv_trades True --glove_dim 200 --emb_selection farthest_points      --eval_method knn      --knn_norm inf  --emb_loss Linf, 11000]
+
+  # orthogonal vecs
+  - [python research/scripts/train.py --num_workers 5 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34/orthogonal_adv_robust/orthogonal_emb_L1_e_L1                    --glove True --adv_trades True --glove_dim 200 --emb_selection orthogonal           --eval_method knn      --knn_norm 1    --emb_loss L1, 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34/orthogonal_adv_robust/orthogonal_emb_L2_e_L2                    --glove True --adv_trades True --glove_dim 200 --emb_selection orthogonal           --eval_method knn      --knn_norm 2    --emb_loss L2, 11000]
+
+  # glove vecs
+  - [python research/scripts/train.py --num_workers 5 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34/glove_adv_robust/glove_emb_L1_e_L1                              --glove True --adv_trades True --glove_dim 200 --emb_selection glove                --eval_method knn      --knn_norm 1    --emb_loss L1, 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34/glove_adv_robust/glove_emb_L2_e_L2                              --glove True --adv_trades True --glove_dim 200 --emb_selection glove                --eval_method knn      --knn_norm 2    --emb_loss L2, 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34/glove_adv_robust/glove_emb_Linf_e_Linf                          --glove True --adv_trades True --glove_dim 200 --emb_selection glove                --eval_method knn      --knn_norm inf  --emb_loss Linf, 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet34/glove_adv_robust/glove_emb_cosine_e_cosine                      --glove True --adv_trades True --glove_dim 200 --emb_selection glove                --eval_method cosine                   --emb_loss cosine, 11000]

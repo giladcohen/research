@@ -519,10 +519,6 @@ def load_characteristics(characteristics_file):
 
 def generate_farthest_vecs(pts: np.ndarray, n: int) -> np.ndarray:
     """A Naive O(N^2) algorithm to do furthest points sampling with PyTorch"""
-    # N = len(self.classes) * 100
-    # indices = np.zeros(len(self.classes), dtype=np.int32)
-    # rand_points = torch.randn((N, self.GLOVE_DIM)).cuda()
-    # distance_mat = torch.cdist(rand_points, rand_points)
 
     assert len(pts.shape) == 2, 'pts should be 2d array'
     assert n <= pts.shape[0], 'n ({}) cannot exceed the number of input points ({})'.format(n, pts.shape[0])
