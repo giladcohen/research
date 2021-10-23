@@ -56,6 +56,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 # TRADES params
 parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
+parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -199,7 +200,7 @@ if args.adv_trades:
         step_size=args.step_size,
         epsilon=args.epsilon,
         perturb_steps=10,
-        beta=1.0,
+        beta=args.beta,
         field='glove_embeddings' if args.glove else 'logits',
         criterion=args.emb_loss if args.glove else 'ce',
         adv_criterion=args.emb_loss if args.glove else 'kl'

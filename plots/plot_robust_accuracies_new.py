@@ -17,14 +17,16 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 CHECKPOINT_ROOT = '/data/gilad/logs/glove_emb'
 datasets = ['cifar10']
 nets = ['resnet34']
-emb_selections = ['glove', 'random', 'orthogonal', 'farthest_points']
-metrics = ['L1', 'L2', 'Linf', 'cosine']
+# emb_selections = ['glove', 'random', 'orthogonal', 'farthest_points']
+# metrics = ['L1', 'L2', 'Linf', 'cosine']
+emb_selections = ['glove']
+metrics = ['cosine']
 attacks = ['normal', 'fgsm_L1', 'fgsm_L2', 'fgsm_Linf', 'fgsm_cosine', 'pgd_L1', 'pgd_L2', 'pgd_Linf', 'pgd_cosine']
 evals = ['knn_p1', 'knn_p2', 'knn_pinf', 'cosine']
 data = {}
 
 def get_log(dataset, net, emb_selection, metric, attack, eval):
-    path = os.path.join(CHECKPOINT_ROOT, dataset, net, emb_selection,
+    path = os.path.join(CHECKPOINT_ROOT, dataset, net, emb_selection + '_adv_robust',
                         emb_selection + '_emb_' + metric + '_e_' + metric, attack, eval)
     path = os.path.join(path, 'log.log')
     return path
