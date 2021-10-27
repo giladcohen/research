@@ -27,7 +27,7 @@ data = {}
 
 def get_log(dataset, net, emb_selection, metric, attack, eval):
     path = os.path.join(CHECKPOINT_ROOT, dataset, net, emb_selection + '_adv_robust',
-                        emb_selection + '_emb_' + metric + '_e_' + metric, attack, eval)
+                        emb_selection + '_emb_' + metric + '_e_' + metric + '_loss_beta_6', attack, eval)
     path = os.path.join(path, 'log.log')
     return path
 
