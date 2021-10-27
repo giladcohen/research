@@ -18,7 +18,7 @@ from cleverhans.utils import random_targets, to_categorical
 
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
-from research.losses.losses import LinfLoss, CosineEmbeddingLossV2
+from research.losses.losses import L2Loss, LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor
 from research.datasets.utils import get_robustness_inds
@@ -128,7 +128,7 @@ elif args.attack_loss == 'L1':
 elif args.attack_loss == 'SL1':
     loss = nn.SmoothL1Loss()
 elif args.attack_loss == 'L2':
-    loss = nn.MSELoss()
+    loss = L2Loss()
 elif args.attack_loss == 'Linf':
     loss = LinfLoss()
 elif args.attack_loss == 'cosine':
