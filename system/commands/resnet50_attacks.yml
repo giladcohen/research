@@ -2,8 +2,8 @@ commands:
   # CIFAR-10
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
 
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove                              --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove                              --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
@@ -46,8 +46,8 @@ commands:
   # CIFAR-100
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
 
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
