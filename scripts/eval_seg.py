@@ -20,7 +20,7 @@ from research.utils import set_logger
 CONFIG_FILE = '/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py'
 CHECKPOINT_PATH = '/data/gilad/logs/glove_emb/pascal/baseline1/ckpt.pth'
 METRICS_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug'
-SHOW_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/results/results_debug'
+SHOW_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug/results_debug'
 
 os.makedirs(METRICS_DIR, exist_ok=True)
 log_file = os.path.join(METRICS_DIR, 'log.log')
