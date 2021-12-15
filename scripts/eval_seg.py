@@ -78,14 +78,16 @@ results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 
 # debug
-batch_idx = 0
-data = list(data_loader)[0]
+# batch_idx = 0
+# data = list(data_loader)[0]
 for batch_idx, data in enumerate(data_loader):
     out = wrapper(data)
     result = out['preds'].cpu().numpy()
     results.extend(result)
 
     # dump plots
+    img = data['img'][0]
+    img_meta = [im._data for im in data['img_metas']][0][0]
     imgs = tensor2imgs(img, **img_meta[0]['img_norm_cfg'])
     assert len(imgs) == len(img_meta)
 
