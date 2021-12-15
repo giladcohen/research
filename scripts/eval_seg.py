@@ -74,9 +74,8 @@ model.to('cuda')
 model.eval()
 results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
-loader_indices = data_loader.batch_sampler
 
-for batch_indices, data in zip(loader_indices, data_loader):
+for batch_idx, data in enumerate(data_loader):
     # with torch.no_grad():
     #     result = model(return_loss=False, **data)
     imgs = data['img']
