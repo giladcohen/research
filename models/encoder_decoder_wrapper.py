@@ -2,7 +2,7 @@ from typing import Dict
 import sys
 import torch.nn as nn
 import logging
-from time import time
+import time
 sys.path.insert(0, "./mmsegmentation")
 from mmseg.models.segmentors.encoder_decoder import EncoderDecoder
 

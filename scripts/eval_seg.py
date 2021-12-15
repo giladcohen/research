@@ -14,6 +14,7 @@ sys.path.insert(0, "./mmsegmentation")
 from mmseg.datasets import build_dataloader, build_dataset
 from mmseg.models import build_segmentor
 from research.utils import set_logger
+from research.models.encoder_decoder_wrapper import EncoderDecoderWrapper
 
 
 # get config:
@@ -70,50 +71,18 @@ torch.cuda.empty_cache()
 eval_kwargs = {}
 
 # model = MMDataParallel(model, device_ids=[0])
-model.to('cuda')
-model.eval()
+wrapper = EncoderDecoderWrapper(model)
+wrapper.to('cuda')
+wrapper.eval()
 results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 
+# debug
+batch_idx = 0
+data = list(data_loader)[0]
 for batch_idx, data in enumerate(data_loader):
-    # with torch.no_grad():
-    #     result = model(return_loss=False, **data)
-    imgs = data['img']
-    img_metas = data['img_metas']
-    img_metas = [im._data for im in img_metas][0]
-
-    # assertions
-    for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
-        if not isinstance(var, list):
-            raise TypeError(f'{name} must be a list, but got f{type(var)}')
-    num_augs = len(imgs)
-    if num_augs != len(img_metas):
-        raise ValueError(f'num of augmentations ({len(imgs)}) != ' + f'num of image meta ({len(img_metas)})')
-    # all images in the same aug batch all of the same ori_shape and pad shape
-    for img_meta in img_metas:
-        ori_shapes = [_['ori_shape'] for _ in img_meta]
-        assert all(shape == ori_shapes[0] for shape in ori_shapes)
-        img_shapes = [_['img_shape'] for _ in img_meta]
-        assert all(shape == img_shapes[0] for shape in img_shapes)
-        pad_shapes = [_['pad_shape'] for _ in img_meta]
-        assert all(shape == pad_shapes[0] for shape in pad_shapes)
-
-    assert num_augs == 1, 'currently not supporting TTAs'
-    img = imgs[0].to('cuda')
-    img_meta = img_metas[0]
-
-    inference_succ = False
-    while not inference_succ:
-        try:
-            seg_logits = model.inference(img, img_meta, rescale=True)
-        except RuntimeError as e:
-            logger.info('Got error {}. waiting 5 seconds to retry...'.format(e))
-            time.sleep(5)
-        else:
-            inference_succ = True
-
-    seg_preds = seg_logits.argmax(dim=1)
-    result = seg_preds.cpu().numpy()
+    out = wrapper(data)
+    result = out['preds'].cpu().numpy()
     results.extend(result)
 
     # dump plots
