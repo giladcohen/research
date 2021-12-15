@@ -40,6 +40,7 @@ timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
 json_file = os.path.join(METRICS_DIR, 'eval_{}.json'.format(timestamp))
 
 # build the dataloader
+cfg.data.test['type'] = 'MyPascalVOCDataset'
 dataset = build_dataset(cfg.data.test)
 data_loader = build_dataloader(
     dataset,
@@ -78,8 +79,8 @@ results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 
 # debug
-# batch_idx = 0
-# data = list(data_loader)[0]
+batch_idx = 0
+data = list(data_loader)[0]
 for batch_idx, data in enumerate(data_loader):
     out = wrapper(data)
     result = out['preds'].cpu().numpy()
