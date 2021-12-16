@@ -1,5 +1,7 @@
 """Evaluating DeepLab model with IoU metric"""
 import os
+import numpy as np
+import matplotlib.pyplot as plt
 import time
 import logging
 import torch
@@ -78,8 +80,8 @@ results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 
 # debug
-# batch_idx = 0
-# data, targets = list(data_loader)[0]
+batch_idx = 1
+data, targets = list(data_loader)[1]
 for batch_idx, (data, targets) in enumerate(data_loader):
     out = wrapper(data)
     result = out['preds'].cpu().numpy()
