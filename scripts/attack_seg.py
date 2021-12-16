@@ -24,8 +24,8 @@ EPS = 0.031
 # get config:
 CONFIG_FILE = '/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py'
 CHECKPOINT_PATH = '/data/gilad/logs/glove_emb/pascal/baseline1/ckpt.pth'
-METRICS_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm'
-ATTACK_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm/results'
+METRICS_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031'
+ATTACK_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/results'
 
 os.makedirs(METRICS_DIR, exist_ok=True)
 log_file = os.path.join(METRICS_DIR, 'log.log')
@@ -84,8 +84,21 @@ prog_bar = mmcv.ProgressBar(len(dataset))
 
 ce_loss = CrossEntropyLoss()
 
+# debug
+batch_idx = 1
+data, targets = list(data_loader)[1]
+
+def scale(x):
+    minn = x.min()
+    maxx = x.max()
+    scaled_x = (x - minn) / (maxx - minn)
+    return scaled_x, minn, maxx
+
+
 for batch_idx, (data, targets) in enumerate(data_loader):
-    data['img'][0].requires_grad = True
+    # scaling the image in [0, 1]:
+    data['scaled_img'], data['minn'], data['maxx'] = scale(data['img'][0])
+    data['scaled_img'].requires_grad = True
     targets = targets.to('cuda').long()
     out = wrapper(data)
     kwargs = {'ignore_index': 255}
@@ -96,16 +109,17 @@ for batch_idx, (data, targets) in enumerate(data_loader):
 
     wrapper.zero_grad()
     loss.backward()
-    grads = data['img'][0].grad
+    grads = data['scaled_img'].grad
     grads = torch.sign(grads)
     perturbation_step = EPS * grads
-    x_adv = data['img'][0] + perturbation_step
-    data['img'][0] = x_adv.detach()
+    scaled_x_adv = data['scaled_img'] + perturbation_step
+    scaled_x_adv = torch.clip(scaled_x_adv, 0.0, 1.0)
+    data['scaled_img'] = scaled_x_adv.detach()
     out = wrapper(data)
     result = out['preds'].cpu().numpy()
 
     # dump plots
-    img = data['img'][0]
+    img = wrapper.unscale(scaled_x_adv, data['minn'], data['maxx']).detach()  # data['img'][0]
     img_meta = [im._data for im in data['img_metas']][0][0]
     imgs = tensor2imgs(img, **img_meta[0]['img_norm_cfg'])
     assert len(imgs) == len(img_meta)

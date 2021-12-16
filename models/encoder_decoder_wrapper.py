@@ -31,14 +31,21 @@ class EncoderDecoderWrapper(nn.Module):
 
         assert num_augs == 1, 'currently not supporting TTAs'
 
+    @staticmethod
+    def unscale(x, minn, maxx):
+        x *= (maxx - minn)
+        x += minn
+        return x
+
     def forward(self, data: Dict):
         net = {}
-        imgs = data['img']
+        imgs = data['scaled_img']
         img_metas = data['img_metas']
         img_metas = [im._data for im in img_metas][0]
-        self.verify_data(imgs, img_metas)
+        self.verify_data(data['img'], img_metas)
 
-        img = imgs[0].to('cuda')
+        img = imgs.to('cuda')
+        img = self.unscale(img, data['minn'], data['maxx'])
         img_meta = img_metas[0]
         inference_succ = False
         while not inference_succ:
