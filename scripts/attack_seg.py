@@ -85,8 +85,8 @@ prog_bar = mmcv.ProgressBar(len(dataset))
 ce_loss = CrossEntropyLoss()
 
 # debug
-batch_idx = 3
-data, targets = list(data_loader)[3]
+# batch_idx = 3
+# data, targets = list(data_loader)[3]
 
 def scale(x):
     minn = x.min()
