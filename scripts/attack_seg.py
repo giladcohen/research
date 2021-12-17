@@ -25,7 +25,9 @@ EPS = 0.031
 CONFIG_FILE = '/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py'
 CHECKPOINT_PATH = '/data/gilad/logs/glove_emb/pascal/baseline1/ckpt.pth'
 METRICS_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031'
-ATTACK_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/results'
+ATTACK_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/adv_images'
+PRED_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/preds'
+OVERLAP_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/overlaps'
 
 os.makedirs(METRICS_DIR, exist_ok=True)
 log_file = os.path.join(METRICS_DIR, 'log.log')
@@ -79,14 +81,13 @@ wrapper = EncoderDecoderWrapper(model)
 wrapper.to('cuda')
 wrapper.eval()
 results = []
-adv_results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 
 ce_loss = CrossEntropyLoss()
 
 # debug
-# batch_idx = 1
-# data, targets = list(data_loader)[1]
+batch_idx = 1
+data, targets = list(data_loader)[1]
 
 def scale(x):
     minn = x.min()
@@ -117,6 +118,7 @@ for batch_idx, (data, targets) in enumerate(data_loader):
     data['scaled_img'] = scaled_x_adv.detach()
     out = wrapper(data)
     result = out['preds'].cpu().numpy()
+    results.extend(result)
 
     # dump plots
     img = wrapper.unscale(scaled_x_adv, data['minn'], data['maxx']).detach()  # data['img'][0]
@@ -133,14 +135,14 @@ for batch_idx, (data, targets) in enumerate(data_loader):
     img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
     out_file = os.path.join(ATTACK_DIR, img_meta['ori_filename'])
-    model.show_result(
+    model.show_result_all(
         img_show,
         result,
+        os.path.join(ATTACK_DIR, img_meta['ori_filename']),
+        os.path.join(PRED_DIR, img_meta['ori_filename']),
+        os.path.join(OVERLAP_DIR, img_meta['ori_filename']),
         palette=dataset.PALETTE,
-        show=True,
-        out_file=out_file,
         opacity=0.5)
-
     prog_bar.update()
 
 
