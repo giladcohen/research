@@ -7,7 +7,6 @@ import logging
 import torch
 import torch.backends.cudnn as cudnn
 import mmcv
-from mmcv import tensor2imgs
 from mmcv.runner import load_checkpoint, wrap_fp16_model
 
 import sys
@@ -16,7 +15,7 @@ sys.path.insert(0, "./mmsegmentation")
 from mmseg.datasets import build_dataloader, build_dataset
 from mmseg.models import build_segmentor
 from mmseg.models.losses import CrossEntropyLoss
-from research.utils import set_logger
+from research.utils import set_logger, tensor2imgs
 from research.models.encoder_decoder_wrapper import EncoderDecoderWrapper
 
 EPS = 0.031
@@ -86,8 +85,8 @@ prog_bar = mmcv.ProgressBar(len(dataset))
 ce_loss = CrossEntropyLoss()
 
 # debug
-# batch_idx = 1
-# data, targets = list(data_loader)[1]
+batch_idx = 3
+data, targets = list(data_loader)[3]
 
 def scale(x):
     minn = x.min()
