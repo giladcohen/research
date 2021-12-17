@@ -86,8 +86,8 @@ prog_bar = mmcv.ProgressBar(len(dataset))
 ce_loss = CrossEntropyLoss()
 
 # debug
-batch_idx = 1
-data, targets = list(data_loader)[1]
+# batch_idx = 1
+# data, targets = list(data_loader)[1]
 
 def scale(x):
     minn = x.min()
@@ -134,7 +134,6 @@ for batch_idx, (data, targets) in enumerate(data_loader):
     ori_h, ori_w = img_meta['ori_shape'][:-1]
     img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
-    out_file = os.path.join(ATTACK_DIR, img_meta['ori_filename'])
     model.show_result_all(
         img_show,
         result,
