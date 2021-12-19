@@ -33,7 +33,7 @@ parser.add_argument('--attack_loss', default='cross_entropy', type=str,
 parser.add_argument('--attack_dir', default='debug2', type=str, help='attack directory')
 
 # for FGSM/PGD:
-parser.add_argument('--eps'     , default=8/255, type=float, help='maximum Linf deviation from original image')
+parser.add_argument('--eps'     , default=0.031, type=float, help='maximum Linf deviation from original image')
 parser.add_argument('--eps_step', default=0.003, type=float, help='step size of each adv iteration')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
