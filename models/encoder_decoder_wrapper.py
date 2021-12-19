@@ -40,13 +40,6 @@ class EncoderDecoderWrapper(nn.Module):
         return x
 
     @staticmethod
-    def scale(x):
-        minn = x.min()
-        maxx = x.max()
-        scaled_x = (x - minn) / (maxx - minn)
-        return scaled_x, minn, maxx
-
-    @staticmethod
     def get_image(data: Dict, rescale):
         if rescale:
             x = data['scaled_img']
