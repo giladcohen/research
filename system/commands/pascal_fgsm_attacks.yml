@@ -1,0 +1,9 @@
+commands:
+#  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_0.25   --eps 0.0009804  , 11000]
+  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_0.5    --eps 0.0019608  , 11000]
+  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_1      --eps 0.0039216  , 11000]
+  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_2      --eps 0.0078431  , 11000]
+  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_4      --eps 0.0156863  , 11000]
+  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_8      --eps 0.0313725  , 11000]
+  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_16     --eps 0.0627451  , 11000]
+  - [python research/scripts/attack_seg.py --checkpoint_dir /data/gilad/logs/glove_emb/pascal/baseline1    --attack fgsm    --attack_loss cross_entropy   --attack_dir fgsm_32     --eps 0.1254902  , 11000]
