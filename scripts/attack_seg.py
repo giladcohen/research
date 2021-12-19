@@ -86,8 +86,8 @@ prog_bar = mmcv.ProgressBar(len(dataset))
 ce_loss = CrossEntropyLoss()
 
 # debug
-batch_idx = 3
-data, targets = list(data_loader)[3]
+# batch_idx = 4
+# data, targets = list(data_loader)[3]
 
 for batch_idx, (data, targets) in enumerate(data_loader):
     # scaling the image in [0, 1]:
