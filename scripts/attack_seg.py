@@ -9,6 +9,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import mmcv
 from mmcv.runner import load_checkpoint, wrap_fp16_model
+import argparse
 
 import sys
 sys.path.insert(0, "./mmsegmentation")
@@ -19,31 +20,46 @@ from mmseg.models.losses import CrossEntropyLoss
 from research.utils import set_logger, tensor2imgs
 from research.models.encoder_decoder_wrapper import EncoderDecoderWrapper
 
-EPS = 0.031
+parser = argparse.ArgumentParser(description='PyTorch PASCAL VOC adversarial attack')
+parser.add_argument('--config',
+                    default='/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py',
+                    type=str, help='python config file')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/pascal/baseline1',
+                    type=str, help='checkpoint dir name')
+parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
+parser.add_argument('--attack_loss', default='cross_entropy', type=str,
+                    help='The loss used for attacking: cross_entropy/L1/SL1/L2/Linf/cosine')
+parser.add_argument('--attack_dir', default='debug2', type=str, help='attack directory')
 
-# get config:
-CONFIG_FILE = '/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py'
-CHECKPOINT_PATH = '/data/gilad/logs/glove_emb/pascal/baseline1/ckpt.pth'
-METRICS_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug'
-ATTACK_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug/adv_images'
-PRED_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug/preds'
-OVERLAP_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug/overlaps'
+# for FGSM/PGD:
+parser.add_argument('--eps'     , default=0.031, type=float, help='maximum Linf deviation from original image')
+parser.add_argument('--eps_step', default=0.003, type=float, help='step size of each adv iteration')
 
-os.makedirs(METRICS_DIR, exist_ok=True)
-log_file = os.path.join(METRICS_DIR, 'log.log')
+parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
+parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
+
+args = parser.parse_args()
+
+CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
+ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
+ADV_IMGS_DIR = os.path.join(ATTACK_DIR, 'adv_images')
+PRED_DIR = os.path.join(ATTACK_DIR, 'preds')
+OVERLAP_DIR = os.path.join(ATTACK_DIR, 'overlaps')
+
+os.makedirs(ATTACK_DIR, exist_ok=True)
+log_file = os.path.join(ATTACK_DIR, 'log.log')
 set_logger(log_file)
 logger = logging.getLogger()
 
-cfg = mmcv.Config.fromfile(CONFIG_FILE)
+cfg = mmcv.Config.fromfile(args.config)
 if cfg.get('cudnn_benchmark', False):
     cudnn.benchmark = True
 cfg.model.pretrained = None
 cfg.data.test.test_mode = True
 
 distributed = False
-os.makedirs(METRICS_DIR, exist_ok=True)
 timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-json_file = os.path.join(METRICS_DIR, 'eval_{}.json'.format(timestamp))
+json_file = os.path.join(ATTACK_DIR, 'eval_{}.json'.format(timestamp))
 
 # build the dataloader
 dataset = build_dataset(cfg.data.test)
@@ -74,7 +90,6 @@ else:
 
 # clean gpu memory when starting a new evaluation.
 torch.cuda.empty_cache()
-eval_kwargs = {}
 
 # model = MMDataParallel(model, device_ids=[0])
 wrapper = EncoderDecoderWrapper(model)
@@ -82,62 +97,116 @@ wrapper.to('cuda')
 wrapper.eval()
 results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
-
 ce_loss = CrossEntropyLoss()
+
+def set_scaled_img(data: Dict):
+    x = data['x']
+    minn = x.min()
+    maxx = x.max()
+    scaled_x = (x - minn) / (maxx - minn)
+    data['scaled_x'] = scaled_x
+    data['meta'].update({'minn': minn.item(), 'maxx': maxx.item()})
+
+def unscale(x, minn, maxx):
+    x *= (maxx - minn)
+    x += minn
+    return x
+
+def generate_fgsm(wrapper, x, meta, targets):
+    out = wrapper(x, meta)
+    kwargs = {'ignore_index': 255}
+    loss = ce_loss(out['logits'], targets, **kwargs)
+    wrapper.zero_grad()
+    loss.backward()
+    grads = x.grad
+    grads = torch.sign(grads)
+    perturbation_step = args.eps * grads
+    scaled_x_adv = x + perturbation_step
+    scaled_x_adv = torch.clip(scaled_x_adv, 0.0, 1.0)
+    scaled_x_adv = scaled_x_adv.detach()
+    x_adv = unscale(scaled_x_adv, meta['minn'], meta['maxx'])
+    return x_adv
+
+def parse_data(data):
+    data['x'] = data['img'][0]
+    data['meta'] = data['img_metas'][0]._data[0][0]
+
+def verify_data(data):
+    imgs = data['img']
+    img_metas = [im._data for im in data['img_metas']][0]
+    for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
+        if not isinstance(var, list):
+            raise TypeError(f'{name} must be a list, but got f{type(var)}')
+    num_augs = len(imgs)
+    if num_augs != len(img_metas):
+        raise ValueError(f'num of augmentations ({len(imgs)}) != ' + f'num of image meta ({len(img_metas)})')
+    # all images in the same aug batch all of the same ori_shape and pad shape
+    for img_meta in img_metas:
+        ori_shapes = [_['ori_shape'] for _ in img_meta]
+        assert all(shape == ori_shapes[0] for shape in ori_shapes)
+        img_shapes = [_['img_shape'] for _ in img_meta]
+        assert all(shape == img_shapes[0] for shape in img_shapes)
+        pad_shapes = [_['pad_shape'] for _ in img_meta]
+        assert all(shape == pad_shapes[0] for shape in pad_shapes)
+
+    assert num_augs == 1, 'currently not supporting TTAs'
+
+def show_rgb_img(img):
+    x = img.copy()
+    x[:, :, 0] = img[:, :, 2]
+    x[:, :, 2] = img[:, :, 0]
+    plt.imshow(x)
+    plt.show()
 
 # debug
 # batch_idx = 4
-# data, targets = list(data_loader)[3]
+# data, targets = list(data_loader)[4]
 
 for batch_idx, (data, targets) in enumerate(data_loader):
     # scaling the image in [0, 1]:
-    wrapper.set_scaled_img(data)
-    data['scaled_img'].requires_grad = True
+    verify_data(data)
+    parse_data(data)
+    meta = data['meta']
+    set_scaled_img(data)
+
+    x_adv_init = data['scaled_x'].clone()
+    x_adv_init = x_adv_init.to('cuda')
+    x_adv_init.requires_grad = True
     targets = targets.to('cuda').long()
-    out = wrapper(data, rescale=True)
-    kwargs = {'ignore_index': 255}
-    loss = ce_loss(out['logits'], targets, **kwargs)
 
-    # attack:
-    # x_adv = data['img'][0][0].clone()
+    if args.attack == 'fgsm':
+        x_adv = generate_fgsm(wrapper, x_adv_init, meta, targets)
+    else:
+        err_str = 'attack {} is not supported'.format(args.attack)
+        logger.error(err_str)
+        raise AssertionError(err_str)
 
-    wrapper.zero_grad()
-    loss.backward()
-    grads = data['scaled_img'].grad
-    grads = torch.sign(grads)
-    perturbation_step = EPS * grads
-    scaled_x_adv = data['scaled_img'] + perturbation_step
-    scaled_x_adv = torch.clip(scaled_x_adv, 0.0, 1.0)
-    data['scaled_img'] = scaled_x_adv.detach()
-    out = wrapper(data, rescale=True)
+    out = wrapper(x_adv, meta)
     result = out['preds'].cpu().numpy()
     results.extend(result)
 
     # dump plots
-    img = wrapper.unscale(scaled_x_adv, data['minn'], data['maxx']).detach()
-    img_meta = wrapper.get_meta(data)
-    imgs = tensor2imgs(img, **img_meta[0]['img_norm_cfg'])
-    assert len(imgs) == len(img_meta)
-
-    img = imgs[0]
-    img_meta = img_meta[0]
-    h, w, _ = img_meta['img_shape']
-    img_show = img[:h, :w, :]
-    ori_h, ori_w = img_meta['ori_shape'][:-1]
+    x_adv_imgs = tensor2imgs(x_adv, **meta['img_norm_cfg'])
+    x_adv_img = x_adv_imgs[0]
+    h, w, _ = meta['img_shape']
+    img_show = x_adv_img[:h, :w, :]
+    ori_h, ori_w = meta['ori_shape'][:-1]
     img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+    # show_rgb_img(img_show)
 
     model.show_result_all(
         img_show,
         result,
-        os.path.join(ATTACK_DIR, img_meta['ori_filename']),
-        os.path.join(PRED_DIR, img_meta['ori_filename']),
-        os.path.join(OVERLAP_DIR, img_meta['ori_filename']),
+        os.path.join(ADV_IMGS_DIR, meta['ori_filename']),
+        os.path.join(PRED_DIR, meta['ori_filename']),
+        os.path.join(OVERLAP_DIR, meta['ori_filename']),
         palette=dataset.PALETTE,
         opacity=0.5)
     prog_bar.update()
 
 
 # get metrics:
+eval_kwargs = {}
 eval_kwargs.update(metric='mIoU')
 metric = dataset.evaluate(results, **eval_kwargs)
 mmcv.dump(metric, json_file, indent=4)
