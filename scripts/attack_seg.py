@@ -1,4 +1,4 @@
-"""Evaluating DeepLab model with IoU metric"""
+"""Attacking and evaluating DeepLab model with IoU metric"""
 import os
 import json
 import numpy as np
@@ -20,6 +20,8 @@ from mmseg.models import build_segmentor
 from mmseg.models.losses import CrossEntropyLoss
 from research.utils import set_logger, tensor2imgs
 from research.models.encoder_decoder_wrapper import EncoderDecoderWrapper
+from research.datasets.pascal_utils import set_scaled_img, unscale, parse_data, verify_data, show_rgb_img
+
 
 parser = argparse.ArgumentParser(description='PyTorch PASCAL VOC adversarial attack')
 parser.add_argument('--config',
@@ -98,24 +100,11 @@ torch.cuda.empty_cache()
 
 # model = MMDataParallel(model, device_ids=[0])
 wrapper = EncoderDecoderWrapper(model)
-wrapper.to('cuda')
+wrapper.cuda()
 wrapper.eval()
 results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 ce_loss = CrossEntropyLoss()
-
-def set_scaled_img(data: Dict):
-    x = data['x']
-    minn = x.min()
-    maxx = x.max()
-    scaled_x = (x - minn) / (maxx - minn)
-    data['scaled_x'] = scaled_x
-    data['meta'].update({'minn': minn.item(), 'maxx': maxx.item()})
-
-def unscale(x, minn, maxx):
-    x *= (maxx - minn)
-    x += minn
-    return x
 
 def generate_fgsm(wrapper, x, meta, targets):
     out = wrapper(x, meta)
@@ -132,37 +121,6 @@ def generate_fgsm(wrapper, x, meta, targets):
     x_adv = unscale(scaled_x_adv, meta['minn'], meta['maxx'])
     return x_adv
 
-def parse_data(data):
-    data['x'] = data['img'][0]
-    data['meta'] = data['img_metas'][0]._data[0][0]
-
-def verify_data(data):
-    imgs = data['img']
-    img_metas = [im._data for im in data['img_metas']][0]
-    for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
-        if not isinstance(var, list):
-            raise TypeError(f'{name} must be a list, but got f{type(var)}')
-    num_augs = len(imgs)
-    if num_augs != len(img_metas):
-        raise ValueError(f'num of augmentations ({len(imgs)}) != ' + f'num of image meta ({len(img_metas)})')
-    # all images in the same aug batch all of the same ori_shape and pad shape
-    for img_meta in img_metas:
-        ori_shapes = [_['ori_shape'] for _ in img_meta]
-        assert all(shape == ori_shapes[0] for shape in ori_shapes)
-        img_shapes = [_['img_shape'] for _ in img_meta]
-        assert all(shape == img_shapes[0] for shape in img_shapes)
-        pad_shapes = [_['pad_shape'] for _ in img_meta]
-        assert all(shape == pad_shapes[0] for shape in pad_shapes)
-
-    assert num_augs == 1, 'currently not supporting TTAs'
-
-def show_rgb_img(img):
-    x = img.copy()
-    x[:, :, 0] = img[:, :, 2]
-    x[:, :, 2] = img[:, :, 0]
-    plt.imshow(x)
-    plt.show()
-
 # debug
 # batch_idx = 4
 # data, targets = list(data_loader)[4]
@@ -175,9 +133,9 @@ for batch_idx, (data, targets) in enumerate(data_loader):
     set_scaled_img(data)
 
     x_adv_init = data['scaled_x'].clone()
-    x_adv_init = x_adv_init.to('cuda')
+    x_adv_init = x_adv_init.cuda()
     x_adv_init.requires_grad = True
-    targets = targets.to('cuda').long()
+    targets = targets.cuda().long()
 
     if args.attack == 'fgsm':
         x_adv = generate_fgsm(wrapper, x_adv_init, meta, targets)
