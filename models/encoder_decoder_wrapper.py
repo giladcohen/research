@@ -13,7 +13,9 @@ class EncoderDecoderWrapper(nn.Module):
         self.logger = logging.getLogger(str(__class__))
 
     @staticmethod
-    def verify_data(imgs, img_metas):
+    def verify_data(data):
+        imgs = data['img']
+        img_metas = [im._data for im in data['img_metas']][0]
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got f{type(var)}')
@@ -37,16 +39,26 @@ class EncoderDecoderWrapper(nn.Module):
         x += minn
         return x
 
-    def forward(self, data: Dict):
-        net = {}
-        imgs = data['scaled_img']
-        img_metas = data['img_metas']
-        img_metas = [im._data for im in img_metas][0]
-        self.verify_data(data['img'], img_metas)
+    @staticmethod
+    def scale(x):
+        minn = x.min()
+        maxx = x.max()
+        scaled_x = (x - minn) / (maxx - minn)
+        return scaled_x, minn, maxx
 
-        img = imgs.to('cuda')
-        img = self.unscale(img, data['minn'], data['maxx'])
-        img_meta = img_metas[0]
+    @staticmethod
+    def get_image(data: Dict, rescale):
+        if rescale:
+            x = data['scaled_img']
+        else:
+            x = data['img'][0]
+        return x.to('cuda')
+
+    @staticmethod
+    def get_meta(data: Dict):
+        return [im._data for im in data['img_metas']][0][0]
+
+    def infer(self, img, img_meta):
         inference_succ = False
         while not inference_succ:
             try:
@@ -56,8 +68,25 @@ class EncoderDecoderWrapper(nn.Module):
                 time.sleep(5)
             else:
                 inference_succ = True
+        return seg_logits
 
-        seg_preds = seg_logits.argmax(dim=1)
-        net['logits'] = seg_logits
-        net['preds'] = seg_preds
+    def forward(self, data: Dict, rescale=False):
+        self.verify_data(data)
+        net = {}
+        img = self.get_image(data, rescale)
+        if rescale:
+            img = self.unscale(img, data['minn'], data['maxx'])
+        img_meta = self.get_meta(data)
+        net['logits'] = self.infer(img, img_meta)
+        net['preds'] = net['logits'].argmax(dim=1)
         return net
+
+    @staticmethod
+    def set_scaled_img(data: Dict):
+        x = data['img'][0]
+        minn = x.min()
+        maxx = x.max()
+        scaled_x = (x - minn) / (maxx - minn)
+        data['scaled_img'] = scaled_x
+        data['minn'] = minn
+        data['maxx'] = maxx

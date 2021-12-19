@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import logging
+from typing import Dict
 import torch
 import torch.backends.cudnn as cudnn
 import mmcv
@@ -23,10 +24,10 @@ EPS = 0.031
 # get config:
 CONFIG_FILE = '/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py'
 CHECKPOINT_PATH = '/data/gilad/logs/glove_emb/pascal/baseline1/ckpt.pth'
-METRICS_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031'
-ATTACK_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/adv_images'
-PRED_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/preds'
-OVERLAP_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/fgsm_eps_0.031/overlaps'
+METRICS_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug'
+ATTACK_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug/adv_images'
+PRED_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug/preds'
+OVERLAP_DIR = '/data/gilad/logs/glove_emb/pascal/baseline1/debug/overlaps'
 
 os.makedirs(METRICS_DIR, exist_ok=True)
 log_file = os.path.join(METRICS_DIR, 'log.log')
@@ -85,22 +86,15 @@ prog_bar = mmcv.ProgressBar(len(dataset))
 ce_loss = CrossEntropyLoss()
 
 # debug
-# batch_idx = 3
-# data, targets = list(data_loader)[3]
-
-def scale(x):
-    minn = x.min()
-    maxx = x.max()
-    scaled_x = (x - minn) / (maxx - minn)
-    return scaled_x, minn, maxx
-
+batch_idx = 3
+data, targets = list(data_loader)[3]
 
 for batch_idx, (data, targets) in enumerate(data_loader):
     # scaling the image in [0, 1]:
-    data['scaled_img'], data['minn'], data['maxx'] = scale(data['img'][0])
+    wrapper.set_scaled_img(data)
     data['scaled_img'].requires_grad = True
     targets = targets.to('cuda').long()
-    out = wrapper(data)
+    out = wrapper(data, rescale=True)
     kwargs = {'ignore_index': 255}
     loss = ce_loss(out['logits'], targets, **kwargs)
 
@@ -115,13 +109,13 @@ for batch_idx, (data, targets) in enumerate(data_loader):
     scaled_x_adv = data['scaled_img'] + perturbation_step
     scaled_x_adv = torch.clip(scaled_x_adv, 0.0, 1.0)
     data['scaled_img'] = scaled_x_adv.detach()
-    out = wrapper(data)
+    out = wrapper(data, rescale=True)
     result = out['preds'].cpu().numpy()
     results.extend(result)
 
     # dump plots
-    img = wrapper.unscale(scaled_x_adv, data['minn'], data['maxx']).detach()  # data['img'][0]
-    img_meta = [im._data for im in data['img_metas']][0][0]
+    img = wrapper.unscale(scaled_x_adv, data['minn'], data['maxx']).detach()
+    img_meta = wrapper.get_meta(data)
     imgs = tensor2imgs(img, **img_meta[0]['img_norm_cfg'])
     assert len(imgs) == len(img_meta)
 
@@ -129,7 +123,6 @@ for batch_idx, (data, targets) in enumerate(data_loader):
     img_meta = img_meta[0]
     h, w, _ = img_meta['img_shape']
     img_show = img[:h, :w, :]
-
     ori_h, ori_w = img_meta['ori_shape'][:-1]
     img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
