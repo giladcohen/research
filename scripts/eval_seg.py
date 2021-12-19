@@ -97,8 +97,8 @@ results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 
 # debug
-batch_idx = 4
-data, targets = list(data_loader)[4]
+# batch_idx = 4
+# data, targets = list(data_loader)[4]
 for batch_idx, (data, targets) in enumerate(data_loader):
     verify_data(data)
     parse_data(data)
