@@ -25,7 +25,10 @@ from collections import OrderedDict
 import scipy
 from scipy.spatial.distance import pdist, cdist, squareform
 from sklearn.metrics import roc_curve, auc, roc_auc_score
-import mmcv
+try:
+    import mmcv
+except:
+    pass
 
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
