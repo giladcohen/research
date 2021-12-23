@@ -55,7 +55,7 @@ if cfg.get('cudnn_benchmark', False):
 cfg.model.pretrained = None
 cfg.data.test.test_mode = False
 
-distributed = False
+distributed = True
 timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
 json_file = os.path.join(NEW_CHECKPOINT_DIR, 'eval_{}.json'.format(timestamp))
 

@@ -28,7 +28,7 @@ parser.add_argument('--config',
                     type=str, help='python config file')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/pascal/baseline1',
                     type=str, help='checkpoint dir name')
-parser.add_argument('--eval_dir', default='eval', type=str, help='attack directory')
+parser.add_argument('--eval_dir', default='debug', type=str, help='attack directory')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -99,7 +99,8 @@ prog_bar = mmcv.ProgressBar(len(dataset))
 # debug
 # batch_idx = 4
 # data, targets = list(data_loader)[4]
-for batch_idx, (data, targets) in enumerate(data_loader):
+for batch_idx, data in enumerate(data_loader):
+    targets = data['gt_semantic_seg']
     verify_data(data)
     parse_data(data)
     meta = data['meta']

@@ -125,7 +125,8 @@ def generate_fgsm(wrapper, x, meta, targets):
 # batch_idx = 4
 # data, targets = list(data_loader)[4]
 
-for batch_idx, (data, targets) in enumerate(data_loader):
+for batch_idx, data in enumerate(data_loader):
+    targets = data['gt_semantic_seg']
     # scaling the image in [0, 1]:
     verify_data(data)
     parse_data(data)
