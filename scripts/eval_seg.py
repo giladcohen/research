@@ -24,9 +24,12 @@ from research.datasets.pascal_utils import set_scaled_img, unscale, parse_data, 
 
 parser = argparse.ArgumentParser(description='PyTorch PASCAL VOC evaluator')
 parser.add_argument('--config',
-                    default='/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py',
+                    # default='/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py',
+                    default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_l2_lr_0.01_iters_10k/train_glove.py',
                     type=str, help='python config file')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/pascal/baseline1',
+parser.add_argument('--checkpoint_dir',
+                    # default='/data/gilad/logs/glove_emb/pascal/baseline1',
+                    default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_l2_lr_0.01_iters_10k/latest.pth',
                     type=str, help='checkpoint dir name')
 parser.add_argument('--eval_dir', default='debug', type=str, help='attack directory')
 
