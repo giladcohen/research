@@ -23,13 +23,9 @@ from research.datasets.pascal_utils import set_scaled_img, unscale, parse_data, 
 
 
 parser = argparse.ArgumentParser(description='PyTorch PASCAL VOC evaluator')
-parser.add_argument('--config',
-                    # default='/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py',
-                    default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_l2_lr_0.01_iters_10k/train_glove.py',
-                    type=str, help='python config file')
 parser.add_argument('--checkpoint_dir',
                     # default='/data/gilad/logs/glove_emb/pascal/baseline1',
-                    default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_l2_lr_0.01_iters_10k/latest.pth',
+                    default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_L2_lr_0.01_iters_10k',
                     type=str, help='checkpoint dir name')
 parser.add_argument('--eval_dir', default='debug', type=str, help='attack directory')
 
@@ -38,6 +34,7 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
+CONFIG_PATH = os.path.join(args.checkpoint_dir, 'config.py')
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
 EVAL_DIR = os.path.join(args.checkpoint_dir, args.eval_dir)
 PRED_DIR = os.path.join(EVAL_DIR, 'preds')
@@ -52,7 +49,7 @@ logger = logging.getLogger()
 with open(os.path.join(EVAL_DIR, 'eval_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
-cfg = mmcv.Config.fromfile(args.config)
+cfg = mmcv.Config.fromfile(CONFIG_PATH)
 if cfg.get('cudnn_benchmark', False):
     cudnn.benchmark = True
 cfg.model.pretrained = None
@@ -93,15 +90,15 @@ else:
 torch.cuda.empty_cache()
 
 # model = MMDataParallel(model, device_ids=[0])
-wrapper = EncoderDecoderWrapper(model)
+wrapper = EncoderDecoderWrapper(cfg.model, model)
 wrapper.cuda()
 wrapper.eval()
 results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
 
 # debug
-# batch_idx = 4
-# data, targets = list(data_loader)[4]
+batch_idx = 4
+data = list(data_loader)[4]
 for batch_idx, data in enumerate(data_loader):
     targets = data['gt_semantic_seg']
     verify_data(data)
@@ -110,7 +107,7 @@ for batch_idx, data in enumerate(data_loader):
 
     x = data['x'].cuda()
     out = wrapper(x, meta)
-    result = out['preds'].cpu().numpy()
+    result = out['preds']
     results.extend(result)
 
     # dump plots
