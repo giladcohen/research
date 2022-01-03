@@ -2,23 +2,44 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torch.nn import L1Loss
 from torch.nn.modules.loss import _Loss
 from typing import Tuple, Dict
 from torch.autograd import Variable
 
 
 class CosineEmbeddingLossV2(nn.CosineEmbeddingLoss):
-    def forward(self, input1: Tensor, input2: Tensor, target=None) -> Tensor:
-        return super(CosineEmbeddingLossV2, self).forward(input1, input2, torch.ones(input1.size(0), device=input1.device))
+    def forward(self, input1: Tensor, input2: Tensor, target=None, weights=None) -> Tensor:
+        if weights is None:
+            assert self.reduction == 'mean'
+            return super().forward(input1, input2, torch.ones(input1.size(0), device=input1.device))
+        else:
+            assert self.reduction == 'none'
+            cosine_loss = super().forward(input1, input2, torch.ones(input1.size(0), device=input1.device))
+            return weights * cosine_loss
+
+class L1Loss(_Loss):
+    def forward(self, input: Tensor, target: Tensor, weights=None) -> Tensor:
+        if weights is None:
+            diffs = torch.linalg.norm(input - target, ord=1, dim=-1)
+        else:
+            diffs = weights * torch.linalg.norm(input - target, ord=1, dim=-1)
+        return diffs.mean()
 
 class L2Loss(_Loss):
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        return torch.linalg.norm(input - target, ord=2, dim=-1).mean()
+    def forward(self, input: Tensor, target: Tensor, weights=None) -> Tensor:
+        if weights is None:
+            diffs = torch.linalg.norm(input - target, ord=2, dim=-1)
+        else:
+            diffs = weights * torch.linalg.norm(input - target, ord=2, dim=-1)
+        return diffs.mean()
 
 class LinfLoss(_Loss):
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        return torch.linalg.norm(input - target, ord=float('inf'), dim=-1).mean()
+    def forward(self, input: Tensor, target: Tensor, weights=None) -> Tensor:
+        if weights is None:
+            diffs = torch.linalg.norm(input - target, ord=float('inf'), dim=-1)
+        else:
+            diffs = weights * torch.linalg.norm(input - target, ord=float('inf'), dim=-1)
+        return diffs.mean()
 
 class KLDivLossV2(nn.KLDivLoss):
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
