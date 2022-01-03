@@ -8,14 +8,14 @@ from torch.autograd import Variable
 
 
 class CosineEmbeddingLossV2(nn.CosineEmbeddingLoss):
-    def forward(self, input1: Tensor, input2: Tensor, target=None, weights=None) -> Tensor:
+    def forward(self, input1: Tensor, input2: Tensor, weights=None) -> Tensor:
         if weights is None:
-            assert self.reduction == 'mean'
+            assert self.reduction == 'mean', 'Expecting reduction=mean but we have reduction={}'.format(self.reduction)
             return super().forward(input1, input2, torch.ones(input1.size(0), device=input1.device))
         else:
-            assert self.reduction == 'none'
+            assert self.reduction == 'none', 'Expecting reduction=none but we have reduction={}'.format(self.reduction)
             cosine_loss = super().forward(input1, input2, torch.ones(input1.size(0), device=input1.device))
-            return weights * cosine_loss
+            return (weights * cosine_loss).mean()
 
 class L1Loss(_Loss):
     def forward(self, input: Tensor, target: Tensor, weights=None) -> Tensor:
