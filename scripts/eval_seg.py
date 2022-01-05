@@ -27,6 +27,7 @@ parser.add_argument('--checkpoint_dir',
                     # default='/data/gilad/logs/glove_emb/pascal/baseline1',
                     default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_L2_lr_0.01_iters_10k',
                     type=str, help='checkpoint dir name')
+parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint file name')
 parser.add_argument('--eval_dir', default='debug', type=str, help='attack directory')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -35,7 +36,7 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 args = parser.parse_args()
 
 CONFIG_PATH = os.path.join(args.checkpoint_dir, 'config.py')
-CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
+CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
 EVAL_DIR = os.path.join(args.checkpoint_dir, args.eval_dir)
 PRED_DIR = os.path.join(EVAL_DIR, 'preds')
 OVERLAP_DIR = os.path.join(EVAL_DIR, 'overlaps')
