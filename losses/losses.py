@@ -31,9 +31,9 @@ class L2Loss(_Loss):
             print('DEBUG: L2Loss was called with weights=None')
             diffs = torch.linalg.norm(input - target, ord=2, dim=-1)
         else:
-            print('DEBUG(L2Loss): weights.shape={}\nweights={}'.format(weights.shape, weights))
-            print('DEBUG(L2Loss): input.shape={}\ninput={}'.format(input.shape, input))
-            print('DEBUG(L2Loss): target.shape={}\ntarget.unique()={}\ntarget={}'.format(target.shape, target.unique(), target))
+            # print('DEBUG(L2Loss): weights.shape={}\nweights={}'.format(weights.shape, weights))
+            # print('DEBUG(L2Loss): input.shape={}\ninput={}'.format(input.shape, input))
+            # print('DEBUG(L2Loss): target.shape={}\ntarget.unique()={}\ntarget={}'.format(target.shape, target.unique(), target))
             diffs = weights * torch.linalg.norm(input - target, ord=2, dim=-1)
         return diffs.mean()
 
