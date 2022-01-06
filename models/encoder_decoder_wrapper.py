@@ -93,7 +93,7 @@ class EncoderDecoderWrapper(nn.Module):
         attempt = 0
         inference_succ = False
         while not inference_succ:
-            if attempt > 2:
+            if attempt > 5:
                 break
             try:
                 seg_logits = self.model.inference(x, [meta], rescale=True, softmax=self.apply_softmax)
@@ -106,7 +106,7 @@ class EncoderDecoderWrapper(nn.Module):
         if inference_succ:
             return seg_logits
         else:
-            raise AssertionError(e)
+            raise AssertionError('Inference was not successful')
 
     def forward(self, x: torch.tensor, meta: Dict):
         net = {}
