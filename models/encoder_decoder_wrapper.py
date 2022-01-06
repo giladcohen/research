@@ -63,6 +63,7 @@ class EncoderDecoderWrapper(nn.Module):
         self.model = model
         self.logger = logging.getLogger(str(__class__))
         self.interpreter = self.get_interpreter(cfg.decode_head.loss_decode)
+        self.apply_softmax = cfg.decode_head.loss_decode['loss_type'] == 'CrossEntropyLoss'
 
     @staticmethod
     def get_norm(x: str):
@@ -95,7 +96,7 @@ class EncoderDecoderWrapper(nn.Module):
             if attempt > 2:
                 break
             try:
-                seg_logits = self.model.inference(x, [meta], rescale=True)
+                seg_logits = self.model.inference(x, [meta], rescale=True, softmax=self.apply_softmax)
             except RuntimeError as e:
                 self.logger.info('Got error {}. waiting 5 seconds to retry...'.format(e))
                 time.sleep(5)
