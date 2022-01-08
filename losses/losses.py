@@ -28,7 +28,6 @@ class L1Loss(_Loss):
 class L2Loss(_Loss):
     def forward(self, input: Tensor, target: Tensor, weights=None) -> Tensor:
         if weights is None:
-            print('DEBUG: L2Loss was called with weights=None')
             diffs = torch.linalg.norm(input - target, ord=2, dim=-1)
         else:
             diffs = weights * torch.linalg.norm(input - target, ord=2, dim=-1)
