@@ -24,7 +24,7 @@ from research.datasets.pascal_utils import set_scaled_img, unscale, parse_data, 
 
 parser = argparse.ArgumentParser(description='PyTorch PASCAL VOC evaluator')
 parser.add_argument('--checkpoint_dir',
-                    default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_L2_lr_0.01_iters_10k_new',
+                    default='/data/gilad/logs/glove_emb/pascal/single_img_mem_adam_L2_full_phase_4',
                     type=str, help='checkpoint dir name')
 parser.add_argument('--checkpoint_file', default='latest.pth', type=str, help='checkpoint file name')
 parser.add_argument('--eval_dir', default='debug', type=str, help='attack directory')
