@@ -29,7 +29,7 @@ class KNNInterpreter(nn.Module):
 
     def forward(self, x):
         N, C, H, W = x.shape
-        x = x.reshape(-1, C)
+        x = np.transpose(x, [0, 2, 3, 1]).reshape(-1, C)
         seg_preds = self.knn.kneighbors(x, return_distance=False).squeeze()
         seg_preds = seg_preds.reshape((N, H, W))
         return seg_preds
