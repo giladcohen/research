@@ -34,7 +34,10 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-CONFIG_PATH = os.path.join(args.checkpoint_dir, 'config.py')
+if os.path.exists(os.path.join(args.checkpoint_dir, 'config.py')):
+    CONFIG_PATH = os.path.join(args.checkpoint_dir, 'config.py')
+else:
+    CONFIG_PATH = os.path.join(args.checkpoint_dir, 'train_glove.py')
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
 EVAL_DIR = os.path.join(args.checkpoint_dir, args.eval_dir)
 PRED_DIR = os.path.join(EVAL_DIR, 'preds')
