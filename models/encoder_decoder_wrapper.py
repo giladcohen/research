@@ -44,7 +44,7 @@ class CosineInterpreter(nn.Module):
 
     def forward(self, x):
         N, C, H, W = x.shape
-        x = x.reshape(-1, C)
+        x = np.transpose(x, [0, 2, 3, 1]).reshape(-1, C)
         x = torch.from_numpy(x)
         distance_mat = torch.zeros((x.size(0), self.num_classes))
         for cls_idx in range(self.num_classes):
