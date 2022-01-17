@@ -17,22 +17,22 @@ sys.path.insert(0, "./mmsegmentation")
 
 from mmseg.datasets import build_dataloader, build_dataset
 from mmseg.models import build_segmentor
-from mmseg.models.losses import CrossEntropyLoss
+from mmseg.models.losses import CrossEntropyLoss, DistanceLoss
 from research.utils import set_logger, tensor2imgs
 from research.models.encoder_decoder_wrapper import EncoderDecoderWrapper
 from research.datasets.pascal_utils import set_scaled_img, unscale, parse_data, verify_data, show_rgb_img
 
 
 parser = argparse.ArgumentParser(description='PyTorch PASCAL VOC adversarial attack')
-parser.add_argument('--config',
-                    default='/home/gilad/workspace/mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x512_40k_voc12aug.py',
-                    type=str, help='python config file')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/pascal/baseline1',
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/pascal/glove_gpus_4x2_L2_lr_0.01_iters_10k_lr_steps_double_conv',
                     type=str, help='checkpoint dir name')
+parser.add_argument('--checkpoint_file', default='latest.pth', type=str, help='checkpoint file name')
+parser.add_argument('--idx_to_vec_path', default='/data/gilad/logs/glove_emb/pascal/glove_idx_to_emb.npy',
+                    type=str, help='path to glove vec npy file')
+parser.add_argument('--class_weight', default=None,  # /data/dataset/VOCdevkit/VOC_seg_weights.npy
+                    type=str, help='path to class weight npy file')
 parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
-parser.add_argument('--attack_loss', default='cross_entropy', type=str,
-                    help='The loss used for attacking: cross_entropy/L1/SL1/L2/Linf/cosine')
-parser.add_argument('--attack_dir', default='debug2', type=str, help='attack directory')
+parser.add_argument('--attack_dir', default='debug', type=str, help='attack directory')
 
 # for FGSM/PGD:
 parser.add_argument('--eps'     , default=0.031, type=float, help='maximum Linf deviation from original image')
@@ -43,7 +43,8 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
+CONFIG_PATH = os.path.join(args.checkpoint_dir, 'config.py')
+CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
 ATTACK_DIR = os.path.join(args.checkpoint_dir, args.attack_dir)
 ADV_IMGS_DIR = os.path.join(ATTACK_DIR, 'adv_images')
 PRED_DIR = os.path.join(ATTACK_DIR, 'preds')
@@ -58,7 +59,7 @@ logger = logging.getLogger()
 with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
-cfg = mmcv.Config.fromfile(args.config)
+cfg = mmcv.Config.fromfile(CONFIG_PATH)
 if cfg.get('cudnn_benchmark', False):
     cudnn.benchmark = True
 cfg.model.pretrained = None
@@ -99,17 +100,29 @@ else:
 torch.cuda.empty_cache()
 
 # model = MMDataParallel(model, device_ids=[0])
-wrapper = EncoderDecoderWrapper(model)
+wrapper = EncoderDecoderWrapper(cfg.model, model)
 wrapper.cuda()
 wrapper.eval()
 results = []
 prog_bar = mmcv.ProgressBar(len(dataset))
-ce_loss = CrossEntropyLoss()
+
+# setting loss criterion
+def get_loss_criterion(cfg_loss):
+    if cfg_loss.type == 'CrossEntropyLoss':
+        return CrossEntropyLoss(class_weight=args.class_weight)
+    elif cfg_loss.type == 'DistanceLoss':
+        return DistanceLoss(cfg_loss.loss_type, args.idx_to_vec_path, args.class_weight)
+    else:
+        raise AssertionError('loss type {} is not supported'.format(cfg_loss.type))
+
+
+criterion = get_loss_criterion(cfg.model.decode_head.loss_decode)
+
 
 def generate_fgsm(wrapper, x, meta, targets):
     out = wrapper(x, meta)
     kwargs = {'ignore_index': 255}
-    loss = ce_loss(out['logits'], targets, **kwargs)
+    loss = criterion(out['logits'], targets, **kwargs)
     wrapper.zero_grad()
     loss.backward()
     grads = x.grad
@@ -122,8 +135,8 @@ def generate_fgsm(wrapper, x, meta, targets):
     return x_adv
 
 # debug
-# batch_idx = 4
-# data = list(data_loader)[4]
+batch_idx = 4
+data = list(data_loader)[4]
 
 for batch_idx, data in enumerate(data_loader):
     targets = data['gt_semantic_seg']
@@ -146,7 +159,7 @@ for batch_idx, data in enumerate(data_loader):
         raise AssertionError(err_str)
 
     out = wrapper(x_adv, meta)
-    result = out['preds'].cpu().numpy()
+    result = out['preds']
     results.extend(result)
 
     # dump plots
