@@ -93,7 +93,7 @@ class EncoderDecoderWrapper(nn.Module):
         attempt = 0
         inference_succ = False
         while not inference_succ:
-            if attempt > 5:
+            if attempt > 30:
                 break
             try:
                 seg_logits = self.model.inference(x, [meta], rescale=True, softmax=self.apply_softmax)
