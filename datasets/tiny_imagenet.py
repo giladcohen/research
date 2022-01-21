@@ -8,8 +8,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
-from research.utils import get_all_files_recursive, convert_grayscale_to_rgb, inverse_map
-
+from research.utils import get_all_files_recursive, convert_grayscale_to_rgb, inverse_map, generate_farthest_vecs
 
 class TinyImageNet(VisionDataset):
     """`TinyImageNet <https://www.kaggle.com/c/tiny-imagenet>`_ Dataset.
@@ -28,6 +27,8 @@ class TinyImageNet(VisionDataset):
             downloaded again.
 
     """
+    GLOVE_EMB_DIM = 300
+    BERT_EMB_DIM = 1024
 
     def __init__(
             self,
@@ -36,13 +37,20 @@ class TinyImageNet(VisionDataset):
             transform: Optional[Callable] = None,
             target_transform: Optional[Callable] = None,
             download: bool = False,
-            cls_to_omit: str = None
+            cls_to_omit: str = None,
+            emb_selection: str = None,
+            emb_dim: int = None,
     ) -> None:
 
         super(TinyImageNet, self).__init__(root, transform=transform, target_transform=target_transform)
         assert cls_to_omit is None, 'cls_to_omit is not supported for {}'.format(__class__)
+        self.EMB_DIM = emb_dim
+
         self.url = 'http://cs231n.stanford.edu/tiny-imagenet-200.zip'
         self.file_name = 'tiny-imagenet-200.zip'
+        self.text_url = 'https://75acb9ce-c4ff-4914-a21d-3d50535914e4.usrfiles.com/archives/75acb9_ca1177a31a6143639b039a6e38d72b5a.zip'
+        self.text_file_name = 'imagenet_text_embeddings.zip'
+
         self.base_dir = os.path.join(self.root, self.file_name[:-4].replace('-', '_'))
         self.train_dir = os.path.join(self.base_dir, 'train')
         self.test_dir = os.path.join(self.base_dir, 'val')
@@ -59,6 +67,8 @@ class TinyImageNet(VisionDataset):
         self.class_to_idx = self.parse_classes()
         self.idx_to_class = inverse_map(self.class_to_idx)
         self.classes = self.get_class_names()
+        self.load_glove_bert_data()
+        self.idx_to_class_emb_vec = self.set_emb_vecs(emb_selection)
 
         self.data: Any = []
         self.targets = []
@@ -75,6 +85,51 @@ class TinyImageNet(VisionDataset):
                 self.targets = np.load(self.test_labels_file)
             else:
                 self.parse_test_data()
+
+    def load_glove_bert_data(self):
+        imagenet_cls2label_path = os.path.join(self.root, 'imagenet_cls2label.txt')
+        # imagenet_labels_path = os.path.join(self.root, 'imagenet_labels.txt')
+        # imagenet_descriptions_path = os.path.join(self.root, 'imagenet_descriptions.txt')
+        imagenet_labels_glove_embds_path = os.path.join(self.root, 'imagenet_labels_glove_embds.csv')
+        imagenet_descriptions_bert_embds_path = os.path.join(self.root, 'imagenet_descriptions_bert_embds.csv')
+
+        with open(imagenet_cls2label_path) as f:
+            lines = f.readlines()
+        lines = [x.rstrip() for x in lines]
+        all_imagenet_classes = {}
+        for x in lines:
+            class_, idx, label = x.split(' ')
+            all_imagenet_classes[class_] = int(idx) - 1
+        self.imagenet_class_to_global_idx = {}
+        for key, val in all_imagenet_classes.items():
+            if key in self.class_to_idx:
+                self.imagenet_class_to_global_idx[key] = val
+
+        with open(imagenet_labels_glove_embds_path) as f:
+            glove_list = [line.split() for line in f]
+        with open(imagenet_descriptions_bert_embds_path) as f:
+            bert_list = [line.split() for line in f]
+
+        for lis in [glove_list, bert_list]:
+            n1, n2 = len(lis), len(lis[0])
+            for i in range(n1):
+                for j in range(n2):
+                    lis[i][j] = np.float64(lis[i][j])
+        all_glove_embs = np.asarray(glove_list)
+        all_bert_embs = np.asarray(bert_list)
+
+        # filter from imagenet to tiny imagenet indices
+        glove_embs = []
+        bert_embs = []
+        for i in range(len(self.classes)):
+            class_ = self.idx_to_class[i]
+            global_idx =  self.imagenet_class_to_global_idx[class_]
+            glove_embs.append(all_glove_embs[global_idx])
+            bert_embs.append(all_bert_embs[global_idx])
+        self.glove_embs = np.vstack(glove_embs)
+        self.bert_embs = np.vstack(bert_embs)
+        assert self.glove_embs.shape == (200, self.GLOVE_EMB_DIM)
+        assert self.bert_embs.shape == (200, self.BERT_EMB_DIM)
 
     def get_class_names(self):
         class_key_to_desc = {}
@@ -94,6 +149,33 @@ class TinyImageNet(VisionDataset):
         for i in range(200):
             classes.append(class_idx_to_desc[i])
         return classes
+
+    def overwrite_emb_vecs(self, v):
+        self.idx_to_class_emb_vec = v
+
+    def set_emb_vecs(self, emb_selection):
+        if emb_selection is None:
+            return None
+        elif emb_selection == 'glove':
+            assert self.EMB_DIM == self.GLOVE_EMB_DIM
+            embs = self.glove_embs
+        elif emb_selection == 'bert':
+            assert self.EMB_DIM == self.BERT_EMB_DIM
+            embs = self.bert_embs
+        elif 'random' in emb_selection:
+            embs = np.random.randn(len(self.classes), self.EMB_DIM)
+        elif emb_selection == 'farthest_points':
+            pts = np.random.randn(100 * len(self.classes), self.EMB_DIM)
+            inds = generate_farthest_vecs(pts, len(self.classes))
+            embs = pts[inds]
+        elif emb_selection == 'orthogonal':
+            pts = np.random.randn(self.EMB_DIM, self.EMB_DIM)
+            q, _ = np.linalg.qr(pts, 'complete')
+            embs = q.T[:len(self.classes)]
+        else:
+            raise AssertionError('Unknown emb_selection: {}'.format(emb_selection))
+        embs = embs.astype(np.float32)
+        return embs
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """
@@ -124,6 +206,7 @@ class TinyImageNet(VisionDataset):
         if not os.path.exists(self.base_dir):
             download_and_extract_archive(self.url, self.root, filename=self.file_name)
             os.rename(os.path.join(self.root, self.file_name[:-4]), self.base_dir)
+            download_and_extract_archive(self.text_url, self.root, filename=self.text_file_name)
 
     def parse_classes(self):
         file = os.path.join(self.base_dir, 'wnids.txt')

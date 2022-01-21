@@ -9,12 +9,10 @@ import torch
 from research.utils import inverse_map, generate_farthest_vecs
 
 class MyCIFAR10(CIFAR10):
-
-    EMB_DIM = 200
-
     def __init__(self, *args, **kwargs) -> None:
         cls_to_omit = kwargs.pop('cls_to_omit', None)
         emb_selection = kwargs.pop('emb_selection', None)
+        self.EMB_DIM = kwargs.pop('emb_dim', None)
         super(MyCIFAR10, self).__init__(*args, **kwargs)
         if cls_to_omit is not None:
             assert cls_to_omit in self.classes

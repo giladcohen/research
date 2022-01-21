@@ -24,15 +24,15 @@ from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
-parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
+parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
 parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 
 # architecture:
-parser.add_argument('--net', default='resnet34', type=str, help='network architecture')
+parser.add_argument('--net', default='resnet50', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
-parser.add_argument('--glove_dim', default=200, type=int, help='Size of the words embeddings. -1 for no layer')
+parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
 
 # GloVe settings
 parser.add_argument('--emb_selection', default='glove', type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
@@ -49,7 +49,7 @@ parser.add_argument('--factor', default=0.9, type=float, help='LR schedule facto
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
-parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
@@ -103,7 +103,8 @@ test_writer  = SummaryWriter(os.path.join(args.checkpoint_dir, 'test'))
 
 # Data
 logger.info('==> Preparing data..')
-dataset_args = {'cls_to_omit': None, 'emb_selection': args.emb_selection}
+dataset_args = {'cls_to_omit': None, 'emb_selection': args.emb_selection,
+                'emb_dim': args.glove_dim if args.glove_dim != -1 else None}
 trainloader, valloader, train_inds, val_inds = get_train_valid_loader(
     dataset=args.dataset,
     dataset_args=dataset_args,
@@ -125,6 +126,7 @@ img_shape = get_image_shape(args.dataset)
 classes = trainloader.dataset.classes
 num_classes = len(classes)
 class_emb_vecs = trainloader.dataset.idx_to_class_emb_vec
+valloader.dataset.overwrite_emb_vecs(class_emb_vecs)
 testloader.dataset.overwrite_emb_vecs(class_emb_vecs)
 train_size = len(trainloader.dataset)
 val_size   = len(valloader.dataset)

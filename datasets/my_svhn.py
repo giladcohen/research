@@ -10,6 +10,7 @@ class MySVHN(SVHN):
         train = kwargs['train']
         download = kwargs['download']
         cls_to_omit = kwargs.pop('cls_to_omit', None)
+        kwargs.pop('emb_dim', None)
         if train:
             split = 'train'
         else:
