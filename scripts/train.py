@@ -35,7 +35,7 @@ parser.add_argument('--activation', default='relu', type=str, help='network acti
 parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
 
 # GloVe settings
-parser.add_argument('--emb_selection', default='glove', type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
+parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
 parser.add_argument('--emb_loss', default='L2', type=str, help='The loss used for embedding training: L1/L2/Linf/cosine')
 parser.add_argument('--eval_method', default='knn', type=str, help='eval method for embeddings: knn/cosine')
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
