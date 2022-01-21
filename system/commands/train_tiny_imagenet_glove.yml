@@ -1,14 +1,30 @@
 commands:
-  # CIFAR-10
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove False --glove_dim -1   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/baseline1      , 11000]
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove False --glove_dim -1   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline1      , 11000]
+  # tiny imagenet resnet 34
+  # baseline
+  # - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove False --glove_dim -1   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/baseline1      , 11000]
 
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove True  --glove_dim 300  --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/glove      --emb_selection glove      , 11000]
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 300  --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/glove      --emb_selection glove      , 11000]
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove True  --glove_dim 1024 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/glove      --emb_selection bert       , 11000]
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 1024 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/glove      --emb_selection bert       , 11000]
+  # glove
+  # - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove True  --glove_dim 300  --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/glove      --emb_selection glove      , 11000]
 
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove False --glove_dim 300  --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/baseline2_300  , 11000]
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove False --glove_dim 1024 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/baseline2_1024 , 11000]
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove False --glove_dim 300  --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_300  , 11000]
-  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove False --glove_dim 1024 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_1024 , 11000]
+  # bert
+  # - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet34 --glove True  --glove_dim 1024 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet34/glove      --emb_selection bert       , 11000]
+
+
+
+  # tiny imagenet resnet 50
+  # baseline
+  # - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove False --glove_dim -1   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline1      , 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove False --glove_dim 300  --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_300     --lr 0.01, 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove False --glove_dim 1024 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_1024    --lr 0.01, 11000]
+
+  # glove
+  # - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 300 --emb_selection glove --emb_loss L2        --eval_method knn --knn_norm 2 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/glove_L2      , 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 300 --emb_selection glove --emb_loss L1        --eval_method knn --knn_norm 1   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/glove_L1      , 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 300 --emb_selection glove --emb_loss Linf      --eval_method knn --knn_norm inf --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/glove_Linf    , 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 300 --emb_selection glove --emb_loss cosine    --eval_method cosine             --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/glove_cosine  , 11000]
+
+  # bert
+  # - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 1024 --emb_selection bert --emb_loss L2        --eval_method knn --knn_norm 2 --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/bert_L2      , 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 1024 --emb_selection bert --emb_loss L1        --eval_method knn --knn_norm 1   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/bert_L1      , 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 1024 --emb_selection bert --emb_loss Linf      --eval_method knn --knn_norm inf --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/bert_Linf    , 11000]
+  - [python research/scripts/train.py --num_workers 5 --dataset tiny_imagenet --net resnet50 --glove True  --glove_dim 1024 --emb_selection bert --emb_loss cosine    --eval_method cosine             --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/bert_cosine  , 11000]
