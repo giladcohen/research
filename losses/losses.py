@@ -97,7 +97,7 @@ class TradesLoss(_Loss):
         self.model.train(is_training)
 
         x_adv = torch.clamp(x_adv, 0.0, 1.0)
-        x_adv.requires_grad_()
+        x_adv.requires_grad_(False)
         # zero gradient
         self.optimizer.zero_grad()
         # calculate robust loss

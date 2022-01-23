@@ -232,6 +232,15 @@ def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     preds = preds.cpu().numpy()
     return preds
 
+def get_loss():
+    if args.adv_trades:
+        loss_func = output_loss_robust
+    elif args.glove:
+        loss_func = output_loss_emb
+    else:
+        loss_func = output_loss_normal
+    return loss_func
+
 def knn_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
     return preds
@@ -247,15 +256,6 @@ def cosine_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     distance_mat = distance_mat.detach().cpu().numpy()
     preds = distance_mat.argmax(1)
     return preds
-
-def get_loss():
-    if args.adv_trades:
-        loss_func = output_loss_robust
-    elif args.glove:
-        loss_func = output_loss_emb
-    else:
-        loss_func = output_loss_normal
-    return loss_func
 
 def get_pred():
     if not args.glove:
