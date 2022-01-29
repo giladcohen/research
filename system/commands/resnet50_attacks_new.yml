@@ -1,0 +1,176 @@
+commands:
+  # CIFAR-10
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove                              --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random                             --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random                             --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points                    --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points                    --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal                         --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal                         --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+
+  # adv training
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1_adv_robust                --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1_adv_robust                --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2_adv_robust                --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2_adv_robust                --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                    --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                    --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# CIFAR-100
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove                              --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random                             --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points                    --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal                         --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+
+
+
+
+
+
+
+
+
+
+
+
+#  # CIFAR-10 adv training
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1_adv_robust                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline1_adv_robust                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+#  #  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2_adv_robust                         --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  #  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/baseline2_adv_robust                         --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/glove_adv_robust                              --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust                             --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+#
+#  # CIFAR-100 adv training
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1_adv_robust                          --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1_adv_robust                          --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+#  #  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2_adv_robust                         --attack fgsm --attack_loss cross_entropy --attack_dir fgsm         , 11000]
+#  #  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline2_adv_robust                         --attack pgd  --attack_loss cross_entropy --attack_dir pgd          , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/glove_adv_robust                              --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_adv_robust                             --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/farthest_points_adv_robust                    --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
+#
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss L1            --attack_dir fgsm_L1      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss L2            --attack_dir fgsm_L2      , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss Linf          --attack_dir fgsm_Linf    , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine  , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss L1            --attack_dir pgd_L1       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss L2            --attack_dir pgd_L2       , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss Linf          --attack_dir pgd_Linf     , 11000]
+#  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_adv_robust                         --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine   , 11000]
