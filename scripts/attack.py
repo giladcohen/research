@@ -74,7 +74,9 @@ logger = logging.getLogger()
 dataset = train_args['dataset']
 _, test_inds = get_robustness_inds(dataset)
 test_size = len(test_inds)
-dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('emb_selection', None)}
+emb_dim = train_args.get('glove_dim', -1)
+dataset_args = {'cls_to_omit': None, 'emb_selection': train_args.get('emb_selection', None),
+                'emb_dim': emb_dim if emb_dim != -1 else None}
 
 # Data
 logger.info('==> Preparing data..')
