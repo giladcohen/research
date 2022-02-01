@@ -61,8 +61,6 @@ CLASS_EMB_VECS = os.path.join(args.checkpoint_dir, 'class_emb_vecs.npy')
 batch_size = args.batch_size
 
 DUMP_DIR = get_dump_dir(args.checkpoint_dir, args.dump_dir, args.attack_dir)
-PLOTS_DIR = os.path.join(DUMP_DIR, 'plots')
-os.makedirs(os.path.join(PLOTS_DIR, 'pca'), exist_ok=True)
 log_file = os.path.join(DUMP_DIR, 'log.log')
 
 # dumping args to txt file
@@ -81,10 +79,10 @@ logger = logging.getLogger()
 rand_gen = np.random.RandomState(seed=12345)
 
 dataset = train_args['dataset']
-val_inds, test_inds = get_robustness_inds(dataset)
-val_size = len(val_inds)
+_, test_inds = get_robustness_inds(dataset)
 test_size = len(test_inds)
-dataset_args = {'cls_to_omit': None, 'emb_selection': None}
+emb_dim = train_args.get('glove_dim', -1)
+dataset_args = {'cls_to_omit': None, 'emb_selection': None, 'emb_dim': emb_dim if emb_dim != -1 else None}
 
 # get data:
 test_loader = get_test_loader(
@@ -109,9 +107,10 @@ else:
 y_test = np.asarray(test_loader.dataset.targets)
 classes = test_loader.dataset.classes
 num_classes = len(classes)
-logger.info('Loading embeddings vecs from {}'.format(CLASS_EMB_VECS))
-test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
-class_emb_vecs = test_loader.dataset.idx_to_class_emb_vec
+if args.method != 'softmax':
+    logger.info('Loading embeddings vecs from {}'.format(CLASS_EMB_VECS))
+    test_loader.dataset.overwrite_emb_vecs(np.load(CLASS_EMB_VECS))
+    class_emb_vecs = test_loader.dataset.idx_to_class_emb_vec
 
 # Model
 logger.info('==> Building model..')
@@ -137,10 +136,6 @@ if device == 'cuda':
 
 y_gt = y_test[test_inds]
 
-labels_dict = {}
-for i in range(num_classes):
-    labels_dict[i] = np.where(y_gt == i)[0]
-
 if args.method == 'softmax':
     y_probs = pytorch_evaluate(net, X, ['probs'], batch_size)[0][test_inds]
     y_preds = y_probs.argmax(axis=1)
@@ -154,9 +149,9 @@ elif args.method == 'knn':
 elif args.method == 'cosine':
     cos = nn.CosineSimilarity()
     glove_embs = pytorch_evaluate(net, X, ['glove_embeddings'], batch_size, to_tensor=True)[0][test_inds]
-    distance_mat = torch.zeros((glove_embs.shape[0], num_classes)).to(device)
+    distance_mat = torch.zeros((test_size, num_classes)).to(device)
     for cls_idx in range(num_classes):
-        embs = np.tile(class_emb_vecs[cls_idx], (10000, 1))
+        embs = np.tile(class_emb_vecs[cls_idx], (test_size, 1))
         embs = torch.from_numpy(embs).to(device)
         distance_mat[:, cls_idx] = cos(glove_embs, embs)
     distance_mat = distance_mat.cpu().numpy()
