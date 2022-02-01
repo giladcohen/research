@@ -32,7 +32,7 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ens
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_glove_p1', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet50/glove', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack_dir', default='', type=str, help='attack directory, or None for normal images')
 parser.add_argument('--method', default='cosine', type=str, help='softmax/knn/cosine')
@@ -42,7 +42,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--knn_norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 # dump
-parser.add_argument('--dump_dir', default='cosine', type=str, help='dump dir for logs and data')
+parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and data')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -61,6 +61,7 @@ CLASS_EMB_VECS = os.path.join(args.checkpoint_dir, 'class_emb_vecs.npy')
 batch_size = args.batch_size
 
 DUMP_DIR = get_dump_dir(args.checkpoint_dir, args.dump_dir, args.attack_dir)
+os.makedirs(DUMP_DIR, exist_ok=True)
 log_file = os.path.join(DUMP_DIR, 'log.log')
 
 # dumping args to txt file

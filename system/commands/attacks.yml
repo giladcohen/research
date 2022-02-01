@@ -88,13 +88,13 @@ commands:
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_adv_robust_300        --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
 
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_1024                  --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_1024                  --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
+  # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_1024                  --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
   # NOT READY
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_adv_robust_1024       --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/baseline2_adv_robust_1024       --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
 
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/random_300                      --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/random_300                      --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+  # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/random_300                      --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
   # NOT READY
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/random_300_adv_robust           --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/random_300_adv_robust           --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
@@ -111,8 +111,8 @@ commands:
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_300_adv_robust       --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_300_adv_robust       --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
 
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_1024                 --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_1024                 --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+  # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_1024                 --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
+  # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_1024                 --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
   # NOT READY
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_1024_adv_robust       --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_1024_adv_robust       --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
