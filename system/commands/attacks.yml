@@ -13,19 +13,16 @@ commands:
 
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random                          --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random                          --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
-  # NOT READY
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust               --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/random_adv_robust               --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
 
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal                      --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal                      --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
-  # NOT READY
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust           --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_adv_robust           --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
 
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points                 --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points                 --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
-  # NOT READY
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust      --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   # - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_adv_robust      --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
 
