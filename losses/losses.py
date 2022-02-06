@@ -80,7 +80,8 @@ class TradesLoss(_Loss):
         self.loss_criterion = self.loss_critetion_factory(criterion)
         self.adv_loss_criterion = self.loss_critetion_factory(adv_criterion)
 
-    def forward(self, x_natural: Tensor, y: Tensor, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    def forward(self, x_natural: Tensor, y: Tensor, is_training=False) -> Tuple[Dict, Dict[str, torch.Tensor]]:
+        losses = {}
         self.model.eval()
         x_adv = x_natural.detach() + 0.001 * torch.randn(x_natural.shape).cuda().detach()
         for _ in range(self.perturb_steps):
@@ -107,4 +108,7 @@ class TradesLoss(_Loss):
         loss_natural = self.loss_criterion(out_natural, y)
         loss_robust = self.adv_loss_criterion(out_adv, out_natural)
         loss = loss_natural + self.beta * loss_robust
-        return outputs, loss
+        losses['natural'] = loss_natural
+        losses['robust'] = loss_robust
+        losses['loss'] = loss
+        return outputs, losses

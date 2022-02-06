@@ -225,22 +225,32 @@ def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict, torch.
     return trades_loss(inputs, targets, is_training)
 
 def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    losses = {}
     embs = targets_to_embs(targets)
     outputs = net(inputs)
     loss = emb_loss(outputs['glove_embeddings'], embs)
+    losses['embeddings'] = loss
+    losses['loss'] = loss
     return outputs, loss
 
 def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    losses = {}
     outputs = net(inputs)
     loss = ce_criterion(outputs['logits'], targets)
+    losses['cross_entropy'] = loss
+    losses['loss'] = loss
     return outputs, loss
 
 def output_loss_aux(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    losses = {}
     embs = targets_to_embs(targets)
     outputs = net(inputs)
     loss_ce = ce_criterion(outputs['logits'], targets)
     loss_emb = emb_loss(outputs['glove_embeddings'], embs)
     loss = (1 - args.w_aux) * loss_ce + args.w_aux * loss_emb
+    losses['cross_entropy'] = loss_ce
+    losses['embeddings'] = loss_emb
+    losses['loss'] = loss
     return outputs, loss
 
 def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
@@ -304,8 +314,9 @@ def train():
     for batch_idx, (inputs, targets) in enumerate(trainloader):  # train a single step
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs, loss = loss_func(inputs, targets, is_training=True)
+        outputs, loss_dict = loss_func(inputs, targets, is_training=True)
 
+        loss = loss_dict['loss']
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
@@ -318,7 +329,8 @@ def train():
         acc = num_corrected / targets.size(0)
 
         if global_step % 10 == 0:  # sampling, once ever 10 train iterations
-            train_writer.add_scalar('losses/loss',    loss.item(),    global_step)
+            for k, v in loss_dict.items():
+                train_writer.add_scalar('losses/' + k, v.item(), global_step)
             train_writer.add_scalar('metrics/acc', 100.0 * acc, global_step)
             train_writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
 
@@ -345,9 +357,10 @@ def validate():
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(valloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs, loss = loss_func(inputs, targets, is_training=False)
+            outputs, loss_dict = loss_func(inputs, targets, is_training=False)
             preds = pred_func(outputs)
 
+            loss = loss_dict['loss']
             val_loss += loss.item()
             predicted.extend(preds)
 
@@ -387,9 +400,10 @@ def test():
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs, loss = loss_func(inputs, targets, is_training=False)
+            outputs, loss_dict = loss_func(inputs, targets, is_training=False)
             preds = pred_func(outputs)
 
+            loss = loss_dict['loss']
             test_loss += loss.item()
             predicted.extend(preds)
 
