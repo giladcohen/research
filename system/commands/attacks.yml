@@ -61,6 +61,35 @@ commands:
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust            --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust            --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
 
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_softmax --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_softmax --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_softmax --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_softmax --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_softmax --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_softmax --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_softmax --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_softmax --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_softmax --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_softmax --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_softmax --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_softmax --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
 
   # CIFAR-100
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1                       --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
