@@ -34,10 +34,15 @@ parser.add_argument('--net', default='resnet50', type=str, help='network archite
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
 parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
 
+# cross entropy with embedding loss
+parser.add_argument('--aux_loss', default=False, type=boolean_string,
+                    help='Train cross entropy with embeddings loss as auxiliary loss')
+parser.add_argument('--w_aux', default=0.5, type=float, help="The embedding loss auxiliary loss's weight")
+
 # GloVe settings
 parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
 parser.add_argument('--emb_loss', default='L2', type=str, help='The loss used for embedding training: L1/L2/Linf/cosine')
-parser.add_argument('--eval_method', default='knn', type=str, help='eval method for embeddings: knn/cosine')
+parser.add_argument('--eval_method', default='knn', type=str, help='eval method for embeddings: softmax/knn/cosine')
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
@@ -62,6 +67,9 @@ parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm 
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
 args = parser.parse_args()
+
+if args.aux_loss:
+    assert args.glove, 'using auxiliary loss requires glove=True'
 
 if args.glove:
     assert args.glove_dim != -1, 'glove_dim must be set when training with glove embeddings'
@@ -227,6 +235,14 @@ def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict, torch.
     loss = ce_criterion(outputs['logits'], targets)
     return outputs, loss
 
+def output_loss_aux(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+    embs = targets_to_embs(targets)
+    outputs = net(inputs)
+    loss_ce = ce_criterion(outputs['logits'], targets)
+    loss_emb = emb_loss(outputs['glove_embeddings'], embs)
+    loss = (1 - args.w_aux) * loss_ce + args.w_aux * loss_emb
+    return outputs, loss
+
 def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     _, preds = outputs['logits'].max(1)
     preds = preds.cpu().numpy()
@@ -235,6 +251,8 @@ def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
 def get_loss():
     if args.adv_trades:
         loss_func = output_loss_robust
+    elif args.aux_loss:
+        loss_func = output_loss_aux
     elif args.glove:
         loss_func = output_loss_emb
     else:
@@ -258,7 +276,7 @@ def cosine_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     return preds
 
 def get_pred():
-    if not args.glove:
+    if args.eval_method == 'softmax':
         pred_func = softmax_pred
     elif args.eval_method == 'knn':
         pred_func = knn_pred
