@@ -219,29 +219,29 @@ if args.adv_trades:
 def targets_to_embs(targets):
     return torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
 
-def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     if args.glove:
         targets = targets_to_embs(targets)
     return trades_loss(inputs, targets, is_training)
 
-def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
     embs = targets_to_embs(targets)
     outputs = net(inputs)
     loss = emb_loss(outputs['glove_embeddings'], embs)
     losses['embeddings'] = loss
     losses['loss'] = loss
-    return outputs, loss
+    return outputs, losses
 
-def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
     outputs = net(inputs)
     loss = ce_criterion(outputs['logits'], targets)
     losses['cross_entropy'] = loss
     losses['loss'] = loss
-    return outputs, loss
+    return outputs, losses
 
-def output_loss_aux(inputs, targets, is_training=False) -> Tuple[Dict, torch.Tensor]:
+def output_loss_aux(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
     embs = targets_to_embs(targets)
     outputs = net(inputs)
@@ -251,7 +251,7 @@ def output_loss_aux(inputs, targets, is_training=False) -> Tuple[Dict, torch.Ten
     losses['cross_entropy'] = loss_ce
     losses['embeddings'] = loss_emb
     losses['loss'] = loss
-    return outputs, loss
+    return outputs, losses
 
 def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     _, preds = outputs['logits'].max(1)
