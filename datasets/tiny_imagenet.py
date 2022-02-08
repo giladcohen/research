@@ -91,6 +91,7 @@ class TinyImageNet(VisionDataset):
         # imagenet_labels_path = os.path.join(self.root, 'imagenet_labels.txt')
         # imagenet_descriptions_path = os.path.join(self.root, 'imagenet_descriptions.txt')
         imagenet_labels_glove_embds_path = os.path.join(self.root, 'imagenet_labels_glove_embds.csv')
+        imagenet_labels_bert_embds_path = os.path.join(self.root, 'imagenet_labels_bert_embds.csv')
         imagenet_descriptions_bert_embds_path = os.path.join(self.root, 'imagenet_descriptions_bert_embds.csv')
 
         with open(imagenet_cls2label_path) as f:
@@ -107,28 +108,35 @@ class TinyImageNet(VisionDataset):
 
         with open(imagenet_labels_glove_embds_path) as f:
             glove_list = [line.split() for line in f]
+        with open(imagenet_labels_bert_embds_path) as f:
+            bert_word_list = [line.split() for line in f]
         with open(imagenet_descriptions_bert_embds_path) as f:
             bert_list = [line.split() for line in f]
 
-        for lis in [glove_list, bert_list]:
+        for lis in [glove_list, bert_word_list, bert_list]:
             n1, n2 = len(lis), len(lis[0])
             for i in range(n1):
                 for j in range(n2):
                     lis[i][j] = np.float64(lis[i][j])
         all_glove_embs = np.asarray(glove_list)
+        all_bert_word_embs = np.asarray(bert_word_list)
         all_bert_embs = np.asarray(bert_list)
 
         # filter from imagenet to tiny imagenet indices
         glove_embs = []
+        bert_word_embs = []
         bert_embs = []
         for i in range(len(self.classes)):
             class_ = self.idx_to_class[i]
-            global_idx =  self.imagenet_class_to_global_idx[class_]
+            global_idx = self.imagenet_class_to_global_idx[class_]
             glove_embs.append(all_glove_embs[global_idx])
+            bert_word_embs.append(all_bert_word_embs[global_idx])
             bert_embs.append(all_bert_embs[global_idx])
         self.glove_embs = np.vstack(glove_embs)
+        self.bert_word_embs = np.vstack(bert_word_embs)
         self.bert_embs = np.vstack(bert_embs)
         assert self.glove_embs.shape == (200, self.GLOVE_EMB_DIM)
+        assert self.bert_word_embs.shape == (200, self.BERT_EMB_DIM)
         assert self.bert_embs.shape == (200, self.BERT_EMB_DIM)
 
     def get_class_names(self):
@@ -159,6 +167,9 @@ class TinyImageNet(VisionDataset):
         elif emb_selection == 'glove':
             assert self.EMB_DIM == self.GLOVE_EMB_DIM
             embs = self.glove_embs
+        elif emb_selection == 'bert_word':
+            assert self.EMB_DIM == self.BERT_EMB_DIM
+            embs = self.bert_word_embs
         elif emb_selection == 'bert':
             assert self.EMB_DIM == self.BERT_EMB_DIM
             embs = self.bert_embs
