@@ -1,3 +1,4 @@
+import contextlib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -47,25 +48,25 @@ class KLDivLossV2(nn.KLDivLoss):
         in2 = F.softmax(target, dim=1)
         return super().forward(in1, in2)
 
-class TradesLoss(_Loss):
-    @staticmethod
-    def loss_critetion_factory(criterion: str):
-        if criterion == 'L1':
-            loss_criterion = L1Loss()
-        elif criterion == 'L2':
-            loss_criterion = L2Loss()
-        elif criterion == 'Linf':
-            loss_criterion = LinfLoss()
-        elif criterion == 'cosine':
-            loss_criterion = CosineEmbeddingLossV2()
-        elif criterion == 'ce':
-            loss_criterion = nn.CrossEntropyLoss()
-        elif criterion == 'kl':
-            loss_criterion = KLDivLossV2(reduction='batchmean')
-        else:
-            raise AssertionError('Unknown criterion {}'.format(criterion))
-        return loss_criterion
+def loss_critetion_factory(criterion: str):
+    if criterion == 'L1':
+        loss_criterion = L1Loss()
+    elif criterion == 'L2':
+        loss_criterion = L2Loss()
+    elif criterion == 'Linf':
+        loss_criterion = LinfLoss()
+    elif criterion == 'cosine':
+        loss_criterion = CosineEmbeddingLossV2()
+    elif criterion == 'ce':
+        loss_criterion = nn.CrossEntropyLoss()
+    elif criterion == 'kl':
+        loss_criterion = KLDivLossV2(reduction='batchmean')
+    else:
+        raise AssertionError('Unknown criterion {}'.format(criterion))
+    return loss_criterion
 
+
+class TradesLoss(_Loss):
     def __init__(self, model: nn.Module, optimizer: torch.optim.Optimizer, step_size: float, epsilon,
                  perturb_steps: int, beta: float, field: str, criterion: str, adv_criterion: str,
                  size_average=None, reduce=None, reduction: str = 'none') -> None:
@@ -77,8 +78,8 @@ class TradesLoss(_Loss):
         self.perturb_steps = perturb_steps
         self.beta = beta
         self.field = field
-        self.loss_criterion = self.loss_critetion_factory(criterion)
-        self.adv_loss_criterion = self.loss_critetion_factory(adv_criterion)
+        self.loss_criterion = loss_critetion_factory(criterion)
+        self.adv_loss_criterion = loss_critetion_factory(adv_criterion)
 
     def forward(self, x_natural: Tensor, y: Tensor, is_training=False) -> Tuple[Dict, Dict[str, torch.Tensor]]:
         losses = {}
@@ -112,3 +113,65 @@ class TradesLoss(_Loss):
         losses['robust'] = loss_robust
         losses['loss'] = loss
         return outputs, losses
+
+@contextlib.contextmanager
+def _disable_tracking_bn_stats(model):
+
+    def switch_attr(m):
+        if hasattr(m, 'track_running_stats'):
+            m.track_running_stats ^= True
+
+    model.apply(switch_attr)
+    yield
+    model.apply(switch_attr)
+
+
+def _l2_normalize(d):
+    d_reshaped = d.view(d.shape[0], -1, *(1 for _ in range(d.dim() - 2)))
+    d /= torch.norm(d_reshaped, dim=1, keepdim=True) + 1e-8
+    return d
+
+
+class VATLoss(nn.Module):
+
+    def __init__(self, model: nn.Module, field: str, adv_criterion: str, xi=10.0, eps=1.0, ip=1):
+        """VAT loss
+        :param xi: hyperparameter of VAT (default: 10.0)
+        :param eps: hyperparameter of VAT (default: 1.0)
+        :param ip: iteration times of computing adv noise (default: 1)
+        """
+        super(VATLoss, self).__init__()
+        self.model = model
+        self.adv_loss_criterion = loss_critetion_factory(adv_criterion)
+        self.field = field
+        self.xi = xi
+        self.eps = eps
+        self.ip = ip
+
+    def forward(self, x, is_training):
+        self.model.eval()
+        with torch.no_grad():
+            outputs = self.model(x)
+        out_natural = outputs[self.field]
+
+        # prepare random unit tensor
+        d = torch.rand(x.shape).sub(0.5).to(x.device)
+        d = _l2_normalize(d)
+        with torch.enable_grad():
+            with _disable_tracking_bn_stats(self.model):
+                # calc adversarial direction
+                for _ in range(self.ip):
+                    d.requires_grad_()
+                    out_adv = self.model(x + self.xi * d)[self.field]
+                    adv_distance = self.adv_loss_criterion(out_adv, out_natural)
+                    adv_distance.backward()
+                    d = _l2_normalize(d.grad)
+                    self.model.zero_grad()
+
+        self.model.train(is_training)
+        # calc LDS
+        r_adv = d * self.eps
+        out_adv = self.model(x + r_adv)[self.field]
+        lds = self.adv_loss_criterion(out_adv, out_natural)
+
+        return lds, outputs

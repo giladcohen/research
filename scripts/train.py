@@ -18,7 +18,7 @@ import logging
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 
-from research.losses.losses import LinfLoss, L2Loss, CosineEmbeddingLossV2, TradesLoss
+from research.losses.losses import LinfLoss, L2Loss, CosineEmbeddingLossV2, TradesLoss, VATLoss
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
@@ -28,6 +28,7 @@ parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='datase
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
 parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
+parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
 
 # architecture:
 parser.add_argument('--net', default='resnet50', type=str, help='network architecture')
@@ -58,15 +59,18 @@ parser.add_argument('--num_workers', default=0, type=int, help='Data loading thr
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
-# TRADES params
+# TRADES/VAT params
 parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
-parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training')
+parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for VAT)')
+parser.add_argument('--xi', default=1, type=float, help='xi param for VAT')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
 args = parser.parse_args()
+
+assert not (args.adv_trades and args.adv_vat), 'TRADES and VAT cannot be set together'
 
 if args.aux_loss:
     assert args.glove, 'using auxiliary loss requires glove=True'
@@ -215,14 +219,38 @@ if args.adv_trades:
         criterion=args.emb_loss if args.glove else 'ce',
         adv_criterion=args.emb_loss if args.glove else 'kl'
     )
+elif args.adv_vat:
+    vat_loss = VATLoss(
+        model=net,
+        field='glove_embeddings' if args.glove else 'logits',
+        adv_criterion=args.emb_loss if args.glove else 'kl',
+        xi=args.xi,
+        eps=args.args.epsilon
+    )
+
 
 def targets_to_embs(targets):
     return torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
 
-def output_loss_robust(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+def output_loss_trades(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     if args.glove:
         targets = targets_to_embs(targets)
     return trades_loss(inputs, targets, is_training)
+
+def output_loss_vat(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    losses = {}
+    loss_robust, outputs = vat_loss(inputs, is_training)
+    if args.glove:
+        targets = targets_to_embs(targets)
+        loss_natural = emb_loss(outputs['glove_embeddings'], targets)
+    else:
+        loss_natural = ce_criterion(outputs['logits'], targets)
+    loss = loss_natural + args.beta * loss_robust
+    losses['natural'] = loss_natural
+    losses['robust'] = loss_robust
+    losses['loss'] = loss
+    return outputs, losses
+
 
 def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
@@ -260,7 +288,9 @@ def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
 
 def get_loss():
     if args.adv_trades:
-        loss_func = output_loss_robust
+        loss_func = output_loss_trades
+    elif args.adv_vat:
+        loss_func = output_loss_vat
     elif args.aux_loss:
         loss_func = output_loss_aux
     elif args.glove:
