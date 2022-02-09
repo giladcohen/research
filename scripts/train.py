@@ -63,7 +63,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
 parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for VAT)')
-parser.add_argument('--xi', default=1, type=float, help='xi param for VAT')
+parser.add_argument('--xi', default=10, type=float, help='xi param for VAT')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -225,7 +225,7 @@ elif args.adv_vat:
         field='glove_embeddings' if args.glove else 'logits',
         adv_criterion=args.emb_loss if args.glove else 'kl',
         xi=args.xi,
-        eps=args.args.epsilon
+        eps=args.epsilon
     )
 
 
