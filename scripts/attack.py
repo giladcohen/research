@@ -41,6 +41,7 @@ parser.add_argument('--num_workers', default=0, type=int, help='Data loading thr
 # for FGSM/PGD/CW_Linf/whitebox_pgd:
 parser.add_argument('--eps'     , default=0.031, type=float, help='maximum Linf deviation from original image')
 parser.add_argument('--eps_step', default=0.003, type=float, help='step size of each adv iteration')
+parser.add_argument('--max_iter', default=100, type=int, help='Max iter for PGD attack')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -187,6 +188,7 @@ elif args.attack == 'pgd':
         eps_step=args.eps_step,
         targeted=targeted,
         num_random_init=10,
+        max_iter=args.max_iter,
         batch_size=batch_size
     )
 elif args.attack == 'deepfool':
