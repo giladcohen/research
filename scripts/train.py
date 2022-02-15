@@ -213,7 +213,6 @@ if args.adv_emb_loss is None:
 else:
     adv_emb_loss = args.adv_emb_loss
 
-
 if args.adv_trades:
     trades_loss = TradesLoss(
         model=net,
@@ -484,7 +483,7 @@ if __name__ == "__main__":
     global_state = {}
 
     logger.info('Testing epoch #{}'.format(epoch + 1))
-    # test()
+    test()
 
     logger.info('Start training from epoch #{} for {} epochs'.format(epoch + 1, args.epochs))
     for epoch in tqdm(range(epoch, epoch + args.epochs)):

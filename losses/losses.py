@@ -50,12 +50,9 @@ class KLDivLossV2(nn.KLDivLoss):
 
 class KLDivAbsLoss(nn.KLDivLoss):
     def forward(self, input: Tensor, target: Tensor, y: Tensor) -> Tensor:
-        in1 = torch.abs(input - y)
-        in2 = torch.abs(target - y)
-        in1 = F.normalize(in1, p=1, dim=1)
-        in2 = F.normalize(in2, p=1, dim=1)
-        in1 = torch.log(in1)
-        return super().forward(in1, in2)
+        in1 = F.normalize(torch.abs(input - y), p=1, dim=1)
+        in2 = F.normalize(torch.abs(target - y), p=1, dim=1)
+        return super().forward(torch.log(in1), in2)
 
 def loss_critetion_factory(criterion: str):
     if criterion == 'L1':
