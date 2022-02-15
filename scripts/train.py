@@ -60,6 +60,7 @@ parser.add_argument('--metric', default='accuracy', type=str, help='metric to op
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
 # TRADES/VAT params
+parser.add_argument('--adv_emb_loss', default=None, type=str, help='criterion for the adversarial loss in TRADES')
 parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
 parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for VAT)')
@@ -207,6 +208,12 @@ elif args.emb_loss == 'cosine':
 else:
     raise AssertionError('Unknown value args.emb_loss = {}'.format(args.emb_loss))
 
+if args.adv_emb_loss is None:
+    adv_emb_loss = args.emb_loss
+else:
+    adv_emb_loss = args.adv_emb_loss
+
+
 if args.adv_trades:
     trades_loss = TradesLoss(
         model=net,
@@ -217,13 +224,13 @@ if args.adv_trades:
         beta=args.beta,
         field='glove_embeddings' if args.glove else 'logits',
         criterion=args.emb_loss if args.glove else 'ce',
-        adv_criterion=args.emb_loss if args.glove else 'kl'
+        adv_criterion=adv_emb_loss if args.glove else 'kl'
     )
 elif args.adv_vat:
     vat_loss = VATLoss(
         model=net,
         field='glove_embeddings' if args.glove else 'logits',
-        adv_criterion=args.emb_loss if args.glove else 'kl',
+        adv_criterion=adv_emb_loss if args.glove else 'kl',
         xi=args.xi,
         eps=args.epsilon
     )
@@ -477,7 +484,7 @@ if __name__ == "__main__":
     global_state = {}
 
     logger.info('Testing epoch #{}'.format(epoch + 1))
-    test()
+    # test()
 
     logger.info('Start training from epoch #{} for {} epochs'.format(epoch + 1, args.epochs))
     for epoch in tqdm(range(epoch, epoch + args.epochs)):

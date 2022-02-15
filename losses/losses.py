@@ -48,6 +48,15 @@ class KLDivLossV2(nn.KLDivLoss):
         in2 = F.softmax(target, dim=1)
         return super().forward(in1, in2)
 
+class KLDivAbsLoss(nn.KLDivLoss):
+    def forward(self, input: Tensor, target: Tensor, y: Tensor) -> Tensor:
+        in1 = torch.abs(input - y)
+        in2 = torch.abs(target - y)
+        in1 = F.normalize(in1, p=1, dim=1)
+        in2 = F.normalize(in2, p=1, dim=1)
+        in1 = torch.log(in1)
+        return super().forward(in1, in2)
+
 def loss_critetion_factory(criterion: str):
     if criterion == 'L1':
         loss_criterion = L1Loss()
@@ -61,6 +70,8 @@ def loss_critetion_factory(criterion: str):
         loss_criterion = nn.CrossEntropyLoss()
     elif criterion == 'kl':
         loss_criterion = KLDivLossV2(reduction='batchmean')
+    elif criterion == 'kl_abs':
+        loss_criterion = KLDivAbsLoss(reduction='batchmean')
     else:
         raise AssertionError('Unknown criterion {}'.format(criterion))
     return loss_criterion
@@ -90,7 +101,10 @@ class TradesLoss(_Loss):
             with torch.enable_grad():
                 out_adv = self.model(x_adv)[self.field]
                 out_natural = self.model(x_natural)[self.field]
-                loss = self.adv_loss_criterion(out_adv, out_natural)
+                if isinstance(self.adv_loss_criterion, KLDivAbsLoss):
+                    loss = self.adv_loss_criterion(out_adv, out_natural, y)
+                else:
+                    loss = self.adv_loss_criterion(out_adv, out_natural)
             grad = torch.autograd.grad(loss, [x_adv])[0]
             x_adv = x_adv.detach() + self.step_size * torch.sign(grad.detach())
             x_adv = torch.min(torch.max(x_adv, x_natural - self.epsilon), x_natural + self.epsilon)
@@ -107,7 +121,10 @@ class TradesLoss(_Loss):
         out_natural = outputs[self.field]
         out_adv = self.model(x_adv)[self.field]
         loss_natural = self.loss_criterion(out_natural, y)
-        loss_robust = self.adv_loss_criterion(out_adv, out_natural)
+        if isinstance(self.adv_loss_criterion, KLDivAbsLoss):
+            loss_robust = self.adv_loss_criterion(out_adv, out_natural, y)
+        else:
+            loss_robust = self.adv_loss_criterion(out_adv, out_natural)
         loss = loss_natural + self.beta * loss_robust
         losses['natural'] = loss_natural
         losses['robust'] = loss_robust
