@@ -32,17 +32,17 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ens
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Evaluating robustness score')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet50/glove', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_70_16', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack_dir', default='', type=str, help='attack directory, or None for normal images')
-parser.add_argument('--method', default='cosine', type=str, help='softmax/knn/cosine')
+parser.add_argument('--method', default='softmax', type=str, help='softmax/knn/cosine')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
 # for knn method
 parser.add_argument('--knn_norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 # dump
-parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and data')
+parser.add_argument('--dump_dir', default='softmax', type=str, help='dump dir for logs and data')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -115,20 +115,26 @@ if args.method != 'softmax':
 
 # Model
 logger.info('==> Building model..')
-conv1 = get_conv1_params(dataset)
-strides = get_strides(dataset)
-glove_dim = train_args.get('glove_dim', -1)
-if glove_dim != -1:
-    ext_linear = glove_dim
+if train_args['net'] == 'Rebuffi2021Fixing_70_16_cutmix_extra':
+    from robustbench.utils import load_model
+    net = load_model(model_name=train_args['net'], dataset=train_args['dataset'], threat_model='Linf',
+                     model_dir='/data/models')
+    net = net.to(device)
 else:
-    ext_linear = None
-net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
-                                   strides=strides, ext_linear=ext_linear)
-net = net.to(device)
-global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
-if 'best_net' in global_state:
-    global_state = global_state['best_net']
-net.load_state_dict(global_state)
+    conv1 = get_conv1_params(dataset)
+    strides = get_strides(dataset)
+    if emb_dim != -1:
+        ext_linear = emb_dim
+    else:
+        ext_linear = None
+    net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
+                                       strides=strides, ext_linear=ext_linear)
+    net = net.to(device)
+    global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
+    if 'best_net' in global_state:
+        global_state = global_state['best_net']
+    net.load_state_dict(global_state)
+
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 if device == 'cuda':

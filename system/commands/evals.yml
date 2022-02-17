@@ -85,19 +85,15 @@ commands:
   - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust             --attack_dir fgsm_cosine  --method cosine  --dump_dir cosine, 11000]
   - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust             --attack_dir pgd_cosine   --method cosine  --dump_dir cosine, 11000]
 
-  # resnet18 vat exp
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_0.5_xi_10        --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_10          --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_2_xi_10          --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_2           --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_50          --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_10_beta_3   --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_0.5_xi_10        --attack_dir pgd_cosine_fast           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_10          --attack_dir pgd_cosine_fast           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_2_xi_10          --attack_dir pgd_cosine_fast           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_2           --attack_dir pgd_cosine_fast           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_50          --attack_dir pgd_cosine_fast           --method cosine  --dump_dir cosine, 11000]
-  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_10_beta_3   --attack_dir pgd_cosine_fast           --method cosine  --dump_dir cosine, 11000]
+  # resnet50 trades with kl_abs
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-5  --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-5  --attack_dir pgd_cosine   --method cosine  --dump_dir cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-6  --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-6  --attack_dir pgd_cosine   --method cosine  --dump_dir cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-7  --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-7  --attack_dir pgd_cosine   --method cosine  --dump_dir cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-8  --attack_dir ''           --method cosine  --dump_dir cosine, 11000]
+  - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-8  --attack_dir pgd_cosine   --method cosine  --dump_dir cosine, 11000]
 
   # CIFAR-100
   - [python research/scripts/eval.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/baseline1                        --attack_dir ''           --method softmax --dump_dir softmax, 11000]

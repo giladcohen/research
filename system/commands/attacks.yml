@@ -61,14 +61,11 @@ commands:
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust            --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
   - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust            --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
 
-  # resnet18 vat exp
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_0.5_xi_10         --attack pgd --attack_loss cosine        --attack_dir pgd_cosine_fast  --eps_step 0.007 --max_iter 10, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_10           --attack pgd --attack_loss cosine        --attack_dir pgd_cosine_fast  --eps_step 0.007 --max_iter 10, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_2_xi_10           --attack pgd --attack_loss cosine        --attack_dir pgd_cosine_fast  --eps_step 0.007 --max_iter 10, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_2            --attack pgd --attack_loss cosine        --attack_dir pgd_cosine_fast  --eps_step 0.007 --max_iter 10, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_50           --attack pgd --attack_loss cosine        --attack_dir pgd_cosine_fast  --eps_step 0.007 --max_iter 10, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024_adv_robust_vat_eps_1_xi_10_beta_3    --attack pgd --attack_loss cosine        --attack_dir pgd_cosine_fast  --eps_step 0.007 --max_iter 10, 8000]
-
+  # resnet50 trades with kl_abs
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-5          --attack pgd --attack_loss cosine        --attack_dir pgd_cosine    --attack_dir pgd_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-6          --attack pgd --attack_loss cosine        --attack_dir pgd_cosine    --attack_dir pgd_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-7          --attack pgd --attack_loss cosine        --attack_dir pgd_cosine    --attack_dir pgd_cosine, 8000]
+  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/bert_1024_adv_robust_kl_abs_beta_1e-8          --attack pgd --attack_loss cosine        --attack_dir pgd_cosine    --attack_dir pgd_cosine, 8000]
 
 
   # CIFAR-100
