@@ -12,8 +12,9 @@ class DMWideResNetV2(DMWideResNet):
         self.use_ext_linear = ext_linear is not None
         super().__init__(*args, **kwargs)
         if self.use_ext_linear:
+            del self.logits
             self.ext_linear = nn.Linear(self.num_channels, ext_linear)
-            self.logits = nn.Linear(ext_linear, kwargs['num_classes'])
+            self.ext_logits = nn.Linear(ext_linear, kwargs['num_classes'])
 
     def forward(self, x):
         net = {}
@@ -29,7 +30,9 @@ class DMWideResNetV2(DMWideResNet):
         if self.use_ext_linear:
             out = self.ext_linear(out)
             net['glove_embeddings'] = out
-        out = self.logits(out)
+            out = self.ext_logits(out)
+        else:
+            out = self.logits(out)
         net['logits'] = out
         net['probs'] = F.softmax(out, dim=1)
         net['preds'] = net['probs'].argmax(dim=1)
