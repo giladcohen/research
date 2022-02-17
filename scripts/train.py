@@ -168,7 +168,7 @@ if 'resnet' in args.net:
     net = net_cls(num_classes=num_classes, activation=args.activation, conv1=conv1, strides=strides,
                   ext_linear=ext_linear)
 else:
-    net = net_cls(num_classes=num_classes, depth=70, width=16, activation_fn=Swish,
+    net = net_cls(num_classes=num_classes, depth=28, width=10, activation_fn=Swish,
                   mean=CIFAR10_MEAN, std=CIFAR10_STD, ext_linear=ext_linear)
 net = net.to(device)
 if args.resume:
