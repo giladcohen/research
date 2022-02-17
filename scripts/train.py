@@ -27,13 +27,13 @@ from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_70_16_w_glove', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_28_10_w_glove', type=str, help='checkpoint dir')
 parser.add_argument('--glove', default=True, type=boolean_string, help='Train using GloVe embeddings instead of CE')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
 
 # architecture:
-parser.add_argument('--net', default='Rebuffi2021Fixing_70_16_cutmix_extra', type=str, help='network architecture')
+parser.add_argument('--net', default='Rebuffi2021Fixing_28_10_cutmix_ddpm', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
 parser.add_argument('--glove_dim', default=1024, type=int, help='Size of the words embeddings. -1 for no layer')
 
@@ -49,7 +49,7 @@ parser.add_argument('--eval_method', default='cosine', type=str, help='eval meth
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
-parser.add_argument('--resume', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_70_16/ckpt.pth', type=str, help='Path to checkpoint to be resumed')
+parser.add_argument('--resume', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_28_10/ckpt.pth', type=str, help='Path to checkpoint to be resumed')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
 parser.add_argument('--epochs', default='50', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
