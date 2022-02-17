@@ -19,6 +19,8 @@ import time
 import pickle
 import logging
 import sys
+from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN,\
+    CIFAR100_STD
 
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./research")
@@ -115,25 +117,30 @@ if args.method != 'softmax':
 
 # Model
 logger.info('==> Building model..')
-if train_args['net'] == 'Rebuffi2021Fixing_70_16_cutmix_extra':
-    from robustbench.utils import load_model
-    net = load_model(model_name=train_args['net'], dataset=train_args['dataset'], threat_model='Linf',
-                     model_dir='/data/models')
-    net = net.to(device)
-else:
+# if train_args['net'] == 'Rebuffi2021Fixing_70_16_cutmix_extra':
+#     from robustbench.utils import load_model
+#     net = load_model(model_name=train_args['net'], dataset=train_args['dataset'], threat_model='Linf',
+#                      model_dir='/data/models')
+#     net = net.to(device)
+# else:
+net_cls = get_model(train_args['net'])
+if 'resnet' in train_args['net']:
     conv1 = get_conv1_params(dataset)
     strides = get_strides(dataset)
     if emb_dim != -1:
         ext_linear = emb_dim
     else:
         ext_linear = None
-    net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
-                                       strides=strides, ext_linear=ext_linear)
-    net = net.to(device)
-    global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
-    if 'best_net' in global_state:
-        global_state = global_state['best_net']
-    net.load_state_dict(global_state)
+    net = net_cls(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
+                  strides=strides, ext_linear=ext_linear)
+else:
+    net = net_cls(num_classes=num_classes, depth=70, width=16, activation_fn=Swish,
+                  mean=CIFAR10_MEAN, std=CIFAR10_STD)
+net = net.to(device)
+global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
+if 'best_net' in global_state:
+    global_state = global_state['best_net']
+net.load_state_dict(global_state)
 
 net.eval()  # frozen
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))

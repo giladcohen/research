@@ -1,3 +1,4 @@
+from research.models.dm_wide_resnet import DMWideResNetV2
 from research.models.resnet import ResNet18, ResNet34, ResNet50, ResNet101
 
 def get_strides(dataset: str):
@@ -27,5 +28,7 @@ def get_model(moder_str):
         return ResNet50
     elif moder_str == 'resnet101':
         return ResNet101
+    elif moder_str == 'Rebuffi2021Fixing_70_16_cutmix_extra':
+        return DMWideResNetV2
     else:
         raise AssertionError("network {} is unknown".format(moder_str))
