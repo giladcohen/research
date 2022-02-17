@@ -28,7 +28,7 @@ def get_model(moder_str):
         return ResNet50
     elif moder_str == 'resnet101':
         return ResNet101
-    elif moder_str == 'Rebuffi2021Fixing_70_16_cutmix_extra':
+    elif moder_str in ['Rebuffi2021Fixing_70_16_cutmix_extra', 'Rebuffi2021Fixing_28_10_cutmix_ddpm']:
         return DMWideResNetV2
     else:
         raise AssertionError("network {} is unknown".format(moder_str))
