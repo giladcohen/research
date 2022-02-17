@@ -57,7 +57,7 @@ parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of va
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
-parser.add_argument('--train_only_embs', default=False, type=boolean_string, help='Training only the ext_linear weights/bias')
+parser.add_argument('--train_only_embs', default=True, type=boolean_string, help='Training only the ext_linear weights/bias')
 
 # LR schedule
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
