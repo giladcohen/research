@@ -57,6 +57,7 @@ parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of va
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
+parser.add_argument('--train_only_embs', default=False, type=boolean_string, help='Training only the ext_linear weights/bias')
 
 # LR schedule
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -174,7 +175,7 @@ if args.resume:
     global_state = torch.load(args.resume, map_location=torch.device(device))
     if 'best_net' in global_state:
         global_state = global_state['best_net']
-    net.load_state_dict(global_state)
+    net.load_state_dict(global_state, strict=False)
 
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
@@ -202,7 +203,10 @@ np.save(os.path.join(args.checkpoint_dir, 'y_test.npy'), y_test)
 np.save(os.path.join(args.checkpoint_dir, 'train_inds.npy'), train_inds)
 np.save(os.path.join(args.checkpoint_dir, 'val_inds.npy'), val_inds)
 
-optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
+if args.train_only_embs:
+    optimizer = optim.SGD(net.ext_linear.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
+else:
+    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
 lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     mode=metric_mode,
@@ -211,7 +215,6 @@ lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
     verbose=True,
     cooldown=args.cooldown
 )
-
 
 if args.emb_loss == 'L1':
     emb_loss = nn.L1Loss()
