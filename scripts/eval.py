@@ -44,7 +44,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--knn_norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 # dump
-parser.add_argument('--dump_dir', default='softmax', type=str, help='dump dir for logs and data')
+parser.add_argument('--dump_dir', default='debug', type=str, help='dump dir for logs and data')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -124,18 +124,18 @@ logger.info('==> Building model..')
 #     net = net.to(device)
 # else:
 net_cls = get_model(train_args['net'])
+if emb_dim != -1:
+    ext_linear = emb_dim
+else:
+    ext_linear = None
 if 'resnet' in train_args['net']:
     conv1 = get_conv1_params(dataset)
     strides = get_strides(dataset)
-    if emb_dim != -1:
-        ext_linear = emb_dim
-    else:
-        ext_linear = None
     net = net_cls(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
                   strides=strides, ext_linear=ext_linear)
 else:
     net = net_cls(num_classes=num_classes, depth=70, width=16, activation_fn=Swish,
-                  mean=CIFAR10_MEAN, std=CIFAR10_STD)
+                  mean=CIFAR10_MEAN, std=CIFAR10_STD, ext_linear=ext_linear)
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:

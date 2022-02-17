@@ -17,6 +17,8 @@ import sys
 import logging
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
+from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
+    CIFAR100_STD
 
 from research.losses.losses import LinfLoss, L2Loss, CosineEmbeddingLossV2, TradesLoss, VATLoss
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
@@ -24,16 +26,16 @@ from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
-parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/debug', type=str, help='checkpoint dir')
-parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
+parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_70_16_w_glove', type=str, help='checkpoint dir')
+parser.add_argument('--glove', default=True, type=boolean_string, help='Train using GloVe embeddings instead of CE')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
 
 # architecture:
-parser.add_argument('--net', default='resnet50', type=str, help='network architecture')
+parser.add_argument('--net', default='Rebuffi2021Fixing_70_16_cutmix_extra', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
-parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
+parser.add_argument('--glove_dim', default=1024, type=int, help='Size of the words embeddings. -1 for no layer')
 
 # cross entropy with embedding loss
 parser.add_argument('--aux_loss', default=False, type=boolean_string,
@@ -41,23 +43,26 @@ parser.add_argument('--aux_loss', default=False, type=boolean_string,
 parser.add_argument('--w_aux', default=0.5, type=float, help="The embedding loss auxiliary loss's weight")
 
 # GloVe settings
-parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
-parser.add_argument('--emb_loss', default='L2', type=str, help='The loss used for embedding training: L1/L2/Linf/cosine')
-parser.add_argument('--eval_method', default='knn', type=str, help='eval method for embeddings: softmax/knn/cosine')
+parser.add_argument('--emb_selection', default='bert', type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
+parser.add_argument('--emb_loss', default='cosine', type=str, help='The loss used for embedding training: L1/L2/Linf/cosine')
+parser.add_argument('--eval_method', default='cosine', type=str, help='eval method for embeddings: softmax/knn/cosine')
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--resume', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_70_16/ckpt.pth', type=str, help='Path to checkpoint to be resumed')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
-parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
+parser.add_argument('--epochs', default='50', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
-parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
-parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
-parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
+
+# LR schedule
+parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
+parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
+parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 
 # TRADES/VAT params
 parser.add_argument('--adv_emb_loss', default=None, type=str, help='criterion for the adversarial loss in TRADES')
@@ -151,15 +156,26 @@ if args.glove:
 
 # Model
 logger.info('==> Building model..')
-conv1 = get_conv1_params(args.dataset)
-strides = get_strides(args.dataset)
+net_cls = get_model(args.net)
 if args.glove_dim != -1:
     ext_linear = args.glove_dim
 else:
     ext_linear = None
-net = get_model(args.net)(num_classes=num_classes, activation=args.activation, conv1=conv1, strides=strides,
-                          ext_linear=ext_linear)
+if 'resnet' in args.net:
+    conv1 = get_conv1_params(args.dataset)
+    strides = get_strides(args.dataset)
+    net = net_cls(num_classes=num_classes, activation=args.activation, conv1=conv1, strides=strides,
+                  ext_linear=ext_linear)
+else:
+    net = net_cls(num_classes=num_classes, depth=70, width=16, activation_fn=Swish,
+                  mean=CIFAR10_MEAN, std=CIFAR10_STD, ext_linear=ext_linear)
 net = net.to(device)
+if args.resume:
+    global_state = torch.load(args.resume, map_location=torch.device(device))
+    if 'best_net' in global_state:
+        global_state = global_state['best_net']
+    net.load_state_dict(global_state)
+
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
 if args.glove and args.eval_method == 'knn':
@@ -477,7 +493,7 @@ def load_best_net():
     net.load_state_dict(global_state['best_net'])
 
 if __name__ == "__main__":
-    best_metric    = WORST_METRIC
+    best_metric = WORST_METRIC
     epoch = 0
     global_step = 0
     global_state = {}
