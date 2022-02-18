@@ -26,20 +26,20 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
 from research.models.utils import get_strides, get_conv1_params, get_model
 from research.classifiers.pytorch_classifier_specific import PyTorchClassifierSpecific
 from art.attacks.evasion import FastGradientMethod, ProjectedGradientDescent, DeepFool, SaliencyMapMethod, \
-    CarliniL2Method, CarliniLInfMethod
+    CarliniL2Method, CarliniLInfMethod, AutoProjectedGradientDescent
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robustness testing')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet34_ref', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_28_10_w_glove', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--attack', default='fgsm', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
-parser.add_argument('--attack_loss', default='cross_entropy', type=str,
+parser.add_argument('--attack', default='autopgd', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
+parser.add_argument('--attack_loss', default='cosine', type=str,
                     help='The loss used for attacking: cross_entropy/L1/SL1/L2/Linf/cosine')
-parser.add_argument('--attack_dir', default='debug', type=str, help='attack directory')
+parser.add_argument('--attack_dir', default='cosine', type=str, help='attack directory')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 
 # for FGSM/PGD/CW_Linf/whitebox_pgd:
-parser.add_argument('--eps'     , default=0.031, type=float, help='maximum Linf deviation from original image')
+parser.add_argument('--eps'     , default=8/255, type=float, help='maximum Linf deviation from original image')
 parser.add_argument('--eps_step', default=0.003, type=float, help='step size of each adv iteration')
 parser.add_argument('--max_iter', default=100, type=int, help='Max iter for PGD attack')
 
@@ -188,6 +188,17 @@ elif args.attack == 'pgd':
         eps_step=args.eps_step,
         targeted=targeted,
         num_random_init=10,
+        max_iter=args.max_iter,
+        batch_size=batch_size
+    )
+elif args.attack == 'autopgd':
+    attack = AutoProjectedGradientDescent(
+        estimator=classifier,
+        norm=np.inf,
+        eps=args.eps,
+        eps_step=args.eps_step,
+        targeted=targeted,
+        nb_random_init=5,
         max_iter=args.max_iter,
         batch_size=batch_size
     )
