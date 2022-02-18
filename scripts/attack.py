@@ -15,6 +15,8 @@ import logging
 import sys
 import random
 from cleverhans.utils import random_targets, to_categorical
+from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
+    CIFAR100_STD
 
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
@@ -34,12 +36,12 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 parser.add_argument('--attack', default='autopgd', type=str, help='attack: fgsm, jsma, pgd, deepfool, cw')
 parser.add_argument('--attack_loss', default='cosine', type=str,
                     help='The loss used for attacking: cross_entropy/L1/SL1/L2/Linf/cosine')
-parser.add_argument('--attack_dir', default='cosine', type=str, help='attack directory')
+parser.add_argument('--attack_dir', default='autopgd', type=str, help='attack directory')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 
 # for FGSM/PGD/CW_Linf/whitebox_pgd:
-parser.add_argument('--eps'     , default=8/255, type=float, help='maximum Linf deviation from original image')
+parser.add_argument('--eps'     , default=0.031, type=float, help='maximum Linf deviation from original image')
 parser.add_argument('--eps_step', default=0.003, type=float, help='step size of each adv iteration')
 parser.add_argument('--max_iter', default=100, type=int, help='Max iter for PGD attack')
 
@@ -53,6 +55,9 @@ args = parser.parse_args()
 # random.seed(9)
 # np.random.seed(9)
 # rand_gen = np.random.RandomState(seed=12345)
+
+if args.eps > 1:
+    args.eps = args.eps / 255
 
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
     train_args = json.load(f)
@@ -96,15 +101,19 @@ num_classes = len(classes)
 
 # Model
 logger.info('==> Building model..')
-conv1 = get_conv1_params(dataset)
-strides = get_strides(dataset)
-glove_dim = train_args.get('glove_dim', -1)
-if glove_dim != -1:
-    ext_linear = glove_dim
+net_cls = get_model(train_args['net'])
+if emb_dim != -1:
+    ext_linear = emb_dim
 else:
     ext_linear = None
-net = get_model(train_args['net'])(num_classes=num_classes, activation=train_args['activation'],
-                                   conv1=conv1, strides=strides, ext_linear=ext_linear)
+if 'resnet' in train_args['net']:
+    conv1 = get_conv1_params(dataset)
+    strides = get_strides(dataset)
+    net = net_cls(num_classes=num_classes, activation=train_args['activation'], conv1=conv1,
+                  strides=strides, ext_linear=ext_linear)
+else:
+    net = net_cls(num_classes=num_classes, depth=28, width=10, activation_fn=Swish,
+                  mean=CIFAR10_MEAN, std=CIFAR10_STD, ext_linear=ext_linear)
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
@@ -163,7 +172,7 @@ if targeted:
 
     if args.attack_loss != 'cross_entropy':
         # converting y_test_adv from vector to matrix of embeddings
-        y_adv_vec = np.empty((test_size, glove_dim), dtype=np.float32)
+        y_adv_vec = np.empty((test_size, emb_dim), dtype=np.float32)
         for i in range(test_size):
             y_adv_vec[i] = class_emb_vecs[y_test_adv[i]]
         y_test_adv = y_adv_vec
