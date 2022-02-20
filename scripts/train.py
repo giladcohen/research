@@ -20,20 +20,18 @@ import matplotlib.pyplot as plt
 from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
     CIFAR100_STD
 
-from research.losses.losses import LinfLoss, L2Loss, CosineEmbeddingLossV2, TradesLoss, VATLoss
+from research.losses.losses import LinfLoss, L2Loss, CosineEmbeddingLossV2, TradesLoss, VATLoss, GuidedAdversarialTrainingLoss
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_28_10_w_glove', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/debug', type=str, help='checkpoint dir')
 parser.add_argument('--glove', default=True, type=boolean_string, help='Train using GloVe embeddings instead of CE')
-parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
-parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
 
 # architecture:
-parser.add_argument('--net', default='Rebuffi2021Fixing_28_10_cutmix_ddpm', type=str, help='network architecture')
+parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
 parser.add_argument('--glove_dim', default=1024, type=int, help='Size of the words embeddings. -1 for no layer')
 
@@ -49,15 +47,15 @@ parser.add_argument('--eval_method', default='cosine', type=str, help='eval meth
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
-parser.add_argument('--resume', default='/data/gilad/logs/glove_emb/cifar10/dm_wide_resnet_28_10/ckpt.pth', type=str, help='Path to checkpoint to be resumed')
+parser.add_argument('--resume', default=None, type=str, help='Path to checkpoint to be resumed')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
-parser.add_argument('--epochs', default='50', type=int, help='number of epochs')
+parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
-parser.add_argument('--train_only_embs', default=True, type=boolean_string, help='Training only the ext_linear weights/bias')
+parser.add_argument('--train_only_embs', default=False, type=boolean_string, help='Training only the ext_linear weights/bias')
 
 # LR schedule
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -65,19 +63,32 @@ parser.add_argument('--factor', default=0.9, type=float, help='LR schedule facto
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 
-# TRADES/VAT params
+# common TRADES/VAT/GAT params
+parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
+parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
+parser.add_argument('--adv_gat', default=True, type=boolean_string, help='Use GAT adversarial training')
 parser.add_argument('--adv_emb_loss', default=None, type=str, help='criterion for the adversarial loss in TRADES')
-parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
+parser.add_argument('--epsilon', default=8, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
+# VAT params
 parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for VAT)')
 parser.add_argument('--xi', default=10, type=float, help='xi param for VAT')
+# GAT params
+parser.add_argument('--bern_eps', default=4, type=float, help='Bernoulli noise for GAT adv training')
+parser.add_argument('--steps', default=1, type=int, help='number of steps for GAT')
+parser.add_argument('--l2_reg', default=1.0, type=float, help='L2 regularization coefficient for GAT')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
 args = parser.parse_args()
 
-assert not (args.adv_trades and args.adv_vat), 'TRADES and VAT cannot be set together'
+if args.epsilon > 1:
+    args.epsilon = args.epsilon / 255
+if args.bern_eps > 1:
+    args.bern_eps = args.bern_eps / 255
+
+assert args.adv_trades + args.adv_vat + args.adv_gat <= 1, 'TRADES/VAT/GAT cannot be set together'
 
 if args.aux_loss:
     assert args.glove, 'using auxiliary loss requires glove=True'
@@ -158,10 +169,7 @@ if args.glove:
 # Model
 logger.info('==> Building model..')
 net_cls = get_model(args.net)
-if args.glove_dim != -1:
-    ext_linear = args.glove_dim
-else:
-    ext_linear = None
+ext_linear = args.glove_dim if args.glove_dim != -1 else None
 if 'resnet' in args.net:
     conv1 = get_conv1_params(args.dataset)
     strides = get_strides(args.dataset)
@@ -252,19 +260,30 @@ elif args.adv_vat:
         xi=args.xi,
         eps=args.epsilon
     )
+elif args.adv_gat:
+    gat_loss = GuidedAdversarialTrainingLoss(
+        model=net,
+        eps=args.epsilon,
+        bern_eps=args.bern_eps,
+        steps=args.steps,
+        l2_reg=args.l2_reg,
+        field='glove_embeddings' if args.glove else 'logits',
+        criterion=args.emb_loss if args.glove else 'ce',
+        adv_criterion=adv_emb_loss if args.glove else 'ce'
+    )
 
 
 def targets_to_embs(targets):
     return torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
 
-def output_loss_trades(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+def output_loss_trades(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     if args.glove:
         targets = targets_to_embs(targets)
-    return trades_loss(inputs, targets, is_training)
+    return trades_loss(inputs, targets, kwargs)
 
-def output_loss_vat(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+def output_loss_vat(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
-    loss_robust, outputs = vat_loss(inputs, is_training)
+    loss_robust, outputs = vat_loss(inputs, kwargs)
     if args.glove:
         targets = targets_to_embs(targets)
         loss_natural = emb_loss(outputs['glove_embeddings'], targets)
@@ -276,8 +295,12 @@ def output_loss_vat(inputs, targets, is_training=False) -> Tuple[Dict[str, torch
     losses['loss'] = loss
     return outputs, losses
 
+def output_loss_gat(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    if args.glove:
+        targets = targets_to_embs(targets)
+    return gat_loss(inputs, targets, kwargs)
 
-def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+def output_loss_emb(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
     embs = targets_to_embs(targets)
     outputs = net(inputs)
@@ -286,7 +309,7 @@ def output_loss_emb(inputs, targets, is_training=False) -> Tuple[Dict[str, torch
     losses['loss'] = loss
     return outputs, losses
 
-def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+def output_loss_normal(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
     outputs = net(inputs)
     loss = ce_criterion(outputs['logits'], targets)
@@ -294,7 +317,7 @@ def output_loss_normal(inputs, targets, is_training=False) -> Tuple[Dict[str, to
     losses['loss'] = loss
     return outputs, losses
 
-def output_loss_aux(inputs, targets, is_training=False) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+def output_loss_aux(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
     embs = targets_to_embs(targets)
     outputs = net(inputs)
@@ -316,6 +339,8 @@ def get_loss():
         loss_func = output_loss_trades
     elif args.adv_vat:
         loss_func = output_loss_vat
+    elif args.adv_gat:
+        loss_func = output_loss_gat
     elif args.aux_loss:
         loss_func = output_loss_aux
     elif args.glove:
@@ -369,7 +394,8 @@ def train():
     for batch_idx, (inputs, targets) in enumerate(trainloader):  # train a single step
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs, loss_dict = loss_func(inputs, targets, is_training=True)
+        kwargs = {'is_training': True, 'alt': batch_idx % 2}
+        outputs, loss_dict = loss_func(inputs, targets, kwargs)
 
         loss = loss_dict['loss']
         loss.backward()
@@ -383,7 +409,7 @@ def train():
         num_corrected = np.sum(preds == targets_np)
         acc = num_corrected / targets.size(0)
 
-        if global_step % 10 == 0:  # sampling, once ever 10 train iterations
+        if global_step % 11 == 0:  # sampling, once ever 10 train iterations
             for k, v in loss_dict.items():
                 train_writer.add_scalar('losses/' + k, v.item(), global_step)
             train_writer.add_scalar('metrics/acc', 100.0 * acc, global_step)
@@ -412,7 +438,8 @@ def validate():
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(valloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs, loss_dict = loss_func(inputs, targets, is_training=False)
+            kwargs = {'is_training': False, 'alt': 0}
+            outputs, loss_dict = loss_func(inputs, targets, kwargs)
             preds = pred_func(outputs)
 
             loss = loss_dict['loss']
@@ -455,7 +482,8 @@ def test():
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs, loss_dict = loss_func(inputs, targets, is_training=False)
+            kwargs = {'is_training': False, 'alt': 0}
+            outputs, loss_dict = loss_func(inputs, targets, kwargs)
             preds = pred_func(outputs)
 
             loss = loss_dict['loss']
@@ -502,7 +530,7 @@ if __name__ == "__main__":
     global_state = {}
 
     logger.info('Testing epoch #{}'.format(epoch + 1))
-    test()
+    # test()
 
     logger.info('Start training from epoch #{} for {} epochs'.format(epoch + 1, args.epochs))
     for epoch in tqdm(range(epoch, epoch + args.epochs)):
