@@ -250,7 +250,5 @@ class GuidedAdversarialTrainingLoss(_Loss):
         losses['natural'] = loss_natural
         losses['robust'] = loss_robust
         losses['loss'] = loss
-        print('for alt={}:'.format(alt))
-        print(losses)
         return outputs, losses
 
