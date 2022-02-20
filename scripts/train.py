@@ -28,7 +28,7 @@ from research.models.utils import get_strides, get_conv1_params, get_model
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/debug', type=str, help='checkpoint dir')
-parser.add_argument('--glove', default=True, type=boolean_string, help='Train using GloVe embeddings instead of CE')
+parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
 
 # architecture:
 parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
@@ -41,9 +41,9 @@ parser.add_argument('--aux_loss', default=False, type=boolean_string,
 parser.add_argument('--w_aux', default=0.5, type=float, help="The embedding loss auxiliary loss's weight")
 
 # GloVe settings
-parser.add_argument('--emb_selection', default='bert', type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
+parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
 parser.add_argument('--emb_loss', default='cosine', type=str, help='The loss used for embedding training: L1/L2/Linf/cosine')
-parser.add_argument('--eval_method', default='cosine', type=str, help='eval method for embeddings: softmax/knn/cosine')
+parser.add_argument('--eval_method', default='softmax', type=str, help='eval method for embeddings: softmax/knn/cosine')
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
@@ -52,7 +52,7 @@ parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of S
 parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
-parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--train_only_embs', default=False, type=boolean_string, help='Training only the ext_linear weights/bias')
@@ -66,7 +66,7 @@ parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 # common TRADES/VAT/GAT params
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
-parser.add_argument('--adv_gat', default=True, type=boolean_string, help='Use GAT adversarial training')
+parser.add_argument('--adv_gat', default=False, type=boolean_string, help='Use GAT adversarial training')
 parser.add_argument('--adv_emb_loss', default=None, type=str, help='criterion for the adversarial loss in TRADES')
 parser.add_argument('--epsilon', default=8, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
@@ -211,10 +211,46 @@ np.save(os.path.join(args.checkpoint_dir, 'y_test.npy'), y_test)
 np.save(os.path.join(args.checkpoint_dir, 'train_inds.npy'), train_inds)
 np.save(os.path.join(args.checkpoint_dir, 'val_inds.npy'), val_inds)
 
+# setting parameter groups:
+no_decay = dict()
+decay = dict()
+for name, m in net.named_modules():
+    if isinstance(m, (nn.Linear, nn.Conv2d)):
+        decay[name + '.weight'] = m.weight
+        decay[name + '.bias'] = m.bias
+    elif isinstance(m, nn.BatchNorm2d):
+        no_decay[name + '.weight'] = m.weight
+        no_decay[name + '.bias'] = m.bias
+    else:
+        if hasattr(m, 'weight'):
+            no_decay[name + '.weight'] = m.weight
+        if hasattr(m, 'bias'):
+            no_decay[name + '.bias'] = m.weight
+
+# remove all None values:
+del_items = []
+for d, v in decay.items():
+    if v is None:
+        del_items.append(d)
+for d in del_items:
+    print('deleting {} from decay'.format(d))
+    decay.pop(d)
+
+del_items = []
+for d, v in no_decay.items():
+    if v is None:
+        del_items.append(d)
+for d in del_items:
+    print('deleting {} from no_decay'.format(d))
+    no_decay.pop(d)
+# print(decay.keys())
+# print(no_decay.keys())
+
 if args.train_only_embs:
     optimizer = optim.SGD(net.ext_linear.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
 else:
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
+    optimizer = optim.SGD([{'params': decay.values(), 'weight_decay': args.wd}, {'params': no_decay.values(), 'weight_decay': 0.0}]
+                          , lr=args.lr, momentum=args.mom, nesterov=args.mom > 0)
 lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     mode=metric_mode,
@@ -530,7 +566,7 @@ if __name__ == "__main__":
     global_state = {}
 
     logger.info('Testing epoch #{}'.format(epoch + 1))
-    # test()
+    test()
 
     logger.info('Start training from epoch #{} for {} epochs'.format(epoch + 1, args.epochs))
     for epoch in tqdm(range(epoch, epoch + args.epochs)):
@@ -538,8 +574,8 @@ if __name__ == "__main__":
         validate()
         if epoch % 10 == 0 and epoch > 0:
             test()
-            if epoch % 100 == 0:
-                save_current_state()  # once every 100 epochs, save network to a new, distinctive checkpoint file
+            if epoch % 10 == 0:
+                save_current_state()  # once every 10 epochs, save network to a new, distinctive checkpoint file
     save_current_state()
 
     # getting best metric, loading best net
