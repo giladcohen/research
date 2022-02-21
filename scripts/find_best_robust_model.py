@@ -202,7 +202,7 @@ def pred(X):
 # files.sort()
 accuracy_dict = dict()
 ckpt_list = [os.path.join(args.checkpoint_dir, 'ckpt.pth')]
-for epoch in np.hstack((np.arange(0, 300, 10), 299)):
+for epoch in np.hstack((np.arange(10, 300, 10), 299)):
     ckpt = os.path.join(args.checkpoint_dir, 'ckpt_epoch_{}.pth'.format(epoch))
     ckpt_list.append(ckpt)
 for ckpt in ckpt_list:
