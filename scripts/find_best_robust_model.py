@@ -224,7 +224,8 @@ for ckpt in ckpt_list:
     else:
         epoch = 'best'
     accuracy_dict[epoch] = {'normal': normal_acc, 'robust': robust_acc}
-    logger.info('Epoch {}: normal accuracy: {}%, robust accuracy: {}%'.format(epoch, normal_acc, robust_acc))
+    logger.info('Epoch {}: normal accuracy: {}%, robust accuracy: {}%'
+                .format(epoch, 100.0 * normal_acc, 100.0 * robust_acc))
 
 writer.flush()
 logger.handlers[0].flush()
