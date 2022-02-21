@@ -233,7 +233,6 @@ for d, v in decay.items():
     if v is None:
         del_items.append(d)
 for d in del_items:
-    print('deleting {} from decay'.format(d))
     decay.pop(d)
 
 del_items = []
@@ -241,7 +240,6 @@ for d, v in no_decay.items():
     if v is None:
         del_items.append(d)
 for d in del_items:
-    print('deleting {} from no_decay'.format(d))
     no_decay.pop(d)
 # print(decay.keys())
 # print(no_decay.keys())
