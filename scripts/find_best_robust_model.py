@@ -35,15 +35,15 @@ from art.attacks.evasion import FastGradientMethod, ProjectedGradientDescent, De
     CarliniL2Method, CarliniLInfMethod, AutoProjectedGradientDescent
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robustness testing')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet18/baseline1_adv_robust_gat_lambda_1', type=str, help='checkpoint dir')
-parser.add_argument('--attack_loss', default='cross_entropy', type=str,
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet18/bert', type=str, help='checkpoint dir')
+parser.add_argument('--attack_loss', default='cosine', type=str,
                     help='The loss used for attacking: cross_entropy/L1/L2/Linf/cosine')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--eps'     , default=8, type=float, help='maximum Linf deviation from original image')
 parser.add_argument('--steps', default=7, type=int, help='Number of iterations for attack')
 
 # evaluation
-parser.add_argument('--method', default='softmax', type=str, help='softmax/knn/cosine')
+parser.add_argument('--method', default='cosine', type=str, help='softmax/knn/cosine')
 parser.add_argument('--knn_norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -200,6 +200,14 @@ def pred(X):
 ################################# Attacking and evaluating checkpoints ###########################
 # files = glob.glob(os.path.join(args.checkpoint_dir, '*.pth'), recursive=False)
 # files.sort()
+if args.attack_loss == 'cross_entropy':
+    targets = y_val
+else:
+    # converting class labels from vector to matrix of embeddings
+    targets = np.empty((val_size, emb_dim), dtype=np.float32)
+    for i in range(val_size):
+        targets[i] = class_emb_vecs[y_val[i]]
+
 accuracy_dict = dict()
 ckpt_list = [os.path.join(args.checkpoint_dir, 'ckpt.pth')]
 for epoch in np.hstack((np.arange(10, 300, 10), 299)):
@@ -213,7 +221,7 @@ for ckpt in ckpt_list:
     y_preds = pred(X_val)
     normal_acc = np.mean(y_val == y_preds)
 
-    X_val_adv = attack.generate(x=X_val, y=y_val)
+    X_val_adv = attack.generate(x=X_val, y=targets)
     y_val_preds = pred(X_val_adv)
     robust_acc = np.mean(y_val == y_val_preds)
 
