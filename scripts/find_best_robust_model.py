@@ -225,3 +225,6 @@ for ckpt in ckpt_list:
         epoch = 'best'
     accuracy_dict[epoch] = {'normal': normal_acc, 'robust': robust_acc}
     logger.info('Epoch {}: normal accuracy: {}%, robust accuracy: {}%'.format(epoch, normal_acc, robust_acc))
+
+writer.flush()
+logger.handlers[0].flush()
