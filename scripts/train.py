@@ -35,13 +35,13 @@ parser.add_argument('--activation', default='relu', type=str, help='network acti
 parser.add_argument('--glove_dim', default=1024, type=int, help='Size of the words embeddings. -1 for no layer')
 
 # Loss and GloVe settings
-parser.add_argument('--softmax_loss', default=None, type=str, help='The loss used for probs: None/ce')
-parser.add_argument('--emb_loss', default=None, type=str, help='The loss used for embedding training: None/L1/L2/Linf/cosine')
-parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
-parser.add_argument('--w_emb', default=0.0, type=float, help="The embedding loss's weight")
+parser.add_argument('--softmax_loss', default='ce', type=str, help='The loss used for probs: None/ce')
+parser.add_argument('--emb_loss', default='cosine', type=str, help='The loss used for embedding training: None/L1/L2/Linf/cosine')
+parser.add_argument('--emb_selection', default='bert', type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
+parser.add_argument('--w_emb', default=0.5, type=float, help="The embedding loss's weight")
 
 # Evaluation
-parser.add_argument('--eval_method', default='softmax', type=str, help='eval method for embeddings: softmax/knn/cosine')
+parser.add_argument('--eval_method', default='cosine', type=str, help='eval method for embeddings: softmax/knn/cosine')
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
@@ -79,9 +79,13 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-epsilon = args.epsilon / 255
-eps_step = args.eps_step / 255
-bern_eps = args.bern_eps / 255
+if args.epsilon > 1.0:
+    args.epsilon /= 255
+if args.eps_step > 1.0:
+    args.eps_step /= 255
+if args.bern_eps > 1.0:
+    args.bern_eps /= 255
+
 glove = args.glove_dim != -1
 
 is_adv_training = args.adv_trades or args.adv_vat or args.adv_gat
@@ -233,8 +237,8 @@ else:
 if args.adv_trades:
     adv_training_loss = TradesLoss(
         model=net,
-        eps=epsilon,
-        eps_step=eps_step,
+        eps=args.epsilon,
+        eps_step=args.eps_step,
         steps=10,
         beta=args.beta,
         field='logits',
@@ -249,15 +253,15 @@ elif args.adv_vat:
         adv_criterion='kl',
         beta=args.beta,
         xi=args.xi,
-        eps=epsilon,
+        eps=args.epsilon,
         steps=1
     )
 elif args.adv_gat:
     adv_training_loss = GuidedAdversarialTrainingLoss(
         model=net,
-        eps=epsilon,
-        eps_step=epsilon,
-        bern_eps=bern_eps,
+        eps=args.epsilon,
+        eps_step=args.epsilon,
+        bern_eps=args.bern_eps,
         steps=1,
         l2_reg=args.l2_reg,
         field='logits',
