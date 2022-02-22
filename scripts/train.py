@@ -20,29 +20,27 @@ import matplotlib.pyplot as plt
 from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
     CIFAR100_STD
 
-from research.losses.losses import LinfLoss, L2Loss, CosineEmbeddingLossV2, TradesLoss, VATLoss, GuidedAdversarialTrainingLoss
+from research.losses.losses import TradesLoss, VATLoss, GuidedAdversarialTrainingLoss, loss_critetion_factory
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
-from research.utils import boolean_string, get_image_shape, set_logger
+from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/debug', type=str, help='checkpoint dir')
-parser.add_argument('--glove', default=False, type=boolean_string, help='Train using GloVe embeddings instead of CE')
 
 # architecture:
 parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
 parser.add_argument('--glove_dim', default=1024, type=int, help='Size of the words embeddings. -1 for no layer')
 
-# cross entropy with embedding loss
-parser.add_argument('--aux_loss', default=False, type=boolean_string,
-                    help='Train cross entropy with embeddings loss as auxiliary loss')
-parser.add_argument('--w_aux', default=0.5, type=float, help="The embedding loss auxiliary loss's weight")
-
-# GloVe settings
+# Loss and GloVe settings
+parser.add_argument('--softmax_loss', default=None, type=str, help='The loss used for probs: None/ce')
+parser.add_argument('--emb_loss', default=None, type=str, help='The loss used for embedding training: None/L1/L2/Linf/cosine')
 parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
-parser.add_argument('--emb_loss', default='cosine', type=str, help='The loss used for embedding training: L1/L2/Linf/cosine')
+parser.add_argument('--w_emb', default=0.0, type=float, help="The embedding loss's weight")
+
+# Evaluation
 parser.add_argument('--eval_method', default='softmax', type=str, help='eval method for embeddings: softmax/knn/cosine')
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
@@ -52,7 +50,7 @@ parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of S
 parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
-parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--train_only_embs', default=False, type=boolean_string, help='Training only the ext_linear weights/bias')
@@ -67,15 +65,13 @@ parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
 parser.add_argument('--adv_gat', default=False, type=boolean_string, help='Use GAT adversarial training')
-parser.add_argument('--adv_emb_loss', default=None, type=str, help='criterion for the adversarial loss in TRADES')
 parser.add_argument('--epsilon', default=8, type=float, help='epsilon for TRADES loss')
-parser.add_argument('--step_size', default=0.007, type=float, help='step size for TRADES loss')
+parser.add_argument('--eps_step', default=2, type=float, help='step size for TRADES/GAT loss')
+parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for TRADES/VAT)')
 # VAT params
-parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for VAT)')
 parser.add_argument('--xi', default=10, type=float, help='xi param for VAT')
 # GAT params
 parser.add_argument('--bern_eps', default=4, type=float, help='Bernoulli noise for GAT adv training')
-parser.add_argument('--steps', default=1, type=int, help='number of steps for GAT')
 parser.add_argument('--l2_reg', default=1.0, type=float, help='L2 regularization coefficient for GAT')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -83,18 +79,17 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
-if args.epsilon > 1:
-    args.epsilon = args.epsilon / 255
-if args.bern_eps > 1:
-    args.bern_eps = args.bern_eps / 255
+epsilon = args.epsilon / 255
+eps_step = args.eps_step / 255
+bern_eps = args.bern_eps / 255
+glove = args.glove_dim != -1
 
+is_adv_training = args.adv_trades or args.adv_vat or args.adv_gat
 assert args.adv_trades + args.adv_vat + args.adv_gat <= 1, 'TRADES/VAT/GAT cannot be set together'
-
-if args.aux_loss:
-    assert args.glove, 'using auxiliary loss requires glove=True'
-
-if args.glove:
-    assert args.glove_dim != -1, 'glove_dim must be set when training with glove embeddings'
+assert (args.emb_selection is None) == (args.emb_loss is None) == (args.w_emb == 0.0),\
+    'emb_selection, emb_loss, w_emb must be set together'
+if args.emb_selection is not None:
+    assert glove, 'using auxiliary loss requires glove'
 
 # dumping args to txt file
 os.makedirs(args.checkpoint_dir, exist_ok=True)
@@ -162,14 +157,14 @@ train_size = len(trainloader.dataset)
 val_size   = len(valloader.dataset)
 test_size  = len(testloader.dataset)
 
-if args.glove:
+if args.emb_selection is not None:
     # saving glove_vecs for the classes:
     np.save(CLASS_EMB_VECS, class_emb_vecs)
 
 # Model
 logger.info('==> Building model..')
 net_cls = get_model(args.net)
-ext_linear = args.glove_dim if args.glove_dim != -1 else None
+ext_linear = args.glove_dim if glove else None
 if 'resnet' in args.net:
     conv1 = get_conv1_params(args.dataset)
     strides = get_strides(args.dataset)
@@ -184,22 +179,18 @@ if args.resume:
     if 'best_net' in global_state:
         global_state = global_state['best_net']
     net.load_state_dict(global_state, strict=False)
-
+if device == 'cuda':
+    # net = torch.nn.DataParallel(net)
+    cudnn.benchmark = True
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-if args.glove and args.eval_method == 'knn':
+if (args.emb_selection is not None) and args.eval_method == 'knn':
     # knn model
     knn = NearestNeighbors(n_neighbors=1, algorithm='brute', p=knn_norm)
     knn.fit(class_emb_vecs)
 else:
     knn = None
 
-if device == 'cuda':
-    # net = torch.nn.DataParallel(net)
-    cudnn.benchmark = True
-
-ce_criterion = nn.CrossEntropyLoss()
-cos = nn.CosineSimilarity()
 y_train    = np.asarray(trainloader.dataset.targets)
 y_val      = np.asarray(valloader.dataset.targets)
 y_test     = np.asarray(testloader.dataset.targets)
@@ -211,44 +202,12 @@ np.save(os.path.join(args.checkpoint_dir, 'y_test.npy'), y_test)
 np.save(os.path.join(args.checkpoint_dir, 'train_inds.npy'), train_inds)
 np.save(os.path.join(args.checkpoint_dir, 'val_inds.npy'), val_inds)
 
-# setting parameter groups:
-no_decay = dict()
-decay = dict()
-for name, m in net.named_modules():
-    if isinstance(m, (nn.Linear, nn.Conv2d)):
-        decay[name + '.weight'] = m.weight
-        decay[name + '.bias'] = m.bias
-    elif isinstance(m, nn.BatchNorm2d):
-        no_decay[name + '.weight'] = m.weight
-        no_decay[name + '.bias'] = m.bias
-    else:
-        if hasattr(m, 'weight'):
-            no_decay[name + '.weight'] = m.weight
-        if hasattr(m, 'bias'):
-            no_decay[name + '.bias'] = m.weight
-
-# remove all None values:
-del_items = []
-for d, v in decay.items():
-    if v is None:
-        del_items.append(d)
-for d in del_items:
-    decay.pop(d)
-
-del_items = []
-for d, v in no_decay.items():
-    if v is None:
-        del_items.append(d)
-for d in del_items:
-    no_decay.pop(d)
-# print(decay.keys())
-# print(no_decay.keys())
-
+decay, no_decay = get_parameter_groups(net)
 if args.train_only_embs:
     optimizer = optim.SGD(net.ext_linear.parameters(), lr=args.lr, momentum=args.mom, weight_decay=args.wd, nesterov=args.mom > 0)
 else:
-    optimizer = optim.SGD([{'params': decay.values(), 'weight_decay': args.wd}, {'params': no_decay.values(), 'weight_decay': 0.0}]
-                          , lr=args.lr, momentum=args.mom, nesterov=args.mom > 0)
+    optimizer = optim.SGD([{'params': decay.values(), 'weight_decay': args.wd}, {'params': no_decay.values(), 'weight_decay': 0.0}],
+                          lr=args.lr, momentum=args.mom, nesterov=args.mom > 0)
 lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     mode=metric_mode,
@@ -258,130 +217,87 @@ lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
     cooldown=args.cooldown
 )
 
-if args.emb_loss == 'L1':
-    emb_loss = nn.L1Loss()
-elif args.emb_loss == 'L2':
-    emb_loss = L2Loss()
-elif args.emb_loss == 'Linf':
-    emb_loss = LinfLoss()
-elif args.emb_loss == 'cosine':
-    emb_loss = CosineEmbeddingLossV2()
+ce_criterion = nn.CrossEntropyLoss()
+cos = nn.CosineSimilarity()
+if args.softmax_loss is not None:
+    assert args.softmax_loss == 'ce'
+    softmax_loss = ce_criterion
 else:
-    raise AssertionError('Unknown value args.emb_loss = {}'.format(args.emb_loss))
-
-if args.adv_emb_loss is None:
-    adv_emb_loss = args.emb_loss
+    softmax_loss = None
+if args.emb_loss is not None:
+    assert args.emb_loss in ['L1', 'L2', 'Linf', 'cosine']
+    emb_loss = loss_critetion_factory(args.emb_loss)
 else:
-    adv_emb_loss = args.adv_emb_loss
+    emb_loss = None
 
 if args.adv_trades:
-    trades_loss = TradesLoss(
+    adv_training_loss = TradesLoss(
         model=net,
-        optimizer=optimizer,
-        step_size=args.step_size,
-        epsilon=args.epsilon,
-        perturb_steps=10,
+        eps=epsilon,
+        eps_step=eps_step,
+        steps=10,
         beta=args.beta,
-        field='glove_embeddings' if args.glove else 'logits',
-        criterion=args.emb_loss if args.glove else 'ce',
-        adv_criterion=adv_emb_loss if args.glove else 'kl'
+        field='logits',
+        criterion='ce',
+        adv_criterion='kl'
     )
 elif args.adv_vat:
-    vat_loss = VATLoss(
+    adv_training_loss = VATLoss(
         model=net,
-        field='glove_embeddings' if args.glove else 'logits',
-        adv_criterion=adv_emb_loss if args.glove else 'kl',
+        field='logits',
+        criterion='ce',
+        adv_criterion='kl',
+        beta=args.beta,
         xi=args.xi,
-        eps=args.epsilon
+        eps=epsilon,
+        steps=1
     )
 elif args.adv_gat:
-    gat_loss = GuidedAdversarialTrainingLoss(
+    adv_training_loss = GuidedAdversarialTrainingLoss(
         model=net,
-        eps=args.epsilon,
-        bern_eps=args.bern_eps,
-        steps=args.steps,
+        eps=epsilon,
+        eps_step=epsilon,
+        bern_eps=bern_eps,
+        steps=1,
         l2_reg=args.l2_reg,
-        field='glove_embeddings' if args.glove else 'logits',
-        criterion=args.emb_loss if args.glove else 'ce',
-        adv_criterion=adv_emb_loss if args.glove else 'ce'
+        field='logits',
+        criterion='ce',
+        adv_criterion='ce'
     )
-
 
 def targets_to_embs(targets):
     return torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
 
-def output_loss_trades(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
-    if args.glove:
+def output_adv_training_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    outputs, losses = adv_training_loss(inputs, targets, kwargs)
+    if emb_loss is not None:
         targets = targets_to_embs(targets)
-    return trades_loss(inputs, targets, kwargs)
+        losses['embeddings'] = args.w_emb * emb_loss(outputs['glove_embeddings'], targets)
+        losses['loss'] += losses['embeddings']
+    return outputs, losses
 
-def output_loss_vat(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+def output_non_robust_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     losses = {}
-    loss_robust, outputs = vat_loss(inputs, kwargs)
-    if args.glove:
+    outputs = net(inputs)
+    if softmax_loss is not None:
+        losses['softmax'] = softmax_loss(outputs['logits'], targets)
+    if emb_loss is not None:
         targets = targets_to_embs(targets)
-        loss_natural = emb_loss(outputs['glove_embeddings'], targets)
+        losses['embeddings'] = args.w_emb * emb_loss(outputs['glove_embeddings'], targets)
+    losses['loss'] = losses.get('softmax', 0.0) + losses.get('embeddings', 0.0)
+    return outputs, losses
+
+def get_loss():
+    if is_adv_training:
+        loss_func = output_adv_training_loss
     else:
-        loss_natural = ce_criterion(outputs['logits'], targets)
-    loss = loss_natural + args.beta * loss_robust
-    losses['natural'] = loss_natural
-    losses['robust'] = loss_robust
-    losses['loss'] = loss
-    return outputs, losses
-
-def output_loss_gat(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
-    if args.glove:
-        targets = targets_to_embs(targets)
-    return gat_loss(inputs, targets, kwargs)
-
-def output_loss_emb(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
-    losses = {}
-    embs = targets_to_embs(targets)
-    outputs = net(inputs)
-    loss = emb_loss(outputs['glove_embeddings'], embs)
-    losses['embeddings'] = loss
-    losses['loss'] = loss
-    return outputs, losses
-
-def output_loss_normal(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
-    losses = {}
-    outputs = net(inputs)
-    loss = ce_criterion(outputs['logits'], targets)
-    losses['cross_entropy'] = loss
-    losses['loss'] = loss
-    return outputs, losses
-
-def output_loss_aux(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
-    losses = {}
-    embs = targets_to_embs(targets)
-    outputs = net(inputs)
-    loss_ce = ce_criterion(outputs['logits'], targets)
-    loss_emb = emb_loss(outputs['glove_embeddings'], embs)
-    loss = (1 - args.w_aux) * loss_ce + args.w_aux * loss_emb
-    losses['cross_entropy'] = loss_ce
-    losses['embeddings'] = loss_emb
-    losses['loss'] = loss
-    return outputs, losses
+        loss_func = output_non_robust_loss
+    return loss_func
 
 def softmax_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     _, preds = outputs['logits'].max(1)
     preds = preds.cpu().numpy()
     return preds
-
-def get_loss():
-    if args.adv_trades:
-        loss_func = output_loss_trades
-    elif args.adv_vat:
-        loss_func = output_loss_vat
-    elif args.adv_gat:
-        loss_func = output_loss_gat
-    elif args.aux_loss:
-        loss_func = output_loss_aux
-    elif args.glove:
-        loss_func = output_loss_emb
-    else:
-        loss_func = output_loss_normal
-    return loss_func
 
 def knn_pred(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     preds = knn.kneighbors(outputs['glove_embeddings'].detach().cpu().numpy(), return_distance=False).squeeze()
@@ -572,8 +488,8 @@ if __name__ == "__main__":
         validate()
         if epoch % 10 == 0 and epoch > 0:
             test()
-            if epoch % 10 == 0:
-                save_current_state()  # once every 10 epochs, save network to a new, distinctive checkpoint file
+        if epoch % 1 == 0:  # increase value for large models
+            save_current_state()  # once every 10 epochs, save network to a new, distinctive checkpoint file
     save_current_state()
 
     # getting best metric, loading best net

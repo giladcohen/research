@@ -576,3 +576,36 @@ def tensor2imgs(tensor, mean=(0, 0, 0), std=(1, 1, 1), to_rgb=True):
         img = img.astype(np.uint8)
         imgs.append(np.ascontiguousarray(img))
     return imgs
+
+def get_parameter_groups(net: nn.Module) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    no_decay = dict()
+    decay = dict()
+    for name, m in net.named_modules():
+        if isinstance(m, (nn.Linear, nn.Conv2d)):
+            decay[name + '.weight'] = m.weight
+            decay[name + '.bias'] = m.bias
+        elif isinstance(m, nn.BatchNorm2d):
+            no_decay[name + '.weight'] = m.weight
+            no_decay[name + '.bias'] = m.bias
+        else:
+            if hasattr(m, 'weight'):
+                no_decay[name + '.weight'] = m.weight
+            if hasattr(m, 'bias'):
+                no_decay[name + '.bias'] = m.weight
+
+    # remove all None values:
+    del_items = []
+    for d, v in decay.items():
+        if v is None:
+            del_items.append(d)
+    for d in del_items:
+        decay.pop(d)
+
+    del_items = []
+    for d, v in no_decay.items():
+        if v is None:
+            del_items.append(d)
+    for d in del_items:
+        no_decay.pop(d)
+
+    return decay, no_decay
