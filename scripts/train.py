@@ -79,6 +79,8 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 
 args = parser.parse_args()
 
+torch.autograd.set_detect_anomaly(True)
+
 if args.epsilon > 1.0:
     args.epsilon /= 255
 if args.eps_step > 1.0:
