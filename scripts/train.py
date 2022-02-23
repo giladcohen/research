@@ -327,7 +327,7 @@ def get_pred():
     elif args.eval_method == 'cosine':
         pred_func = cosine_pred
     else:
-        raise AssertionError('Unknown args.glove=True with unknown eval_method={}'.format(args.eval_method))
+        raise AssertionError('Unknown eval_method={}'.format(args.eval_method))
     return pred_func
 
 
