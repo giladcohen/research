@@ -56,7 +56,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--train_only_embs', default=False, type=boolean_string, help='Training only the ext_linear weights/bias')
 
 # LR schedule
-parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
@@ -352,7 +352,6 @@ def train():
         outputs, loss_dict = loss_func(inputs, targets, kwargs)
 
         loss = loss_dict['loss']
-        print(loss_dict)
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
