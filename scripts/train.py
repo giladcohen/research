@@ -32,22 +32,22 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifa
 # architecture:
 parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu or softplus')
-parser.add_argument('--glove_dim', default=1024, type=int, help='Size of the words embeddings. -1 for no layer')
+parser.add_argument('--glove_dim', default=-1, type=int, help='Size of the words embeddings. -1 for no layer')
 
 # Loss and GloVe settings
-parser.add_argument('--softmax_loss', default='ce', type=str, help='The loss used for probs: None/ce')
-parser.add_argument('--emb_loss', default='cosine', type=str, help='The loss used for embedding training: None/L1/L2/Linf/cosine')
-parser.add_argument('--emb_selection', default='bert', type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
-parser.add_argument('--w_emb', default=0.5, type=float, help="The embedding loss's weight")
+parser.add_argument('--softmax_loss', default=None, type=str, help='The loss used for probs: None/ce')
+parser.add_argument('--emb_loss', default=None, type=str, help='The loss used for embedding training: None/L1/L2/Linf/cosine')
+parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
+parser.add_argument('--w_emb', default=0.0, type=float, help="The embedding loss's weight")
 
 # Evaluation
-parser.add_argument('--eval_method', default='cosine', type=str, help='eval method for embeddings: softmax/knn/cosine')
+parser.add_argument('--eval_method', default='softmax', type=str, help='eval method for embeddings: softmax/knn/cosine')
 parser.add_argument('--knn_norm', default='2', type=str, help='Norm for knn: 1/2/inf')
 
 # optimization:
 parser.add_argument('--resume', default=None, type=str, help='Path to checkpoint to be resumed')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
-parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
+parser.add_argument('--epochs', default='400', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size')
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
@@ -56,7 +56,7 @@ parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--train_only_embs', default=False, type=boolean_string, help='Training only the ext_linear weights/bias')
 
 # LR schedule
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
@@ -65,14 +65,14 @@ parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
 parser.add_argument('--adv_gat', default=False, type=boolean_string, help='Use GAT adversarial training')
-parser.add_argument('--epsilon', default=8, type=float, help='epsilon for TRADES loss')
-parser.add_argument('--eps_step', default=2, type=float, help='step size for TRADES/GAT loss')
+parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
+parser.add_argument('--eps_step', default=0.031, type=float, help='step size for TRADES/GAT loss')
 parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for TRADES/VAT)')
 # VAT params
 parser.add_argument('--xi', default=10, type=float, help='xi param for VAT')
 # GAT params
-parser.add_argument('--bern_eps', default=4, type=float, help='Bernoulli noise for GAT adv training')
-parser.add_argument('--l2_reg', default=1.0, type=float, help='L2 regularization coefficient for GAT')
+parser.add_argument('--bern_eps', default=0.0155, type=float, help='Bernoulli noise for GAT adv training')
+parser.add_argument('--l2_reg', default=10.0, type=float, help='L2 regularization coefficient for GAT')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -260,7 +260,7 @@ elif args.adv_gat:
     adv_training_loss = GuidedAdversarialTrainingLoss(
         model=net,
         eps=args.epsilon,
-        eps_step=args.epsilon,
+        eps_step=args.eps_step,
         bern_eps=args.bern_eps,
         steps=1,
         l2_reg=args.l2_reg,
@@ -352,6 +352,7 @@ def train():
         outputs, loss_dict = loss_func(inputs, targets, kwargs)
 
         loss = loss_dict['loss']
+        print(loss_dict)
         loss.backward()
         optimizer.step()
         train_loss += loss.item()

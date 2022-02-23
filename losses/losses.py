@@ -93,6 +93,7 @@ class TradesLoss(_Loss):
         is_training = kwargs['is_training']
         losses = {}
         self.model.eval()
+        batch_size = len(x_natural)
         x_adv = x_natural.detach() + 0.001 * torch.randn(x_natural.shape).cuda().detach()
         with torch.enable_grad():
             outputs = self.model(x_natural)
@@ -101,9 +102,9 @@ class TradesLoss(_Loss):
                 x_adv.requires_grad_()
                 out_adv = self.model(x_adv)[self.field]
                 if isinstance(self.adv_loss_criterion, KLDivAbsLoss):
-                    loss = self.adv_loss_criterion(out_adv, out_natural, y)
+                    loss = batch_size * self.adv_loss_criterion(out_adv, out_natural, y)
                 else:
-                    loss = self.adv_loss_criterion(out_adv, out_natural)
+                    loss = batch_size * self.adv_loss_criterion(out_adv, out_natural)  # multiplying in batch_size to match reference
                 grad = torch.autograd.grad(loss, [x_adv])[0]
                 x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
                 x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
@@ -218,24 +219,25 @@ class GuidedAdversarialTrainingLoss(_Loss):
         x_adv = x_natural + self.bern_eps * torch.sign(torch.tensor(0.5) - torch.rand_like(x_natural))
         x_adv = torch.clamp(x_adv, 0.0, 1.0)
 
-        # x_adv generation
-        for _ in range(self.steps):
-            x_adv.requires_grad_()
-            with torch.enable_grad():
-                outputs = self.model(x_natural)
-                out_natural = outputs[self.field]
-                adv_outputs = self.model(x_adv)
-                out_adv = adv_outputs[self.field]
-                loss_attack = self.adv_loss_criterion(out_adv, y)
-                if alt == 1:
-                    loss_l2_reg = self.l2_reg * (torch.linalg.norm(outputs['probs'] - adv_outputs['probs'], dim=1) ** 2.0).mean(0)
-                else:
-                    loss_l2_reg = 0.0
-                loss = loss_attack + loss_l2_reg
-                grad = torch.autograd.grad(loss, [x_adv])[0]
-                x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
-                x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
-                x_adv = torch.clamp(x_adv, 0.0, 1.0)
+        with torch.enable_grad():
+            outputs = self.model(x_natural)
+            out_natural = outputs[self.field]
+            # x_adv generation
+            for _ in range(self.steps):
+                x_adv.requires_grad_()
+                with torch.enable_grad():
+                    adv_outputs = self.model(x_adv)
+                    out_adv = adv_outputs[self.field]
+                    loss_attack = self.adv_loss_criterion(out_adv, y)
+                    if alt == 1:
+                        loss_l2_reg = self.l2_reg * (torch.linalg.norm(outputs['probs'] - adv_outputs['probs'], dim=1) ** 2.0).mean(0)
+                    else:
+                        loss_l2_reg = 0.0
+                    loss = loss_attack + loss_l2_reg
+                    grad = torch.autograd.grad(loss, [x_adv])[0]
+                    x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
+                    x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
+                    x_adv = torch.clamp(x_adv, 0.0, 1.0)
 
         # adv training
         self.model.train(is_training)
