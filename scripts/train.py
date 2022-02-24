@@ -356,7 +356,7 @@ def train():
         lr = optimizer.param_groups[0]['lr']
         kwargs = {'is_training': True, 'alt': batch_idx % 2, 'lr': lr}
         outputs, loss_dict = loss_func(inputs, targets, kwargs)
-
+        # print(loss_dict)
         if args.lr_warmup != -1 and global_step == 100:
             logger.info('Exiting warm up LR phase, setting LR={}'.format(args.lr))
             force_lr(optimizer, args.lr)
