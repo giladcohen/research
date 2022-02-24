@@ -97,14 +97,14 @@ class TradesLoss(_Loss):
         x_adv = x_natural.detach() + 0.001 * torch.randn(x_natural.shape).cuda().detach()
         with torch.enable_grad():
             outputs = self.model(x_natural)
-            out_natural = outputs[self.field]
+            out = outputs[self.field]
             for _ in range(self.steps):
                 x_adv.requires_grad_()
                 out_adv = self.model(x_adv)[self.field]
                 if isinstance(self.adv_loss_criterion, KLDivAbsLoss):
-                    loss = batch_size * self.adv_loss_criterion(out_adv, out_natural, y)
+                    loss = batch_size * self.adv_loss_criterion(out_adv, out, y)
                 else:
-                    loss = batch_size * self.adv_loss_criterion(out_adv, out_natural)  # multiplying in batch_size to match reference
+                    loss = batch_size * self.adv_loss_criterion(out_adv, out)  # multiplying in batch_size to match reference
                 grad = torch.autograd.grad(loss, [x_adv])[0]
                 x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
                 x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
@@ -115,12 +115,14 @@ class TradesLoss(_Loss):
         # zero gradient
         self.model.zero_grad()
         # calculate robust loss
+        outputs = self.model(x_natural)
+        out = outputs[self.field]
         out_adv = self.model(x_adv)[self.field]
-        loss_natural = self.loss_criterion(out_natural, y)
+        loss_natural = self.loss_criterion(out, y)
         if isinstance(self.adv_loss_criterion, KLDivAbsLoss):
-            loss_robust = self.adv_loss_criterion(out_adv, out_natural, y)
+            loss_robust = self.adv_loss_criterion(out_adv, out, y)
         else:
-            loss_robust = self.adv_loss_criterion(out_adv, out_natural)
+            loss_robust = self.adv_loss_criterion(out_adv, out)
         loss = loss_natural + self.beta * loss_robust
         losses['natural'] = loss_natural
         losses['robust'] = loss_robust
@@ -164,31 +166,34 @@ class VATLoss(nn.Module):
         self.steps = steps
 
     def forward(self, x_natural: torch.Tensor, y: torch.Tensor, kwargs):
-        is_training = kwargs['is_training']
         losses = {}
-        self.model.eval()
+
+        with torch.no_grad():
+            out = self.model(x_natural)[self.field]
+
         # prepare random unit tensor
         d = torch.rand(x_natural.shape).sub(0.5).to(x_natural.device)
         d = _l2_normalize(d)
-        with torch.enable_grad():
-            outputs = self.model(x_natural)
-            out_natural = outputs[self.field]
-            with _disable_tracking_bn_stats(self.model):
+
+        with _disable_tracking_bn_stats(self.model):
+            with torch.enable_grad():
                 # calc adversarial direction
                 for _ in range(self.steps):
                     d.requires_grad_()
                     out_adv = self.model(x_natural + self.xi * d)[self.field]
-                    adv_distance = self.adv_loss_criterion(out_adv, out_natural.detach())
+                    adv_distance = self.adv_loss_criterion(out_adv, out)
                     adv_distance.backward()
                     d = _l2_normalize(d.grad)
                     self.model.zero_grad()
 
-        self.model.train(is_training)
-        x_adv = x_natural + d * self.eps  # x_natural + r_adv
-        self.model.zero_grad()
-        out_adv = self.model(x_adv)[self.field]
-        loss_natural = self.criterion(out_natural, y)
-        loss_robust = self.adv_loss_criterion(out_adv, out_natural)  # calc LDS
+            # calc LDS
+            x_adv = x_natural + d * self.eps
+            out_adv = self.model(x_adv)[self.field]
+            loss_robust = self.adv_loss_criterion(out_adv, out)
+
+        outputs = self.model(x_natural)
+        out = outputs[self.field]
+        loss_natural = self.criterion(out, y)
         loss = loss_natural + self.beta * loss_robust
         losses['natural'] = loss_natural
         losses['robust'] = loss_robust
@@ -213,40 +218,45 @@ class GuidedAdversarialTrainingLoss(_Loss):
         alt = kwargs['alt']
         is_training = kwargs['is_training']
         losses = {}
-        self.model.eval()
+        out_probs = self.model(x_natural)['probs'].detach()
 
         # initializing x_adv
+        self.model.eval()
         x_adv = x_natural + self.bern_eps * torch.sign(torch.tensor(0.5) - torch.rand_like(x_natural))
         x_adv = torch.clamp(x_adv, 0.0, 1.0)
 
         with torch.enable_grad():
-            outputs = self.model(x_natural)
-            out_natural = outputs[self.field]
             # x_adv generation
             for _ in range(self.steps):
                 x_adv.requires_grad_()
-                with torch.enable_grad():
-                    adv_outputs = self.model(x_adv)
-                    out_adv = adv_outputs[self.field]
-                    loss_attack = self.adv_loss_criterion(out_adv, y)
-                    if alt == 1:
-                        loss_l2_reg = self.l2_reg * (torch.linalg.norm(outputs['probs'] - adv_outputs['probs'], dim=1) ** 2.0).mean(0)
-                    else:
-                        loss_l2_reg = 0.0
-                    loss = loss_attack + loss_l2_reg
-                    grad = torch.autograd.grad(loss, [x_adv])[0]
-                    x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
-                    x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
-                    x_adv = torch.clamp(x_adv, 0.0, 1.0)
+                self.model.zero_grad()
+                adv_outputs = self.model(x_adv)
+                out_adv = adv_outputs[self.field]
+                out_adv_probs = adv_outputs['probs']
+                loss_attack = self.adv_loss_criterion(out_adv, y)
+                if alt == 1:
+                    loss_l2_reg = self.l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
+                else:
+                    loss_l2_reg = 0.0
+                loss = loss_attack + loss_l2_reg
+                grad = torch.autograd.grad(loss, [x_adv])[0]
+                x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
+                x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
+                x_adv = torch.clamp(x_adv, 0.0, 1.0)
 
-        # adv training
+        # # adv training
         self.model.train(is_training)
         # zero gradient
         self.model.zero_grad()
         # calculate robust loss
-        adv_probs = self.model(x_adv)['probs']
-        loss_natural = self.loss_criterion(out_natural, y)
-        loss_robust = self.l2_reg * (torch.linalg.norm(outputs['probs'] - adv_probs, dim=1) ** 2.0).mean(0)
+        adv_outputs = self.model(x_adv)
+        out_adv_probs = adv_outputs['probs']
+        outputs = self.model(x_natural)
+        out = outputs[self.field]
+        out_probs = outputs['probs']
+
+        loss_natural = self.loss_criterion(out, y)
+        loss_robust = self.l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
         loss = loss_natural + loss_robust
         losses['natural'] = loss_natural
         losses['robust'] = loss_robust

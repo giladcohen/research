@@ -609,3 +609,8 @@ def get_parameter_groups(net: nn.Module) -> Tuple[Dict[str, torch.Tensor], Dict[
         no_decay.pop(d)
 
     return decay, no_decay
+
+def force_lr(optimizer, lr):
+    """ Force a specific learning rate to all of the optimizer's weights"""
+    for i, param_group in enumerate(optimizer.param_groups):
+        param_group['lr'] = lr

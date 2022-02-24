@@ -22,12 +22,12 @@ from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_ME
 
 from research.losses.losses import TradesLoss, VATLoss, GuidedAdversarialTrainingLoss, loss_critetion_factory
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
-from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups
+from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/debug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/debug/d_0454', type=str, help='checkpoint dir')
 
 # architecture:
 parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
@@ -60,6 +60,7 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
+parser.add_argument('--lr_warmup', default=-1, type=float, help='init learning rate')
 
 # common TRADES/VAT/GAT params
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
@@ -353,6 +354,10 @@ def train():
         kwargs = {'is_training': True, 'alt': batch_idx % 2}
         outputs, loss_dict = loss_func(inputs, targets, kwargs)
 
+        if args.lr_warmup != -1 and global_step == 100:
+            logger.info('Exiting warm up LR phase, setting LR={}'.format(args.lr))
+            force_lr(optimizer, args.lr)
+
         loss = loss_dict['loss']
         loss.backward()
         optimizer.step()
@@ -365,7 +370,7 @@ def train():
         num_corrected = np.sum(preds == targets_np)
         acc = num_corrected / targets.size(0)
 
-        if global_step % 11 == 0:  # sampling, once ever 10 train iterations
+        if global_step % 11 == 0:  # sampling, once ever 11 train iterations
             for k, v in loss_dict.items():
                 train_writer.add_scalar('losses/' + k, v.item(), global_step)
             train_writer.add_scalar('metrics/acc', 100.0 * acc, global_step)
@@ -487,6 +492,10 @@ if __name__ == "__main__":
 
     logger.info('Testing epoch #{}'.format(epoch + 1))
     test()
+
+    if args.lr_warmup != -1:
+        logger.info('Setting warm up learning rate of {} for 100 train steps'.format(args.lr_warmup))
+        force_lr(optimizer, args.lr_warmup)
 
     logger.info('Start training from epoch #{} for {} epochs'.format(epoch + 1, args.epochs))
     for epoch in tqdm(range(epoch, epoch + args.epochs)):
