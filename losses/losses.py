@@ -202,7 +202,7 @@ class VATLoss(nn.Module):
 
 class GuidedAdversarialTrainingLoss(_Loss):
     def __init__(self, model: nn.Module, field: str, criterion: str, adv_criterion: str, bern_eps: float, eps: float,
-                 eps_step: float, steps: int, l2_reg: float):
+                 eps_step: float, steps: int, l2_reg: float, mul: float):
         super().__init__(reduction='none')
         self.model = model
         self.bern_eps = bern_eps
@@ -210,6 +210,7 @@ class GuidedAdversarialTrainingLoss(_Loss):
         self.eps_step = eps_step
         self.steps = steps
         self.l2_reg = l2_reg
+        self.mul = mul
         self.field = field
         self.loss_criterion = loss_critetion_factory(criterion)
         self.adv_loss_criterion = loss_critetion_factory(adv_criterion)
@@ -217,6 +218,12 @@ class GuidedAdversarialTrainingLoss(_Loss):
     def forward(self, x_natural: Tensor, y: Tensor, kwargs) -> Tuple[Dict, Dict[str, torch.Tensor]]:
         alt = kwargs['alt']
         is_training = kwargs['is_training']
+        lr = kwargs['lr']
+        if lr < 0.001:
+            l2_reg = self.l2_reg * self.mul
+        else:
+            l2_reg = self.l2_reg
+
         losses = {}
         out_probs = self.model(x_natural)['probs'].detach()
 
@@ -235,7 +242,7 @@ class GuidedAdversarialTrainingLoss(_Loss):
                 out_adv_probs = adv_outputs['probs']
                 loss_attack = self.adv_loss_criterion(out_adv, y)
                 if alt == 1:
-                    loss_l2_reg = self.l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
+                    loss_l2_reg = l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
                 else:
                     loss_l2_reg = 0.0
                 loss = loss_attack + loss_l2_reg
@@ -256,7 +263,7 @@ class GuidedAdversarialTrainingLoss(_Loss):
         out_probs = outputs['probs']
 
         loss_natural = self.loss_criterion(out, y)
-        loss_robust = self.l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
+        loss_robust = l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
         loss = loss_natural + loss_robust
         losses['natural'] = loss_natural
         losses['robust'] = loss_robust

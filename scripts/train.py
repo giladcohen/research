@@ -74,6 +74,7 @@ parser.add_argument('--xi', default=10, type=float, help='xi param for VAT')
 # GAT params
 parser.add_argument('--bern_eps', default=0.0155, type=float, help='Bernoulli noise for GAT adv training')
 parser.add_argument('--l2_reg', default=10.0, type=float, help='L2 regularization coefficient for GAT')
+parser.add_argument('--mul', default=4.0, type=float, help='Multiply factor for l2_reg at epoch 85')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -266,6 +267,7 @@ elif args.adv_gat:
         eps_step=args.eps_step,
         bern_eps=args.bern_eps,
         steps=1,
+        mul=args.mul,
         l2_reg=args.l2_reg,
         field='logits',
         criterion='ce',
@@ -351,7 +353,8 @@ def train():
     for batch_idx, (inputs, targets) in enumerate(trainloader):  # train a single step
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        kwargs = {'is_training': True, 'alt': batch_idx % 2}
+        lr = optimizer.param_groups[0]['lr']
+        kwargs = {'is_training': True, 'alt': batch_idx % 2, 'lr': lr}
         outputs, loss_dict = loss_func(inputs, targets, kwargs)
 
         if args.lr_warmup != -1 and global_step == 100:
@@ -399,7 +402,8 @@ def validate():
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(valloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            kwargs = {'is_training': False, 'alt': 0}
+            lr = optimizer.param_groups[0]['lr']
+            kwargs = {'is_training': False, 'alt': 0, 'lr': lr}
             outputs, loss_dict = loss_func(inputs, targets, kwargs)
             preds = pred_func(outputs)
 
@@ -443,7 +447,8 @@ def test():
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
-            kwargs = {'is_training': False, 'alt': 0}
+            lr = optimizer.param_groups[0]['lr']
+            kwargs = {'is_training': False, 'alt': 0, 'lr': lr}
             outputs, loss_dict = loss_func(inputs, targets, kwargs)
             preds = pred_func(outputs)
 
