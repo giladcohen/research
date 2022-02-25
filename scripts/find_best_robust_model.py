@@ -238,5 +238,5 @@ for ckpt in ckpt_list:
     logger.info('Epoch {}: normal accuracy: {}%, robust accuracy: {}%'
                 .format(epoch, 100.0 * normal_acc, 100.0 * robust_acc))
 
-writer.flush()
-logger.handlers[0].flush()
+    writer.flush()
+    logger.handlers[0].flush()
