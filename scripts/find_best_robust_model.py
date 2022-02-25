@@ -35,15 +35,16 @@ from art.attacks.evasion import FastGradientMethod, ProjectedGradientDescent, De
     CarliniL2Method, CarliniLInfMethod, AutoProjectedGradientDescent
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 adversarial robustness testing')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet18/bert', type=str, help='checkpoint dir')
-parser.add_argument('--attack_loss', default='cosine', type=str,
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/glove_emb/cifar10/resnet18/baseline1', type=str, help='checkpoint dir')
+parser.add_argument('--attack_loss', default='cross_entropy', type=str,
                     help='The loss used for attacking: cross_entropy/L1/L2/Linf/cosine')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
-parser.add_argument('--eps'     , default=8, type=float, help='maximum Linf deviation from original image')
+parser.add_argument('--eps'     , default=0.031, type=float, help='maximum Linf deviation from original image')
+parser.add_argument('--eps_step'     , default=0.00443, type=float, help='eps step size for adversarial image attack')
 parser.add_argument('--steps', default=7, type=int, help='Number of iterations for attack')
 
 # evaluation
-parser.add_argument('--method', default='cosine', type=str, help='softmax/knn/cosine')
+parser.add_argument('--method', default='softmax', type=str, help='softmax/knn/cosine')
 parser.add_argument('--knn_norm', default="2", type=str, help='Norm for knn: 1/2/inf')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -57,8 +58,10 @@ args = parser.parse_args()
 # np.random.seed(9)
 # rand_gen = np.random.RandomState(seed=12345)
 
-eps = args.eps / 255
-eps_step = eps / args.steps
+if args.eps > 1.0:
+    args.eps /= 255
+if args.eps_step > 1.0:
+    args.eps_step /= 255
 
 with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
     train_args = json.load(f)
@@ -155,8 +158,8 @@ classifier = PyTorchClassifierSpecific(model=net, clip_values=(0, 1), loss=loss,
 attack = ProjectedGradientDescent(
     estimator=classifier,
     norm=np.inf,
-    eps=eps,
-    eps_step=eps_step,
+    eps=args.eps,
+    eps_step=args.eps_step,
     targeted=False,
     num_random_init=0,
     max_iter=args.steps,
@@ -210,7 +213,7 @@ else:
 
 accuracy_dict = dict()
 ckpt_list = [os.path.join(args.checkpoint_dir, 'ckpt.pth')]
-for epoch in np.hstack((np.arange(10, 300, 10), 299)):
+for epoch in range(1, 400):
     ckpt = os.path.join(args.checkpoint_dir, 'ckpt_epoch_{}.pth'.format(epoch))
     ckpt_list.append(ckpt)
 for ckpt in ckpt_list:
