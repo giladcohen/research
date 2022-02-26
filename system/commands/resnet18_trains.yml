@@ -1,43 +1,43 @@
 commands:
   # CIFAR-10
   # regular baselines
-  # good
+  # good. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/baseline1                                         --glove_dim -1     --softmax_loss ce                                                             --eval_method softmax    , 11000]
-  # good
+  # good. in D
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/baseline2_1024                                    --glove_dim 1024   --softmax_loss ce                                                             --eval_method softmax    , 11000]
 
   # adv robust baselines
-  # in progress. looks promising. stuck in G, reran in Yann.
+  # in progress. looks promising. stuck in G, reran in Yann. D has until epoch=262
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/trades_beta_1                                     --glove_dim -1     --softmax_loss ce                                                             --eval_method softmax      --adv_trades True --epsilon 0.031 --eps_step 0.007  --beta 1, 11000]
-  # in progress. looks promising. in D.
+  # in progress. looks promising. in D. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/trades_beta_6                                     --glove_dim -1     --softmax_loss ce                                                             --eval_method softmax      --adv_trades True --epsilon 0.031 --eps_step 0.007  --beta 6, 11000]
-  # good
+  # good. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/vat                                               --glove_dim -1     --softmax_loss ce                                                             --eval_method softmax      --adv_vat    True --epsilon 1.0                     --beta 1, 11000]
-  # good
+  # good. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/gat_l2_reg_10                                     --glove_dim -1     --softmax_loss ce                                                             --eval_method softmax      --adv_gat    True --epsilon 0.031 --eps_step 0.031 --bern_eps 0.0155 --l2_reg 10 --mul 4, 11000]
 
   # training embedding only
-  # good
+  # good. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_1024                                         --glove_dim 1024   --emb_loss cosine --emb_selection bert      --w_emb 1                         --eval_method cosine     , 11000]
-  # good
+  # good. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/bert_word_1024                                    --glove_dim 1024   --emb_loss cosine --emb_selection bert_word --w_emb 1                         --eval_method cosine     , 11000]
 
   # regular baseline + emb aux
-  # good
+  # good. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/baseline2_w_bert_1024_w_emb_10                    --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 10           --eval_method softmax    , 11000]
-  # good
+  # good. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/baseline2_w_bert_1024_w_emb_30                    --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 30           --eval_method softmax    , 11000]
 
   # adv robust baselines + emb aux
-  # in progress. looks promising. stuck in G, reran in R.
+  # in progress. looks promising. stuck in G, reran in R. D has until epoch=179
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/trades_beta_1_w_bert_1024_w_emb_10                --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 10           --eval_method softmax      --adv_trades True --epsilon 0.031 --eps_step 0.007  --beta 1, 11000]
-  # in progress. looks promising. Stuck in G, reran in D.
+  # in progress. looks promising. Stuck in G, reran in D. D has until epoch=251
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/trades_beta_6_w_bert_1024_w_emb_10                --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 10           --eval_method softmax      --adv_trades True --epsilon 0.031 --eps_step 0.007  --beta 6, 11000]
-  # in progress. looks promising. Stuck in G, reran in D.
+  # in progress. looks promising. Stuck in G, reran in D. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/vat_w_bert_1024_w_emb_10                          --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 10           --eval_method softmax      --adv_vat    True --epsilon 1.0                     --beta 1, 11000]
-  # in progress. looks promising. Stuck in G, reran in D.
+  # in progress. looks promising. Stuck in G, reran in D. in D.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/gat_l2_reg_10_w_bert_1024_w_emb_10                --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 10           --eval_method softmax      --adv_gat    True --epsilon 0.031 --eps_step 0.031 --bern_eps 0.0155 --l2_reg 10 --mul 4, 11000]
-  # in progress. looks promising. Stuck in G
+  # in progress. looks promising. Stuck in G. D has until epoch=332.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/vat_w_bert_1024_w_emb_30                          --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 30           --eval_method softmax      --adv_vat    True --epsilon 1.0                     --beta 1, 11000]
-  # in progress. looks promising. Stuck in G
+  # in progress. looks promising. Stuck in G. D has until epoch=328.
   - [python research/scripts/train.py --num_workers 4 --net resnet18 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet18/gat_l2_reg_10_w_bert_1024_w_emb_30                --glove_dim 1024   --softmax_loss ce --emb_loss cosine --emb_selection bert --w_emb 30           --eval_method softmax      --adv_gat    True --epsilon 0.031 --eps_step 0.031 --bern_eps 0.0155 --l2_reg 10 --mul 4, 11000]
