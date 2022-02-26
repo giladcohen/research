@@ -39,6 +39,7 @@ parser.add_argument('--softmax_loss', default=None, type=str, help='The loss use
 parser.add_argument('--emb_loss', default=None, type=str, help='The loss used for embedding training: None/L1/L2/Linf/cosine')
 parser.add_argument('--emb_selection', default=None, type=str, help='Selection of glove embeddings: glove/random/farthest_points/orthogonal')
 parser.add_argument('--w_emb', default=0.0, type=float, help="The embedding loss's weight")
+parser.add_argument('--w_mul', default=1.0, type=float, help="Multiply factor for w_emb @lr=0.001")
 
 # Evaluation
 parser.add_argument('--eval_method', default='softmax', type=str, help='eval method for embeddings: softmax/knn/cosine')
@@ -74,7 +75,7 @@ parser.add_argument('--xi', default=10, type=float, help='xi param for VAT')
 # GAT params
 parser.add_argument('--bern_eps', default=0.0155, type=float, help='Bernoulli noise for GAT adv training')
 parser.add_argument('--l2_reg', default=10.0, type=float, help='L2 regularization coefficient for GAT')
-parser.add_argument('--mul', default=4.0, type=float, help='Multiply factor for l2_reg at epoch 85')
+parser.add_argument('--mul', default=4.0, type=float, help='Multiply factor for l2_reg @lr=0.001')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -278,21 +279,31 @@ def targets_to_embs(targets):
     return torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
 
 def output_adv_training_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    lr = kwargs['lr']
+    if lr < 0.001:
+        w_emb = args.w_mul * args.w_emb
+    else:
+        w_emb = args.w_emb
     outputs, losses = adv_training_loss(inputs, targets, kwargs)
     if emb_loss is not None:
         targets = targets_to_embs(targets)
-        losses['embeddings'] = args.w_emb * emb_loss(outputs['glove_embeddings'], targets)
+        losses['embeddings'] = w_emb * emb_loss(outputs['glove_embeddings'], targets)
         losses['loss'] += losses['embeddings']
     return outputs, losses
 
 def output_non_robust_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    lr = kwargs['lr']
+    if lr < 0.001:
+        w_emb = args.w_mul * args.w_emb
+    else:
+        w_emb = args.w_emb
     losses = {}
     outputs = net(inputs)
     if softmax_loss is not None:
         losses['softmax'] = softmax_loss(outputs['logits'], targets)
     if emb_loss is not None:
         targets = targets_to_embs(targets)
-        losses['embeddings'] = args.w_emb * emb_loss(outputs['glove_embeddings'], targets)
+        losses['embeddings'] = w_emb * emb_loss(outputs['glove_embeddings'], targets)
     losses['loss'] = losses.get('softmax', 0.0) + losses.get('embeddings', 0.0)
     return outputs, losses
 
