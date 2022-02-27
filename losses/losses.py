@@ -202,14 +202,14 @@ class VATLoss(nn.Module):
 
 class GuidedAdversarialTrainingLoss(_Loss):
     def __init__(self, model: nn.Module, field: str, criterion: str, adv_criterion: str, bern_eps: float, eps: float,
-                 eps_step: float, steps: int, l2_reg: float, mul: float):
+                 eps_step: float, steps: int, adv2_reg: float, mul: float):
         super().__init__(reduction='none')
         self.model = model
         self.bern_eps = bern_eps
         self.eps = eps
         self.eps_step = eps_step
         self.steps = steps
-        self.l2_reg = l2_reg
+        self.adv2_reg = adv2_reg
         self.mul = mul
         self.field = field
         self.loss_criterion = loss_critetion_factory(criterion)
@@ -220,9 +220,9 @@ class GuidedAdversarialTrainingLoss(_Loss):
         is_training = kwargs['is_training']
         lr = kwargs['lr']
         if lr < 0.001:
-            l2_reg = self.l2_reg * self.mul
+            adv2_reg = self.adv2_reg * self.mul
         else:
-            l2_reg = self.l2_reg
+            adv2_reg = self.adv2_reg
 
         losses = {}
         out_probs = self.model(x_natural)['probs'].detach()
@@ -242,10 +242,10 @@ class GuidedAdversarialTrainingLoss(_Loss):
                 out_adv_probs = adv_outputs['probs']
                 loss_attack = self.adv_loss_criterion(out_adv, y)
                 if alt == 1:
-                    loss_l2_reg = l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
+                    loss_adv2_reg = adv2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
                 else:
-                    loss_l2_reg = 0.0
-                loss = loss_attack + loss_l2_reg
+                    loss_adv2_reg = 0.0
+                loss = loss_attack + loss_adv2_reg
                 grad = torch.autograd.grad(loss, [x_adv])[0]
                 x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
                 x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
@@ -263,7 +263,69 @@ class GuidedAdversarialTrainingLoss(_Loss):
         out_probs = outputs['probs']
 
         loss_natural = self.loss_criterion(out, y)
-        loss_robust = l2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
+        loss_robust = adv2_reg * (torch.linalg.norm(out_probs - out_adv_probs, dim=1) ** 2.0).mean(0)
+        loss = loss_natural + loss_robust
+        losses['natural'] = loss_natural
+        losses['robust'] = loss_robust
+        losses['loss'] = loss
+        return outputs, losses
+
+class TxtAdversarialTrainingLoss(_Loss):
+    def __init__(self, model: nn.Module, criterion: str, adv_criterion: str, adv2_criterion: str,
+                 bern_eps: float, eps: float, eps_step: float, steps: int, adv2_reg: float, mul: float):
+        super().__init__(reduction='none')
+        self.model = model
+        self.bern_eps = bern_eps
+        self.eps = eps
+        self.eps_step = eps_step
+        self.steps = steps
+        self.adv2_reg = adv2_reg
+        self.mul = mul
+        self.loss_criterion = loss_critetion_factory(criterion)
+        self.adv_loss_criterion = loss_critetion_factory(adv_criterion)
+        self.adv2_loss_criterion = loss_critetion_factory(adv2_criterion)
+
+    def forward(self, x_natural: Tensor, y: Tensor, kwargs) -> Tuple[Dict, Dict[str, torch.Tensor]]:
+        is_training = kwargs['is_training']
+        lr = kwargs['lr']
+        if lr < 0.001:
+            adv2_reg = self.adv2_reg * self.mul
+        else:
+            adv2_reg = self.adv2_reg
+
+        losses = {}
+        out_glove_emb = self.model(x_natural)['glove_embeddings']
+
+        # initializing x_adv
+        self.model.eval()
+        x_adv = x_natural + self.bern_eps * torch.sign(torch.tensor(0.5) - torch.rand_like(x_natural))
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+
+        with torch.enable_grad():
+            # x_adv generation
+            for _ in range(self.steps):
+                x_adv.requires_grad_()
+                self.model.zero_grad()
+                out_adv_glove_emb = self.model(x_adv)['glove_embeddings']
+                loss_attack = self.adv_loss_criterion(out_adv_glove_emb, y)
+                loss_adv2_reg = adv2_reg * self.adv2_loss_criterion(out_glove_emb, out_adv_glove_emb)
+                loss = loss_attack + loss_adv2_reg
+                grad = torch.autograd.grad(loss, [x_adv])[0]
+                x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
+                x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
+                x_adv = torch.clamp(x_adv, 0.0, 1.0)
+
+        # # adv training
+        self.model.train(is_training)
+        # zero gradient
+        self.model.zero_grad()
+        # calculate robust loss
+        out_adv_glove_emb = self.model(x_adv)['glove_embeddings']
+        outputs = self.model(x_natural)
+        out_glove_emb = outputs['glove_embeddings']
+
+        loss_natural = self.loss_criterion(out_glove_emb, y)
+        loss_robust = adv2_reg * self.adv2_loss_criterion(out_glove_emb, out_adv_glove_emb)
         loss = loss_natural + loss_robust
         losses['natural'] = loss_natural
         losses['robust'] = loss_robust

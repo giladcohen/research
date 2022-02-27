@@ -20,7 +20,8 @@ import matplotlib.pyplot as plt
 from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
     CIFAR100_STD
 
-from research.losses.losses import TradesLoss, VATLoss, GuidedAdversarialTrainingLoss, loss_critetion_factory
+from research.losses.losses import TradesLoss, VATLoss, GuidedAdversarialTrainingLoss, TxtAdversarialTrainingLoss, \
+    loss_critetion_factory
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
 from research.models.utils import get_strides, get_conv1_params, get_model
@@ -67,15 +68,16 @@ parser.add_argument('--lr_warmup', default=-1, type=float, help='init learning r
 parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
 parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
 parser.add_argument('--adv_gat', default=False, type=boolean_string, help='Use GAT adversarial training')
+parser.add_argument('--adv_txt', default=False, type=boolean_string, help='Use TXT adversarial training')
 parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--eps_step', default=0.031, type=float, help='step size for TRADES/GAT loss')
 parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for TRADES/VAT)')
 # VAT params
 parser.add_argument('--xi', default=10, type=float, help='xi param for VAT')
-# GAT params
-parser.add_argument('--bern_eps', default=0.0155, type=float, help='Bernoulli noise for GAT adv training')
-parser.add_argument('--l2_reg', default=10.0, type=float, help='L2 regularization coefficient for GAT')
-parser.add_argument('--mul', default=4.0, type=float, help='Multiply factor for l2_reg @lr=0.001')
+# GAT/TXT params
+parser.add_argument('--bern_eps', default=0.0155, type=float, help='Bernoulli noise for GAT/TXT adv training')
+parser.add_argument('--adv2_reg', default=10.0, type=float, help='L2 regularization coefficient for GAT/TXT')
+parser.add_argument('--mul', default=4.0, type=float, help='Multiply factor for adv2_reg @lr=0.001')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -93,12 +95,16 @@ if args.bern_eps > 1.0:
 
 glove = args.glove_dim != -1
 
-is_adv_training = args.adv_trades or args.adv_vat or args.adv_gat
-assert args.adv_trades + args.adv_vat + args.adv_gat <= 1, 'TRADES/VAT/GAT cannot be set together'
+is_adv_training = args.adv_trades or args.adv_vat or args.adv_gat or args.adv_txt
+assert args.adv_trades + args.adv_vat + args.adv_gat + args.adv_txt <= 1, 'TRADES/VAT/GAT/TXT cannot be set together'
 assert (args.emb_selection is None) == (args.emb_loss is None) == (args.w_emb == 0.0),\
     'emb_selection, emb_loss, w_emb must be set together'
 if args.emb_selection is not None:
     assert glove, 'using auxiliary loss requires glove'
+
+if args.adv_txt:
+    assert (args.emb_selection is not None) and (args.emb_loss is not None) and (args.w_emb == 1.0) and \
+           (args.softmax_loss is None), 'adv_txt adversarial training requires only glove_embeddings'
 
 # dumping args to txt file
 os.makedirs(args.checkpoint_dir, exist_ok=True)
@@ -269,14 +275,33 @@ elif args.adv_gat:
         bern_eps=args.bern_eps,
         steps=1,
         mul=args.mul,
-        l2_reg=args.l2_reg,
+        adv2_reg=args.adv2_reg,
         field='logits',
         criterion='ce',
         adv_criterion='ce'
     )
+elif args.adv_txt:
+    adv_training_loss = TxtAdversarialTrainingLoss(
+        model=net,
+        eps=args.epsilon,
+        eps_step=args.eps_step,
+        bern_eps=args.bern_eps,
+        steps=1,
+        mul=args.mul,
+        adv2_reg=args.adv2_reg,
+        criterion='cosine',
+        adv_criterion='cosine',
+        adv2_criterion='cosine'
+    )
+
 
 def targets_to_embs(targets):
     return torch.from_numpy(class_emb_vecs[targets.cpu()]).to(device)
+
+def output_adv_txt_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
+    targets = targets_to_embs(targets)
+    outputs, losses = adv_training_loss(inputs, targets, kwargs)
+    return outputs, losses
 
 def output_adv_training_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
     lr = kwargs['lr']
@@ -308,7 +333,9 @@ def output_non_robust_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Ten
     return outputs, losses
 
 def get_loss():
-    if is_adv_training:
+    if is_adv_training and args.adv_txt:
+        loss_func = output_adv_txt_loss
+    elif is_adv_training:
         loss_func = output_adv_training_loss
     else:
         loss_func = output_non_robust_loss
