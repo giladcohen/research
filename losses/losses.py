@@ -332,3 +332,65 @@ class TxtAdversarialTrainingLoss(_Loss):
         losses['loss'] = loss
         return outputs, losses
 
+class TxtAdversarialTrainingLossV2(_Loss):
+    def __init__(self, model: nn.Module, criterion: str, adv_criterion: str, adv2_criterion: str,
+                 bern_eps: float, eps: float, eps_step: float, steps: int, adv2_reg: float, mul: float):
+        super().__init__(reduction='none')
+        self.model = model
+        self.bern_eps = bern_eps
+        self.eps = eps
+        self.eps_step = eps_step
+        self.steps = steps
+        self.adv2_reg = adv2_reg
+        self.mul = mul
+        self.loss_criterion = loss_critetion_factory(criterion)
+        self.adv_loss_criterion = loss_critetion_factory(adv_criterion)
+        self.adv2_loss_criterion = loss_critetion_factory(adv2_criterion)
+
+    def forward(self, x_natural: Tensor, y: Tensor, kwargs) -> Tuple[Dict, Dict[str, torch.Tensor]]:
+        is_training = kwargs['is_training']
+        lr = kwargs['lr']
+        if lr < 0.001:
+            adv2_reg = self.adv2_reg * self.mul
+        else:
+            adv2_reg = self.adv2_reg
+
+        losses = {}
+
+        # initializing x_adv
+        self.model.eval()
+        x_adv = x_natural + self.bern_eps * torch.sign(torch.tensor(0.5) - torch.rand_like(x_natural))
+        x_adv = torch.clamp(x_adv, 0.0, 1.0)
+        out_glove_emb = self.model(x_natural)['glove_embeddings']
+
+        with torch.enable_grad():
+            # x_adv generation
+            for _ in range(self.steps):
+                x_adv.requires_grad_()
+                self.model.zero_grad()
+                out_adv_glove_emb = self.model(x_adv)['glove_embeddings']
+                loss_attack = self.adv_loss_criterion(out_adv_glove_emb, y)
+                loss_adv2_reg = adv2_reg * self.adv2_loss_criterion(out_glove_emb, out_adv_glove_emb)
+                loss = loss_attack + loss_adv2_reg
+                grad = torch.autograd.grad(loss, [x_adv])[0]
+                x_adv = x_adv.detach() + self.eps_step * torch.sign(grad.detach())
+                x_adv = torch.min(torch.max(x_adv, x_natural - self.eps), x_natural + self.eps)
+                x_adv = torch.clamp(x_adv, 0.0, 1.0)
+
+        # # adv training
+        self.model.train(is_training)
+        # zero gradient
+        self.model.zero_grad()
+        # calculate robust loss
+        out_adv_glove_emb = self.model(x_adv)['glove_embeddings']
+        outputs = self.model(x_natural)
+        out_glove_emb = outputs['glove_embeddings']
+
+        loss_natural = self.loss_criterion(out_glove_emb, y)
+        loss_robust = adv2_reg * self.adv2_loss_criterion(out_glove_emb, out_adv_glove_emb)
+        loss = loss_natural + loss_robust
+        losses['natural'] = loss_natural
+        losses['robust'] = loss_robust
+        losses['loss'] = loss
+        return outputs, losses
+

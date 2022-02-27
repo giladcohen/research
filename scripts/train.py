@@ -21,7 +21,7 @@ from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_ME
     CIFAR100_STD
 
 from research.losses.losses import TradesLoss, VATLoss, GuidedAdversarialTrainingLoss, TxtAdversarialTrainingLoss, \
-    loss_critetion_factory
+    TxtAdversarialTrainingLossV2, loss_critetion_factory
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
 from research.models.utils import get_strides, get_conv1_params, get_model
@@ -65,10 +65,7 @@ parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
 parser.add_argument('--lr_warmup', default=-1, type=float, help='init learning rate')
 
 # common TRADES/VAT/GAT params
-parser.add_argument('--adv_trades', default=False, type=boolean_string, help='Use adv robust training using TRADES')
-parser.add_argument('--adv_vat', default=False, type=boolean_string, help='Use virtual adversarial training')
-parser.add_argument('--adv_gat', default=False, type=boolean_string, help='Use GAT adversarial training')
-parser.add_argument('--adv_txt', default=False, type=boolean_string, help='Use TXT adversarial training')
+parser.add_argument('--adv', default=None, type=str, help='Type of adversarial training')
 parser.add_argument('--epsilon', default=0.031, type=float, help='epsilon for TRADES loss')
 parser.add_argument('--eps_step', default=0.031, type=float, help='step size for TRADES/GAT loss')
 parser.add_argument('--beta', default=1, type=float, help='weight for adversarial loss during training (alpha for TRADES/VAT)')
@@ -95,14 +92,13 @@ if args.bern_eps > 1.0:
 
 glove = args.glove_dim != -1
 
-is_adv_training = args.adv_trades or args.adv_vat or args.adv_gat or args.adv_txt
-assert args.adv_trades + args.adv_vat + args.adv_gat + args.adv_txt <= 1, 'TRADES/VAT/GAT/TXT cannot be set together'
+is_adv_training = args.adv is not None
 assert (args.emb_selection is None) == (args.emb_loss is None) == (args.w_emb == 0.0),\
     'emb_selection, emb_loss, w_emb must be set together'
 if args.emb_selection is not None:
     assert glove, 'using auxiliary loss requires glove'
 
-if args.adv_txt:
+if args.adv in ['txt', 'txt2']:
     assert (args.emb_selection is not None) and (args.emb_loss is not None) and (args.w_emb == 1.0) and \
            (args.softmax_loss is None), 'adv_txt adversarial training requires only glove_embeddings'
 
@@ -245,7 +241,7 @@ if args.emb_loss is not None:
 else:
     emb_loss = None
 
-if args.adv_trades:
+if args.adv == 'trades':
     adv_training_loss = TradesLoss(
         model=net,
         eps=args.epsilon,
@@ -256,7 +252,7 @@ if args.adv_trades:
         criterion='ce',
         adv_criterion='kl'
     )
-elif args.adv_vat:
+elif args.adv == 'vat':
     adv_training_loss = VATLoss(
         model=net,
         field='logits',
@@ -267,7 +263,7 @@ elif args.adv_vat:
         eps=args.epsilon,
         steps=1
     )
-elif args.adv_gat:
+elif args.adv == 'gat':
     adv_training_loss = GuidedAdversarialTrainingLoss(
         model=net,
         eps=args.epsilon,
@@ -280,8 +276,21 @@ elif args.adv_gat:
         criterion='ce',
         adv_criterion='ce'
     )
-elif args.adv_txt:
+elif args.adv == 'txt':
     adv_training_loss = TxtAdversarialTrainingLoss(
+        model=net,
+        eps=args.epsilon,
+        eps_step=args.eps_step,
+        bern_eps=args.bern_eps,
+        steps=1,
+        mul=args.mul,
+        adv2_reg=args.adv2_reg,
+        criterion='cosine',
+        adv_criterion='cosine',
+        adv2_criterion='cosine'
+    )
+elif args.adv == 'txt2':
+    adv_training_loss = TxtAdversarialTrainingLossV2(
         model=net,
         eps=args.epsilon,
         eps_step=args.eps_step,
@@ -333,10 +342,11 @@ def output_non_robust_loss(inputs, targets, kwargs) -> Tuple[Dict[str, torch.Ten
     return outputs, losses
 
 def get_loss():
-    if is_adv_training and args.adv_txt:
-        loss_func = output_adv_txt_loss
-    elif is_adv_training:
-        loss_func = output_adv_training_loss
+    if is_adv_training:
+        if args.adv in ['txt', 'txt2']:
+            loss_func = output_adv_txt_loss
+        else:
+            loss_func = output_adv_training_loss
     else:
         loss_func = output_non_robust_loss
     return loss_func
