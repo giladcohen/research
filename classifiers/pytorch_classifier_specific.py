@@ -75,14 +75,14 @@ class PyTorchClassifierSpecific(PyTorchClassifier):  # lgtm [py/missing-call-to-
                 self.set_dropout(train=False)
 
         if not (
-                (label is None)
-                or (isinstance(label, (int, np.integer)) and label in range(self._nb_classes))
-                or (
-                        isinstance(label, np.ndarray)
-                        and len(label.shape) == 1
-                        and (label < self._nb_classes).all()
-                        and label.shape[0] == x.shape[0]
-                )
+            (label is None)
+            or (isinstance(label, (int, np.integer)) and label in range(self.nb_classes))
+            or (
+                isinstance(label, np.ndarray)
+                and len(label.shape) == 1
+                and (label < self.nb_classes).all()
+                and label.shape[0] == x.shape[0]
+            )
         ):
             raise ValueError("Label %s is out of range." % label)
 
@@ -112,11 +112,11 @@ class PyTorchClassifierSpecific(PyTorchClassifier):  # lgtm [py/missing-call-to-
         preds = model_outputs[ind]
 
         # Compute the gradient
-        grads = []
+        grads_list = list()
 
         def save_grad():
             def hook(grad):
-                grads.append(grad.cpu().numpy().copy())
+                grads_list.append(grad.cpu().numpy().copy())
                 grad.data.zero_()
 
             return hook
@@ -137,12 +137,15 @@ class PyTorchClassifierSpecific(PyTorchClassifier):  # lgtm [py/missing-call-to-
                     retain_graph=True,
                 )
 
+            grads = np.swapaxes(np.array(grads_list), 0, 1)
+
         elif isinstance(label, (int, np.integer)):
             torch.autograd.backward(
                 preds[:, label],
                 torch.tensor([1.0] * len(preds[:, 0])).to(self._device),
                 retain_graph=True,
             )
+            grads = np.swapaxes(np.array(grads_list), 0, 1)
         else:
             unique_label = list(np.unique(label))
             for i in unique_label:
@@ -152,13 +155,13 @@ class PyTorchClassifierSpecific(PyTorchClassifier):  # lgtm [py/missing-call-to-
                     retain_graph=True,
                 )
 
-            grads = np.swapaxes(np.array(grads), 0, 1)
+            grads = np.swapaxes(np.array(grads_list), 0, 1)
             lst = [unique_label.index(i) for i in label]
             grads = grads[np.arange(len(grads)), lst]
 
             grads = grads[None, ...]
+            grads = np.swapaxes(np.array(grads), 0, 1)
 
-        grads = np.swapaxes(np.array(grads), 0, 1)
         if not self.all_framework_preprocessing:
             grads = self._apply_preprocessing_gradient(x, grads)
 
@@ -266,22 +269,22 @@ class PyTorchClassifierSpecific(PyTorchClassifier):  # lgtm [py/missing-call-to-
 
     def __repr__(self):
         repr_ = (
-                "%s(model=%r, loss=%r, optimizer=%r, input_shape=%r, nb_classes=%r, channels_first=%r, "
-                "clip_values=%r, preprocessing_defences=%r, postprocessing_defences=%r, preprocessing=%r, fields=%r)"
-                % (
-                    self.__module__ + "." + self.__class__.__name__,
-                    self._model,
-                    self._loss,
-                    self._optimizer,
-                    self._input_shape,
-                    self.nb_classes,
-                    self.channels_first,
-                    self.clip_values,
-                    self.preprocessing_defences,
-                    self.postprocessing_defences,
-                    self.preprocessing,
-                    self.fields
-                )
+            "%s(model=%r, loss=%r, optimizer=%r, input_shape=%r, nb_classes=%r, channels_first=%r, "
+            "clip_values=%r, preprocessing_defences=%r, postprocessing_defences=%r, preprocessing=%r, fields=%r)"
+            % (
+                self.__module__ + "." + self.__class__.__name__,
+                self._model,
+                self._loss,
+                self._optimizer,
+                self._input_shape,
+                self.nb_classes,
+                self.channels_first,
+                self.clip_values,
+                self.preprocessing_defences,
+                self.postprocessing_defences,
+                self.preprocessing,
+                self.fields
+            )
         )
 
         return repr_
