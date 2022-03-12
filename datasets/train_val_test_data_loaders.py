@@ -57,9 +57,7 @@ def dataset_factory(dataset):
             transforms.ToTensor(),
         ])
 
-    test_transform = transforms.Compose([
-        transforms.ToTensor(),
-    ])
+    test_transform = transforms.ToTensor()
 
     return data_dir, database, train_transform, test_transform
 
@@ -68,7 +66,8 @@ def get_train_valid_loader(dataset,
                            dataset_args,
                            batch_size,
                            rand_gen,
-                           valid_size=0.1,
+                           train_size=0.95,
+                           valid_size=0.05,
                            shuffle=True,
                            num_workers=4,
                            pin_memory=False):
@@ -99,7 +98,9 @@ def get_train_valid_loader(dataset,
     error_msg = "[!] valid_size should be in the range [0, 1]."
     assert ((valid_size >= 0) and (valid_size <= 1)), error_msg
 
-    data_dir, database, train_transform, test_transform = dataset_factory(dataset)
+    data_dir, database, default_train_transform, default_test_transform = dataset_factory(dataset)
+    train_transform = dataset_args.pop('train_transform', default_train_transform)
+    test_transform = dataset_args.pop('test_transform', default_test_transform)
 
     # load the dataset
     train_dataset = database(
@@ -113,11 +114,9 @@ def get_train_valid_loader(dataset,
     )
 
     num_train_val = len(train_dataset)
-    num_val       = int(np.floor(valid_size * num_train_val))
-    indices = list(range(num_train_val))
-
-    train_idx, val_idx = \
-        train_test_split(indices, test_size=num_val, random_state=rand_gen, shuffle=shuffle, stratify=train_dataset.targets)
+    indices       = list(range(num_train_val))
+    train_idx, val_idx = train_test_split(indices, train_size=train_size, test_size=valid_size, random_state=rand_gen,
+                                          shuffle=shuffle, stratify=train_dataset.targets)
     train_idx.sort()
     val_idx.sort()
 
@@ -196,8 +195,7 @@ def get_test_loader(dataset,
                     dataset_args,
                     batch_size,
                     num_workers=4,
-                    pin_memory=False,
-                    transforms=None):
+                    pin_memory=False):
     """
     Utility function for loading and returning a multi-process
     test iterator over the CIFAR-10 dataset.
@@ -214,10 +212,8 @@ def get_test_loader(dataset,
     - data_loader: test set iterator.
     """
 
-    data_dir, database, _, test_transform = dataset_factory(dataset)
-
-    if transforms is None:
-        transforms = test_transform
+    data_dir, database, _, default_test_transform = dataset_factory(dataset)
+    transforms = dataset_args.pop('test_transform', default_test_transform)
 
     dataset = database(
         root=data_dir, train=False,

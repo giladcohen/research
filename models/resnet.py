@@ -76,6 +76,8 @@ class ResNet(nn.Module):
             self.activation = F.relu
         elif activation == 'softplus':
             self.activation = F.softplus
+        elif activation == 'swish':
+            self.activation = F.silu
         else:
             raise AssertionError('activation function {} was not expected'.format(activation))
 
