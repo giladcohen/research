@@ -25,6 +25,8 @@ from collections import OrderedDict
 import scipy
 from scipy.spatial.distance import pdist, cdist, squareform
 from sklearn.metrics import roc_curve, auc, roc_auc_score
+from sklearn.metrics import precision_recall_fscore_support
+
 try:
     import mmcv
 except:
@@ -511,6 +513,26 @@ def get_image_shape(dataset: str) -> Tuple[int, int, int]:
     else:
         raise AssertionError('Unsupported dataset {}'.format(dataset))
 
+def get_num_classes(dataset: str) -> int:
+    if dataset in ['cifar10', 'svhn']:
+        return 10
+    elif dataset == 'cifar100':
+        return 100
+    elif dataset == 'tiny_imagenet':
+        return 200
+    else:
+        raise AssertionError('Unsupported dataset {}'.format(dataset))
+
+def get_max_train_size(dataset: str) -> int:
+    if dataset in ['cifar10', 'cifar100']:
+        return 50000
+    elif dataset == 'svhn':
+        return 72000
+    elif dataset == 'tiny_imagenet':
+        return 100000
+    else:
+        raise AssertionError('Unsupported dataset {}'.format(dataset))
+
 def load_characteristics(characteristics_file):
     X, Y = None, None
     data = np.load(characteristics_file)
@@ -614,3 +636,15 @@ def force_lr(optimizer, lr):
     """ Force a specific learning rate to all of the optimizer's weights"""
     for i, param_group in enumerate(optimizer.param_groups):
         param_group['lr'] = lr
+
+def calc_acc_precision_recall(inferred_non_member, inferred_member):
+    logger = logging.getLogger()
+    member_acc = np.mean(inferred_member == 1)
+    non_member_acc = np.mean(inferred_non_member == 0)
+    acc = (member_acc * len(inferred_member) + non_member_acc * len(inferred_non_member)) / (len(inferred_member) + len(inferred_non_member))
+    precision, recall, f_score, true_sum = precision_recall_fscore_support(
+        y_true=np.concatenate((np.zeros(len(inferred_non_member)), np.ones(len(inferred_member)))),
+        y_pred=np.concatenate((inferred_non_member, inferred_member)),
+    )
+    logger.info('member acc: {}, non-member acc: {}, balanced acc: {}, precision/recall(member): {}/{}, precision/recall(non-member): {}/{}'
+                .format(member_acc, non_member_acc, acc, precision[1], recall[1], precision[0], recall[0]))

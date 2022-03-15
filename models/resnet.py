@@ -67,8 +67,10 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10, activation='relu', conv1=None, strides=None, ext_linear=None):
+    def __init__(self, block, num_blocks, num_classes=10, activation='relu', conv1=None, strides=None, ext_linear=None,
+                 field=None):
         super(ResNet, self).__init__()
+        self.field = field
         self.in_planes = 64
         self.use_ext_linear = ext_linear is not None
 
@@ -121,23 +123,26 @@ class ResNet(nn.Module):
         out = self.linear(out)
         net['logits'] = out
         net['probs'] = F.softmax(out, dim=1)
-        return net
+        if self.field is None:
+            return net
+        else:
+            return net[self.field]
 
 
-def ResNet18(num_classes, activation, conv1, strides, ext_linear=None):
-    return ResNet(BasicBlock, [2,2,2,2], num_classes, activation, conv1, strides, ext_linear)
+def ResNet18(num_classes, activation, conv1, strides, ext_linear=None, field=None):
+    return ResNet(BasicBlock, [2,2,2,2], num_classes, activation, conv1, strides, ext_linear, field)
 
-def ResNet34(num_classes, activation, conv1, strides, ext_linear=None):
-    return ResNet(BasicBlock, [3,4,6,3], num_classes, activation, conv1, strides, ext_linear)
+def ResNet34(num_classes, activation, conv1, strides, ext_linear=None, field=None):
+    return ResNet(BasicBlock, [3,4,6,3], num_classes, activation, conv1, strides, ext_linear, field)
 
-def ResNet50(num_classes, activation, conv1, strides, ext_linear=None):
-    return ResNet(Bottleneck, [3,4,6,3], num_classes, activation, conv1, strides, ext_linear)
+def ResNet50(num_classes, activation, conv1, strides, ext_linear=None, field=None):
+    return ResNet(Bottleneck, [3,4,6,3], num_classes, activation, conv1, strides, ext_linear, field)
 
-def ResNet101(num_classes, activation, conv1, strides, ext_linear=None):
-    return ResNet(Bottleneck, [3,4,23,3], num_classes, activation, conv1, strides, ext_linear)
+def ResNet101(num_classes, activation, conv1, strides, ext_linear=None, field=None):
+    return ResNet(Bottleneck, [3,4,23,3], num_classes, activation, conv1, strides, ext_linear, field)
 
-def ResNet152(num_classes, activation, conv1, strides, ext_linear=None):
-    return ResNet(Bottleneck, [3,8,36,3], num_classes, activation, conv1, strides, ext_linear)
+def ResNet152(num_classes, activation, conv1, strides, ext_linear=None, field=None):
+    return ResNet(Bottleneck, [3,8,36,3], num_classes, activation, conv1, strides, ext_linear, field)
 
 def test():
     net = ResNet18()

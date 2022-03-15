@@ -2,6 +2,8 @@ import logging
 import numpy as np
 import torch
 from typing import List, Union
+import copy
+
 from art.estimators.classification.pytorch import PyTorchClassifier
 
 logger = logging.getLogger(__name__)
@@ -288,3 +290,19 @@ class PyTorchClassifierSpecific(PyTorchClassifier):  # lgtm [py/missing-call-to-
         )
 
         return repr_
+
+    def clone_for_refitting(self) -> "PyTorchClassifier":  # lgtm [py/inheritance/incorrect-overridden-signature]
+        """
+        Create a copy of the classifier that can be refit from scratch. Will inherit same architecture, optimizer and
+        initialization as cloned model, but without weights.
+
+        :return: new estimator
+        """
+        model = copy.deepcopy(self.model)
+        clone = type(self)(model, self._loss, self.input_shape, self.nb_classes, optimizer=self._optimizer, fields=self.fields)
+        # reset weights
+        clone.reset()
+        params = self.get_params()
+        del params["model"]
+        clone.set_params(**params)
+        return clone

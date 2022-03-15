@@ -16,13 +16,6 @@ from tqdm import tqdm
 import time
 import sys
 import logging
-from sklearn.neighbors import NearestNeighbors
-import matplotlib.pyplot as plt
-from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
-    CIFAR100_STD
-
-from research.losses.losses import TradesLoss, VATLoss, GuidedAdversarialTrainingLoss, TxtAdversarialTrainingLoss, \
-    TxtAdversarialTrainingLossV2, loss_critetion_factory
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
 from research.models.utils import get_strides, get_conv1_params, get_model
