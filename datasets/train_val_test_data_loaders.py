@@ -239,3 +239,16 @@ def get_normalized_tensor(loader: torch.utils.data.DataLoader, img_shape, batch_
         X[b:e] = inputs.cpu().numpy()
 
     return X
+
+def get_dataset_with_specific_records(dataset, X, y, dataset_args):
+    data_dir, database, _, transform = dataset_factory(dataset)
+
+    # load the dataset
+    dataset = database(
+        root=data_dir, train=True,
+        download=True, transform=transform, **dataset_args
+    )
+    dataset.data = X
+    dataset.targets = y
+
+    return dataset

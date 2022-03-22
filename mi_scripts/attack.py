@@ -1,10 +1,14 @@
 '''Attack DNNs with PyTorch.'''
 import torch
 import torch.nn as nn
+from torch.nn import Module
+import torch.nn.functional as F
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torchsummary import summary
+from torch.utils.data import TensorDataset
 
+from typing import Callable, Optional, Tuple, Union, Any, List
 import numpy as np
 import json
 import os
@@ -18,20 +22,21 @@ import matplotlib.pyplot as plt
 from cleverhans.utils import random_targets, to_categorical
 from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
     CIFAR100_STD
+from captum.influence import TracInCPFast
 
 # sys.path.insert(0, ".")
 # sys.path.insert(0, "./adversarial_robustness_toolbox")
 # from research.classifiers.pytorch_classifier_specific import PyTorchClassifierSpecific
 from research.losses.losses import L2Loss, LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
-    get_loader_with_specific_inds, get_normalized_tensor
+    get_loader_with_specific_inds, get_normalized_tensor, get_dataset_with_specific_records
 from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape, get_num_classes, \
     get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
-    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox
+    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack
 
 from art.estimators.classification import PyTorchClassifier
 
@@ -179,37 +184,37 @@ test_member_inds = rand_gen.choice(test_member_inds, membership_test_size, repla
 test_member_inds.sort()
 X_member_test = X_member[test_member_inds]
 y_member_test = y_member[test_member_inds]
+assert test_member_inds.shape[0] == membership_test_size
 
 # building train/test set for non members
-non_membership_test_size = membership_test_size  # same as the membership test size
-non_membership_train_size = X_non_member.shape[0] - non_membership_test_size  # as much as possible (can be used by shadow models)
+non_membership_train_size = membership_train_size
+non_membsership_test_size = membership_test_size
 train_non_member_inds = rand_gen.choice(X_non_member.shape[0], non_membership_train_size, replace=False)
 train_non_member_inds.sort()
-X_non_member_train = X_non_member[train_non_member_inds]  # cam be used by shadow models
+X_non_member_train = X_non_member[train_non_member_inds]
 y_non_member_train = y_non_member[train_non_member_inds]
 
 test_non_member_inds = np.asarray([i for i in np.arange(X_non_member.shape[0]) if i not in train_non_member_inds])
-test_non_member_inds = rand_gen.choice(test_non_member_inds, non_membership_test_size, replace=False)
+test_non_member_inds = rand_gen.choice(test_non_member_inds, non_membsership_test_size, replace=False)
 test_non_member_inds.sort()
 X_non_member_test = X_non_member[test_non_member_inds]
 y_non_member_test = y_non_member[test_non_member_inds]
-
 assert X_member_test.shape[0] == X_non_member_test.shape[0], 'assert balanced test set for member/non-member'
 
-# Rule based attack (aka Gap attack)
+# # Rule based attack (aka Gap attack)
 # logger.info('Running Rule Based attack...')
 # attack = MembershipInferenceBlackBoxRuleBased(classifier)
 # inferred_member = attack.infer(X_member_test, y_member_test)
 # inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
 # calc_acc_precision_recall(inferred_non_member, inferred_member)
-
-# Black-box attack
-logger.info('Running black box attack...')
-attack = MembershipInferenceBlackBox(classifier)
-attack.fit(x=X_member_train, y=y_member_train, test_x=X_non_member_train, test_y=y_non_member_train)
-inferred_member = attack.infer(X_member_test, y_member_test)
-inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
-calc_acc_precision_recall(inferred_non_member, inferred_member)
+#
+# # Black-box attack
+# logger.info('Running black box attack...')
+# attack = MembershipInferenceBlackBox(classifier)
+# attack.fit(x=X_member_train, y=y_member_train, test_x=X_non_member_train, test_y=y_non_member_train)
+# inferred_member = attack.infer(X_member_test, y_member_test)
+# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+# calc_acc_precision_recall(inferred_non_member, inferred_member)
 
 # shadow models attack
 # num_shadow_models = np.min([3, (X_non_member.shape[0] - non_membership_test_size) // (membership_train_size + membership_test_size)])
@@ -237,15 +242,147 @@ calc_acc_precision_recall(inferred_non_member, inferred_member)
 #     calc_acc_precision_recall(inferred_non_member, inferred_member)
 
 # Boundary distance
-logger.info('Running Boundary distance attack...')
-attack = LabelOnlyDecisionBoundary(classifier)
-# attack.distance_threshold_tau = 0.357647066116333
-attack.calibrate_distance_threshold(x_train=X_member_train, y_train=y_member_train,
-                                    x_test=X_non_member_train, y_test=y_non_member_train)
+# logger.info('Running Boundary distance attack...')
+# attack = LabelOnlyDecisionBoundary(classifier)
+# # attack.distance_threshold_tau = 0.357647066116333
+# attack.calibrate_distance_threshold(x_train=X_member_train, y_train=y_member_train,
+#                                     x_test=X_non_member_train, y_test=y_non_member_train)
+# inferred_member = attack.infer(X_member_test, y_member_test)
+# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+# calc_acc_precision_recall(inferred_non_member, inferred_member)
+# 03/14/2022 02:48:28 AM root INFO member acc: 0.988, non-member acc: 0.866, balanced acc: 0.927, precision/recall(member): 0.8805704099821747/0.988, precision/recall(non-member): 0.9863325740318907/0.866
+
+################### TracIn #####################
+# device = "cpu"
+# def load_state_dict(model: Module, path: str) -> int:
+#     global_state = torch.load(path, map_location=torch.device(device))
+#     if 'best_net' in global_state:
+#         global_state = global_state['best_net']
+#     model.load_state_dict(global_state)
+#     model.to(device)
+#     return 1
+
+# member_src_set = TensorDataset(torch.from_numpy(X_member_train).to(device), torch.from_numpy(y_member_train).to(device))
+# non_member_src_set = TensorDataset(torch.from_numpy(X_non_member_train).to(device), torch.from_numpy(y_non_member_train).to(device))
+#
+# self influence method
+# tracin = TracInCPFast(
+#     model=net,
+#     final_fc_layer=net.linear,
+#     influence_src_dataset=member_src_set,
+#     checkpoints_load_func=load_state_dict,
+#     checkpoints=[CHECKPOINT_PATH],
+#     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
+#     batch_size=membership_train_size,
+#     vectorize=False,
+# )
+# member_self_influence_scores = tracin.influence(
+#     inputs=None,
+#     targets=None,
+# )
+#
+# tracin = TracInCPFast(
+#     model=net,
+#     final_fc_layer=net.linear,
+#     influence_src_dataset=non_member_src_set,
+#     checkpoints_load_func=load_state_dict,
+#     checkpoints=[CHECKPOINT_PATH],
+#     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
+#     batch_size=non_membership_train_size,
+#     vectorize=False,
+# )
+# non_member_self_influence_scores = tracin.influence(
+#     inputs=None,
+#     targets=None,
+# )
+
+# use the fact that we know some on the training set of the model
+attack = TracInAttack(classifier)
+attack.fit(X_member_train, y_member_train, X_non_member_train, y_non_member_train, CHECKPOINT_PATH)
 inferred_member = attack.infer(X_member_test, y_member_test)
 inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
 calc_acc_precision_recall(inferred_non_member, inferred_member)
-# 03/14/2022 02:48:28 AM root INFO member acc: 0.988, non-member acc: 0.866, balanced acc: 0.927, precision/recall(member): 0.8805704099821747/0.988, precision/recall(non-member): 0.9863325740318907/0.866
+# 03/21/2022 05:08:32 PM root INFO member acc: 0.942, non-member acc: 0.722, balanced acc: 0.832, precision/recall(member): 0.7721311475409836/0.942, precision/recall(non-member): 0.9256410256410257/0.722
+
+# use influence function
+
+
+
+
+
+label_to_class = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+imshow_transform = lambda tensor_in_dataset: tensor_in_dataset.squeeze().permute(1, 2, 0)
+
+def display_test_example(example, true_label, predicted_label, predicted_prob, label_to_class):
+    fig, ax = plt.subplots()
+    print('true_class:', label_to_class[true_label])
+    print('predicted_class:', label_to_class[predicted_label])
+    print('predicted_prob', predicted_prob)
+    ax.imshow(torch.clip(imshow_transform(example), 0, 1))
+    plt.show()
+
+def display_training_examples(examples, true_labels, label_to_class, figsize=(10,4)):
+    fig = plt.figure(figsize=figsize)
+    num_examples = len(examples)
+    for i in range(num_examples):
+        ax = fig.add_subplot(1, num_examples, i+1)
+        ax.imshow(torch.clip(imshow_transform(examples[i]), 0, 1))
+        ax.set_title(label_to_class[true_labels[i]])
+    plt.show()
+    return fig
+
+def display_proponents_and_opponents(test_examples_batch, proponents_indices, opponents_indices, test_examples_true_labels, test_examples_predicted_labels, test_examples_predicted_probs):
+    for (
+            test_example,
+            test_example_proponents,
+            test_example_opponents,
+            test_example_true_label,
+            test_example_predicted_label,
+            test_example_predicted_prob,
+    ) in zip(
+        test_examples_batch,
+        proponents_indices,
+        opponents_indices,
+        test_examples_true_labels,
+        test_examples_predicted_labels,
+        test_examples_predicted_probs,
+    ):
+
+        print("test example:")
+        display_test_example(
+            test_example,
+            test_example_true_label,
+            test_example_predicted_label,
+            test_example_predicted_prob,
+            label_to_class,
+        )
+
+        print("proponents:")
+        test_example_proponents_tensors, test_example_proponents_labels = zip(
+            *[member_src_set[i] for i in test_example_proponents]
+        )
+        display_training_examples(
+            test_example_proponents_tensors, test_example_proponents_labels, label_to_class, figsize=(20, 8)
+        )
+
+        print("opponents:")
+        test_example_opponents_tensors, test_example_opponents_labels = zip(
+            *[member_src_set[i] for i in test_example_opponents]
+        )
+        display_training_examples(
+            test_example_opponents_tensors, test_example_opponents_labels, label_to_class, figsize=(20, 8)
+        )
+
+display_proponents_and_opponents(
+    test_examples_batch,
+    proponents_indices,
+    opponents_indices,
+    test_examples_true_labels,
+    test_examples_predicted_labels,
+    test_examples_predicted_probs,
+)
+
+
 
 
 
@@ -255,3 +392,5 @@ with open(os.path.join(ATTACK_DIR, 'attack_args.txt'), 'w') as f:
 
 
 logger.handlers[0].flush()
+
+
