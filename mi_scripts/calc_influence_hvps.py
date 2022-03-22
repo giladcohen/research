@@ -26,6 +26,9 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/res
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--output_dir', default='influence_functions', type=str, help='checkpoint path file name')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
+parser.add_argument('--calc_grad_z', type=boolean_string, default=False, help='Calculate grad_z for train inputs')
+parser.add_argument('--s_test_set', default=None, type=str,
+                    help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -38,11 +41,10 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
 OUTPUT_DIR = os.path.join(args.checkpoint_dir, args.output_dir)
-os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z'), exist_ok=True)
-os.makedirs(os.path.join(OUTPUT_DIR, 's_test', 'member_train_set'), exist_ok=True)
-os.makedirs(os.path.join(OUTPUT_DIR, 's_test', 'non_member_train_set'), exist_ok=True)
-os.makedirs(os.path.join(OUTPUT_DIR, 's_test', 'member_test_set'), exist_ok=True)
-os.makedirs(os.path.join(OUTPUT_DIR, 's_test', 'non_member_test_set'), exist_ok=True)
+if args.calc_grad_z:
+    os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z'), exist_ok=True)
+if args.s_test_set is not None:
+    os.makedirs(os.path.join(OUTPUT_DIR, 's_test', args.s_test_set), exist_ok=True)
 
 with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
@@ -186,84 +188,49 @@ else:
 device = 'cpu'
 tensor_dataset = TensorDataset(torch.from_numpy(X_member_train).to(device),
                                torch.from_numpy(y_member_train).to(device))
-
 train_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
                           pin_memory=device=='cuda', drop_last=False)
-member_train_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                                 pin_memory=device=='cuda', drop_last=False)
 
-tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_train).to(device),
-                               torch.from_numpy(y_non_member_train).to(device))
-non_member_train_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                                     pin_memory=device=='cuda', drop_last=False)
+if args.calc_grad_z:
+    logger.info('Start grad_z calculation...')
+    calc_grad_z(
+        model=net,
+        train_loader=train_loader,
+        save_pth=os.path.join(OUTPUT_DIR, 'grad_z'),
+        gpu=0,
+        start=0)
 
-tensor_dataset = TensorDataset(torch.from_numpy(X_member_test).to(device),
-                               torch.from_numpy(y_member_test).to(device))
-member_test_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                                pin_memory=device=='cuda', drop_last=False)
+if args.s_test_set is None:
+    logger.info('skipping s_test calculation')
+    exit(0)
+else:
+    logger.info('Start s_test calculation for {}...'.format(args.s_test_set))
 
-tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_test).to(device),
-                               torch.from_numpy(y_non_member_test).to(device))
-non_member_test_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                                    pin_memory=device=='cuda', drop_last=False)
+if args.s_test_set == 'member_train_set':
+    pass
+elif args.s_test_set == 'non_member_train_set':
+    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_train).to(device),
+                                   torch.from_numpy(y_non_member_train).to(device))
+elif args.s_test_set == 'member_test_set':
+    tensor_dataset = TensorDataset(torch.from_numpy(X_member_test).to(device),
+                                   torch.from_numpy(y_member_test).to(device))
+elif args.s_test_set == 'non_member_test_set':
+    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_test).to(device),
+                                   torch.from_numpy(y_non_member_test).to(device))
+else:
+    raise AssertionError('Unrecognized s_test_set {}'.format(args.s_test_set))
+test_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
+                         pin_memory=device=='cuda', drop_last=False)
 
-calc_grad_z(
+calc_s_test(
     model=net,
+    test_loader=test_loader,
     train_loader=train_loader,
-    save_pth=os.path.join(OUTPUT_DIR, 'grad_z'),
-    gpu=0,
-    start=0
-)
-
-calc_s_test(
-    model=net,
-    test_loader=train_loader,
-    train_loader=member_train_loader,
-    save=os.path.join(OUTPUT_DIR, 's_test', 'member_train_set'),
+    save=os.path.join(OUTPUT_DIR, 's_test', args.s_test_set),
     gpu=0,
     damp=0.01,
     scale=25,
-    recursion_depth=max(train_loader.dataset.__len__(), 1000),
+    recursion_depth=train_loader.dataset.__len__(),
     r=1,
-    start=0,
-)
-
-calc_s_test(
-    model=net,
-    test_loader=train_loader,
-    train_loader=non_member_train_loader,
-    save=os.path.join(OUTPUT_DIR, 's_test', 'non_member_train_set'),
-    gpu=0,
-    damp=0.01,
-    scale=25,
-    recursion_depth=max(train_loader.dataset.__len__(), 1000),
-    r=1,
-    start=0,
-)
-
-calc_s_test(
-    model=net,
-    test_loader=train_loader,
-    train_loader=member_test_loader,
-    save=os.path.join(OUTPUT_DIR, 's_test', 'member_test_set'),
-    gpu=0,
-    damp=0.01,
-    scale=25,
-    recursion_depth=max(train_loader.dataset.__len__(), 1000),
-    r=1,
-    start=0,
-)
-
-calc_s_test(
-    model=net,
-    test_loader=train_loader,
-    train_loader=non_member_test_loader,
-    save=os.path.join(OUTPUT_DIR, 's_test', 'non_member_test_set'),
-    gpu=0,
-    damp=0.01,
-    scale=25,
-    recursion_depth=max(train_loader.dataset.__len__(), 1000),
-    r=1,
-    start=0,
-)
+    start=0)
 logger.info('Done.')
