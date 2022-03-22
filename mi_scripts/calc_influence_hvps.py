@@ -223,7 +223,7 @@ calc_s_test(
     gpu=0,
     damp=0.01,
     scale=25,
-    recursion_depth=min(train_loader.dataset.__len__(), 1000),
+    recursion_depth=max(train_loader.dataset.__len__(), 1000),
     r=1,
     start=0,
 )
@@ -236,7 +236,7 @@ calc_s_test(
     gpu=0,
     damp=0.01,
     scale=25,
-    recursion_depth=min(train_loader.dataset.__len__(), 1000),
+    recursion_depth=max(train_loader.dataset.__len__(), 1000),
     r=1,
     start=0,
 )
@@ -249,7 +249,7 @@ calc_s_test(
     gpu=0,
     damp=0.01,
     scale=25,
-    recursion_depth=min(train_loader.dataset.__len__(), 1000),
+    recursion_depth=max(train_loader.dataset.__len__(), 1000),
     r=1,
     start=0,
 )
@@ -262,7 +262,7 @@ calc_s_test(
     gpu=0,
     damp=0.01,
     scale=25,
-    recursion_depth=min(train_loader.dataset.__len__(), 1000),
+    recursion_depth=max(train_loader.dataset.__len__(), 1000),
     r=1,
     start=0,
 )
