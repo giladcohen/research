@@ -13,6 +13,7 @@ from research.datasets.train_val_test_data_loaders import get_loader_with_specif
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape
 from research.models.utils import get_strides, get_conv1_params, get_model
 import influence_functions.pytorch_influence_functions as ptif
+from influence_functions.pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z
 
 # parser = argparse.ArgumentParser(description='Influence functions tutorial using pytorch')
 # parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
@@ -37,7 +38,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 net_cls = get_model('resnet18')
 conv1 = get_conv1_params('cifar10')
 strides = get_strides('cifar10')
-net = net_cls(num_classes=10, activation='swish', conv1=conv1, strides=strides, field='probs')
+net = net_cls(num_classes=10, activation='swish', conv1=conv1, strides=strides, field='logits')
 net = net.to('cuda')
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
@@ -90,13 +91,35 @@ test_loader = get_test_loader(
     pin_memory=device=='cuda'
 )
 
-config['outdir'] = OUTPUT_DIR
-influences, harmful, helpful, test_id_num = ptif.calc_influence_single(
+# config['outdir'] = OUTPUT_DIR
+# influences, harmful, helpful, test_id_num = ptif.calc_influence_single(
+#     model=net,
+#     train_loader=train_loader,
+#     test_loader=test_loader,
+#     test_id_num=0,
+#     gpu=0,
+#     recursion_depth=5000,
+#     r=1,
+#     time_logging=True)
+
+os.makedirs(os.path.join(OUTPUT_DIR, 's_test'), exist_ok=True)
+os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z'), exist_ok=True)
+calc_s_test(
+    model=net,
+    test_loader=test_loader,
+    train_loader=train_loader,
+    save=os.path.join(OUTPUT_DIR, 's_test'),
+    gpu=0,
+    damp=0.01,
+    scale=25,
+    recursion_depth=1000,
+    r=1,
+    start=0,
+)
+calc_grad_z(
     model=net,
     train_loader=train_loader,
-    test_loader=test_loader,
-    test_id_num=0,
+    save_pth=os.path.join(OUTPUT_DIR, 'grad_z'),
     gpu=0,
-    recursion_depth=5000,
-    r=1,
-    time_logging=True)
+    start=0
+)

@@ -1,0 +1,5 @@
+commands:
+  - [python research/mi_scripts/calc_influence_hvps.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish,  11000]
+  - [python research/mi_scripts/calc_influence_hvps.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/s_10k_wo_aug_act_swish, 11000]
+  - [python research/mi_scripts/calc_influence_hvps.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/s_20k_wo_aug_act_swish, 11000]
+  - [python research/mi_scripts/calc_influence_hvps.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/s_28k_wo_aug_act_swish, 11000]
