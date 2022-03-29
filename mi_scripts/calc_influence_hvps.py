@@ -30,8 +30,8 @@ parser.add_argument('--output_dir', default='influence_functions', type=str, hel
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--calc_grad_z', type=boolean_string, default=False, help='Calculate grad_z for train inputs')
 parser.add_argument('--calc_s_test', type=boolean_string, default=False, help='Calculate s_test for test inputs')
-parser.add_argument('--calc_influences', type=boolean_string, default=True, help='Calculate the influence scores for the s_test_set')
-parser.add_argument('--s_test_set', default='non_member_train_set', type=str, help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
+parser.add_argument('--calc_influences', type=boolean_string, default=False, help='Calculate the influence scores for the s_test_set')
+parser.add_argument('--s_test_set', default='', type=str, help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
