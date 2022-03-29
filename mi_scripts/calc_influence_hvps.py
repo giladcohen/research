@@ -41,10 +41,13 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
 OUTPUT_DIR = os.path.join(args.checkpoint_dir, args.output_dir)
+DATA_DIR = os.path.join(args.checkpoint_dir, 'data')
+
 if args.calc_grad_z:
     os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z'), exist_ok=True)
 if args.s_test_set is not None:
     os.makedirs(os.path.join(OUTPUT_DIR, 's_test', args.s_test_set), exist_ok=True)
+os.makedirs(DATA_DIR, exist_ok=True)
 
 with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
@@ -78,7 +81,7 @@ if device == 'cuda':
     cudnn.benchmark = True
 
 # Data
-if not os.path.exists(os.path.join(OUTPUT_DIR, 'X_member_train.npy')):
+if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     logger.info('==> Preparing data..')
     all_train_inds = np.arange(50000)
     train_inds = np.load(os.path.join(args.checkpoint_dir, 'train_inds.npy'))
@@ -166,30 +169,29 @@ if not os.path.exists(os.path.join(OUTPUT_DIR, 'X_member_train.npy')):
     y_non_member_test = y_non_member[test_non_member_inds]
     assert X_member_test.shape[0] == X_non_member_test.shape[0], 'assert balanced test set for member/non-member'
 
-    np.save(os.path.join(OUTPUT_DIR, 'X_member_train.npy'), X_member_train)
-    np.save(os.path.join(OUTPUT_DIR, 'y_member_train.npy'), y_member_train)
-    np.save(os.path.join(OUTPUT_DIR, 'X_non_member_train.npy'), X_non_member_train)
-    np.save(os.path.join(OUTPUT_DIR, 'y_non_member_train.npy'), y_non_member_train)
-    np.save(os.path.join(OUTPUT_DIR, 'X_member_test.npy'), X_member_test)
-    np.save(os.path.join(OUTPUT_DIR, 'y_member_test.npy'), y_member_test)
-    np.save(os.path.join(OUTPUT_DIR, 'X_non_member_test.npy'), X_non_member_test)
-    np.save(os.path.join(OUTPUT_DIR, 'y_non_member_test.npy'), y_non_member_test)
+    np.save(os.path.join(DATA_DIR, 'X_member_train.npy'), X_member_train)
+    np.save(os.path.join(DATA_DIR, 'y_member_train.npy'), y_member_train)
+    np.save(os.path.join(DATA_DIR, 'X_non_member_train.npy'), X_non_member_train)
+    np.save(os.path.join(DATA_DIR, 'y_non_member_train.npy'), y_non_member_train)
+    np.save(os.path.join(DATA_DIR, 'X_member_test.npy'), X_member_test)
+    np.save(os.path.join(DATA_DIR, 'y_member_test.npy'), y_member_test)
+    np.save(os.path.join(DATA_DIR, 'X_non_member_test.npy'), X_non_member_test)
+    np.save(os.path.join(DATA_DIR, 'y_non_member_test.npy'), y_non_member_test)
 else:
     logger.info('loading data..')
-    X_member_train = np.load(os.path.join(OUTPUT_DIR, 'X_member_train.npy'))
-    y_member_train = np.load(os.path.join(OUTPUT_DIR, 'y_member_train.npy'))
-    X_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'X_non_member_train.npy'))
-    y_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'y_non_member_train.npy'))
-    X_member_test = np.load(os.path.join(OUTPUT_DIR, 'X_member_test.npy'))
-    y_member_test = np.load(os.path.join(OUTPUT_DIR, 'y_member_test.npy'))
-    X_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'X_non_member_test.npy'))
-    y_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'y_non_member_test.npy'))
+    X_member_train = np.load(os.path.join(DATA_DIR, 'X_member_train.npy'))
+    y_member_train = np.load(os.path.join(DATA_DIR, 'y_member_train.npy'))
+    X_non_member_train = np.load(os.path.join(DATA_DIR, 'X_non_member_train.npy'))
+    y_non_member_train = np.load(os.path.join(DATA_DIR, 'y_non_member_train.npy'))
+    X_member_test = np.load(os.path.join(DATA_DIR, 'X_member_test.npy'))
+    y_member_test = np.load(os.path.join(DATA_DIR, 'y_member_test.npy'))
+    X_non_member_test = np.load(os.path.join(DATA_DIR, 'X_non_member_test.npy'))
+    y_non_member_test = np.load(os.path.join(DATA_DIR, 'y_non_member_test.npy'))
 
-device = 'cpu'
-tensor_dataset = TensorDataset(torch.from_numpy(X_member_train).to(device),
-                               torch.from_numpy(y_member_train).to(device))
+tensor_dataset = TensorDataset(torch.from_numpy(X_member_train),
+                               torch.from_numpy(y_member_train))
 train_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                          pin_memory=device=='cuda', drop_last=False)
+                          pin_memory=False, drop_last=False)
 
 if args.calc_grad_z:
     logger.info('Start grad_z calculation...')
@@ -209,18 +211,18 @@ else:
 if args.s_test_set == 'member_train_set':
     pass
 elif args.s_test_set == 'non_member_train_set':
-    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_train).to(device),
-                                   torch.from_numpy(y_non_member_train).to(device))
+    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_train),
+                                   torch.from_numpy(y_non_member_train))
 elif args.s_test_set == 'member_test_set':
-    tensor_dataset = TensorDataset(torch.from_numpy(X_member_test).to(device),
-                                   torch.from_numpy(y_member_test).to(device))
+    tensor_dataset = TensorDataset(torch.from_numpy(X_member_test),
+                                   torch.from_numpy(y_member_test))
 elif args.s_test_set == 'non_member_test_set':
-    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_test).to(device),
-                                   torch.from_numpy(y_non_member_test).to(device))
+    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_test),
+                                   torch.from_numpy(y_non_member_test))
 else:
     raise AssertionError('Unrecognized s_test_set {}'.format(args.s_test_set))
 test_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                         pin_memory=device=='cuda', drop_last=False)
+                         pin_memory=False, drop_last=False)
 
 calc_s_test(
     model=net,

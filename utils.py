@@ -648,3 +648,11 @@ def calc_acc_precision_recall(inferred_non_member, inferred_member):
     )
     logger.info('member acc: {}, non-member acc: {}, balanced acc: {}, precision/recall(member): {}/{}, precision/recall(non-member): {}/{}'
                 .format(member_acc, non_member_acc, acc, precision[1], recall[1], precision[0], recall[0]))
+
+def load_state_dict(model: nn.Module, path: str, device='cpu') -> int:
+    global_state = torch.load(path, map_location=torch.device(device))
+    if 'best_net' in global_state:
+        global_state = global_state['best_net']
+    model.load_state_dict(global_state)
+    model.to(device)
+    return 1
