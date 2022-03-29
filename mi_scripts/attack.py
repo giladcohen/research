@@ -327,7 +327,7 @@ logger.info('Running Influence Functions attack...')
 
 train_size = X_member_train.shape[0]
 grad_z_vecs = load_grad_z(grad_z_dir=os.path.join(OUTPUT_DIR, 'grad_z'), train_dataset_size=train_size)
-s_test_dir = os.path.join(OUTPUT_DIR, 's_test', 'member_train_set')
+s_test_dir = os.path.join(OUTPUT_DIR, 's_test', 'non_member_train_set')
 num_s_test_files = len(list(Path(s_test_dir).glob("*.s_test")))
 suffix = 'recdep500_r1'
 s_test_vecs = []
@@ -347,16 +347,18 @@ for i in tqdm(range(num_s_test_files)):
                         [
                             ####################
                             # TODO: potential bottle neck, takes 17% execution time
-                            torch.sum(k * j).data.cpu().numpy()
+                            # torch.sum(k * j).data.cpu().numpy()
                             ####################
-                            # torch.sum(k * j).data
+                            torch.sum(k * j).data
                             for k, j in zip(grad_z_vec, s_test_vec)
                         ]
                     )
                     / train_size
             )
         influences[i, j] = tmp_influence
-
+influences = influences.cpu().numpy()
+harmful = np.argsort(influences, axis=1)
+helpful = harmful[:, ::-1]
 
 
 

@@ -19,7 +19,8 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
     get_max_train_size
 from research.models.utils import get_strides, get_conv1_params, get_model
 import influence_functions.pytorch_influence_functions as ptif
-from influence_functions.pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z
+from influence_functions.pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z, \
+    calc_all_influences
 
 parser = argparse.ArgumentParser(description='Influence functions tutorial using pytorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
@@ -27,8 +28,9 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 parser.add_argument('--output_dir', default='influence_functions', type=str, help='checkpoint path file name')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--calc_grad_z', type=boolean_string, default=False, help='Calculate grad_z for train inputs')
-parser.add_argument('--s_test_set', default=None, type=str,
-                    help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
+parser.add_argument('--calc_s_test', type=boolean_string, default=False, help='Calculate s_test for test inputs')
+parser.add_argument('--calc_influences', type=boolean_string, default=False, help='Calculate the influence scores for the s_test_set')
+parser.add_argument('--s_test_set', type=str, help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -45,8 +47,10 @@ DATA_DIR = os.path.join(args.checkpoint_dir, 'data')
 
 if args.calc_grad_z:
     os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z'), exist_ok=True)
-if args.s_test_set is not None:
+if args.calc_s_test:
     os.makedirs(os.path.join(OUTPUT_DIR, 's_test', args.s_test_set), exist_ok=True)
+if args.calc_influences:
+    os.makedirs(os.path.join(OUTPUT_DIR, 'influences'), exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 
 with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
@@ -193,21 +197,6 @@ tensor_dataset = TensorDataset(torch.from_numpy(X_member_train),
 train_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
                           pin_memory=False, drop_last=False)
 
-if args.calc_grad_z:
-    logger.info('Start grad_z calculation...')
-    calc_grad_z(
-        model=net,
-        train_loader=train_loader,
-        save_pth=os.path.join(OUTPUT_DIR, 'grad_z'),
-        gpu=0,
-        start=0)
-
-if args.s_test_set is None:
-    logger.info('skipping s_test calculation')
-    exit(0)
-else:
-    logger.info('Start s_test calculation for {}...'.format(args.s_test_set))
-
 if args.s_test_set == 'member_train_set':
     pass
 elif args.s_test_set == 'non_member_train_set':
@@ -224,15 +213,33 @@ else:
 test_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
                          pin_memory=False, drop_last=False)
 
-calc_s_test(
-    model=net,
-    test_loader=test_loader,
-    train_loader=train_loader,
-    save=os.path.join(OUTPUT_DIR, 's_test', args.s_test_set),
-    gpu=0,
-    damp=0.01,
-    scale=25,
-    recursion_depth=train_loader.dataset.__len__(),
-    r=1,
-    start=0)
+if args.calc_grad_z:
+    logger.info('Start grad_z calculation...')
+    calc_grad_z(
+        model=net,
+        train_loader=train_loader,
+        save_pth=os.path.join(OUTPUT_DIR, 'grad_z'),
+        gpu=0,
+        start=0)
+
+if args.calc_s_test:
+    logger.info('Start s_test calculation for {}...'.format(args.s_test_set))
+    calc_s_test(
+        model=net,
+        test_loader=test_loader,
+        train_loader=train_loader,
+        save=os.path.join(OUTPUT_DIR, 's_test', args.s_test_set),
+        gpu=0,
+        damp=0.01,
+        scale=25,
+        recursion_depth=train_loader.dataset.__len__(),
+        r=1,
+        start=0)
+
+if args.calc_influences:
+    logger.info('Start influence scores calculation for {}...'.format(args.s_test_set))
+    influences = calc_all_influences(os.path.join(OUTPUT_DIR, 'grad_z'), train_loader.dataset.__len__(),
+                                     os.path.join(OUTPUT_DIR, 's_test', args.s_test_set), test_loader.dataset.__len__())
+    np.save(os.path.join(OUTPUT_DIR, 'influences', 'influences_' + args.s_test_set + '.npy'), influences)
+
 logger.info('Done.')
