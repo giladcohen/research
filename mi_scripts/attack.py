@@ -26,8 +26,10 @@ from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_ME
     CIFAR100_STD
 from captum.influence import TracInCPFast
 
-# sys.path.insert(0, ".")
-# sys.path.insert(0, "./adversarial_robustness_toolbox")
+sys.path.insert(0, ".")
+sys.path.insert(0, "./adversarial_robustness_toolbox")
+sys.path.insert(0, "./influence_functions")
+
 # from research.classifiers.pytorch_classifier_specific import PyTorchClassifierSpecific
 from research.losses.losses import L2Loss, LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
@@ -40,9 +42,8 @@ from research.models.utils import get_strides, get_conv1_params, get_model
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
     MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack
 from art.estimators.classification import PyTorchClassifier
-from influence_functions.pytorch_influence_functions.influence_functions.influence_functions import load_grad_z, \
-    load_s_test
-from influence_functions.pytorch_influence_functions import display_progress
+from pytorch_influence_functions.influence_functions.influence_functions import load_grad_z, load_s_test
+from pytorch_influence_functions import display_progress
 
 parser = argparse.ArgumentParser(description='Membership attack script')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
