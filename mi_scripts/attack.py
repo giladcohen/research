@@ -39,10 +39,10 @@ from research.models.utils import get_strides, get_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
     MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack
-
 from art.estimators.classification import PyTorchClassifier
-from pytorch_influence_functions.influence_functions.influence_functions import load_grad_z, load_s_test
-from pytorch_influence_functions import display_progress
+from influence_functions.pytorch_influence_functions.influence_functions.influence_functions import load_grad_z, \
+    load_s_test
+from influence_functions.pytorch_influence_functions import display_progress
 
 parser = argparse.ArgumentParser(description='Membership attack script')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
