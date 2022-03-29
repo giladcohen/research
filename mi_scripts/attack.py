@@ -346,9 +346,9 @@ for i in tqdm(range(num_s_test_files)):
                         [
                             ####################
                             # TODO: potential bottle neck, takes 17% execution time
-                            torch.sum(k * j).data.cpu().numpy()
+                            # torch.sum(k * j).data.cpu().numpy()
                             ####################
-                            # torch.sum(k * j).data
+                            torch.sum(k * j).data
                             for k, j in zip(grad_z_vec, s_test_vec)
                         ]
                     )
