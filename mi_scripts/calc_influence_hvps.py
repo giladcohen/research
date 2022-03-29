@@ -20,8 +20,8 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
     get_max_train_size
 from research.models.utils import get_strides, get_conv1_params, get_model
 import influence_functions.pytorch_influence_functions as ptif
-from influence_functions.pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z, \
-    calc_all_influences
+from influence_functions.pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z
+#    calc_all_influences
 
 parser = argparse.ArgumentParser(description='Influence functions tutorial using pytorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
