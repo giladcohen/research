@@ -20,17 +20,20 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
     get_max_train_size
 from research.models.utils import get_strides, get_conv1_params, get_model
 import influence_functions.pytorch_influence_functions as ptif
-from influence_functions.pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z, \
+from pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z, \
     calc_all_influences
+from pytorch_influence_functions.influence_functions.influence_functions import calc_self_influence
 
 parser = argparse.ArgumentParser(description='Influence functions tutorial using pytorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--output_dir', default='influence_functions', type=str, help='checkpoint path file name')
+parser.add_argument('--output_dir', default='influence_functions_aug', type=str, help='checkpoint path file name')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--calc_grad_z', type=boolean_string, default=False, help='Calculate grad_z for train inputs')
 parser.add_argument('--calc_s_test', type=boolean_string, default=False, help='Calculate s_test for test inputs')
+parser.add_argument('--calc_self_influences', type=boolean_string, default=False, help='Calculate the self influence scores for all s_test sets')
 parser.add_argument('--calc_influences', type=boolean_string, default=False, help='Calculate the influence scores for the s_test_set')
+parser.add_argument('--use_augmented_train_set', type=boolean_string, default=False, help='Include both member_train and non_member_train in the train loader')
 parser.add_argument('--s_test_set', default='', type=str, help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -193,13 +196,21 @@ else:
     X_non_member_test = np.load(os.path.join(DATA_DIR, 'X_non_member_test.npy'))
     y_non_member_test = np.load(os.path.join(DATA_DIR, 'y_non_member_test.npy'))
 
-tensor_dataset = TensorDataset(torch.from_numpy(X_member_train),
-                               torch.from_numpy(y_member_train))
+if args.use_augmented_train_set:
+    X_train = np.vstack((X_member_train, X_non_member_train))
+    y_train = np.hstack((y_member_train, y_non_member_train))
+else:
+    X_train = X_member_train
+    y_train = y_member_train
+
+tensor_dataset = TensorDataset(torch.from_numpy(X_train),
+                               torch.from_numpy(y_train))
 train_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
                           pin_memory=False, drop_last=False)
 
 if args.s_test_set == 'member_train_set':
-    pass
+    tensor_dataset = TensorDataset(torch.from_numpy(X_member_train),
+                                   torch.from_numpy(y_member_train))
 elif args.s_test_set == 'non_member_train_set':
     tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_train),
                                    torch.from_numpy(y_non_member_train))
@@ -222,6 +233,22 @@ if args.calc_grad_z:
         save_pth=os.path.join(OUTPUT_DIR, 'grad_z'),
         gpu=0,
         start=0)
+
+if args.calc_self_influences:
+    assert not args.use_augmented_train_set
+    logger.info('Start self influence calculation for member train set...')
+    self_influences_member_train = calc_self_influence(X_member_train, y_member_train, net)
+    logger.info('Start self influence calculation for non member train set...')
+    self_influences_non_member_train = calc_self_influence(X_non_member_train, y_non_member_train, net)
+    logger.info('Start self influence calculation for member test set...')
+    self_influences_member_test = calc_self_influence(X_member_test, y_member_test, net)
+    logger.info('Start self influence calculation for non member test set...')
+    self_influences_non_member_test = calc_self_influence(X_non_member_test, y_non_member_test, net)
+
+    np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_train.npy'), self_influences_member_train)
+    np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_train.npy'), self_influences_non_member_train)
+    np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_test.npy'), self_influences_member_test)
+    np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_test.npy'), self_influences_non_member_test)
 
 if args.calc_s_test:
     logger.info('Start s_test calculation for {}...'.format(args.s_test_set))

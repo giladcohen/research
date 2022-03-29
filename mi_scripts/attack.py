@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torchsummary import summary
-from torch.utils.data import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
 
 from typing import Callable, Optional, Tuple, Union, Any, List
 import numpy as np
@@ -40,10 +40,10 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
-    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack
+    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack, SelfInfluenceFunctionAttack
 from art.estimators.classification import PyTorchClassifier
-from pytorch_influence_functions.influence_functions.influence_functions import load_grad_z, load_s_test
-from pytorch_influence_functions import display_progress
+from pytorch_influence_functions.influence_functions.influence_functions import load_grad_z, load_s_test, \
+    calc_influence_single, calc_self_influence
 
 parser = argparse.ArgumentParser(description='Membership attack script')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
@@ -321,54 +321,38 @@ else:
 # # 03/21/2022 05:08:32 PM root INFO member acc: 0.942, non-member acc: 0.722, balanced acc: 0.832, precision/recall(member): 0.7721311475409836/0.942, precision/recall(non-member): 0.9256410256410257/0.722
 
 # Influence functions
-logger.info('Running Influence Functions attack...')
-# member_src_set = TensorDataset(torch.from_numpy(X_member_train).to(device), torch.from_numpy(y_member_train))
-# non_member_src_set = TensorDataset(torch.from_numpy(X_non_member_train).to(device), torch.from_numpy(y_non_member_train))
+# logger.info('Running self Influence Functions attack...')
+# self_influences_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_train.npy'))
+# self_influences_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_train.npy'),)
+# self_influences_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_test.npy'))
+# self_influences_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_test.npy'))
+# attack = SelfInfluenceFunctionAttack(classifier)
+#
+# attack.fit(self_influences_member_train, self_influences_non_member_train)
+# inferred_member = attack.infer(X_member_test, y_member_test, **{'self_influences': self_influences_member_test})
+# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': self_influences_non_member_test})
+# calc_acc_precision_recall(inferred_non_member, inferred_member)
+# 03/29/2022 10:43:18 PM root INFO member acc: 1.0, non-member acc: 0.864, balanced acc: 0.932, precision/recall(member): 0.8802816901408451/1.0, precision/recall(non-member): 1.0/0.864
 
-train_size = X_member_train.shape[0]
-grad_z_vecs = load_grad_z(grad_z_dir=os.path.join(OUTPUT_DIR, 'grad_z'), train_dataset_size=train_size)
-s_test_dir = os.path.join(OUTPUT_DIR, 's_test', 'non_member_train_set')
-num_s_test_files = len(list(Path(s_test_dir).glob("*.s_test")))
-suffix = 'recdep500_r1'
-s_test_vecs = []
-for i in range(num_s_test_files):
-    # s_test.append(torch.load(s_test_dir / str(s_test_id) + f"_{i}.s_test"))
-    s_test_vecs.append(torch.load(os.path.join(s_test_dir, str(i) + '_' + suffix + '.s_test')))
-    display_progress("s_test files loaded: ", i, num_s_test_files)
+influences_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_member_train_set.npy'))
+influences_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_non_member_train_set.npy'))
+influences_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_member_test_set.npy'))
+influences_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_non_member_test_set.npy'))
 
-influences = torch.zeros(num_s_test_files, train_size)
-for i in tqdm(range(num_s_test_files)):
-    s_test_vec = s_test_vecs[i]
-    for j in range(train_size):
-        grad_z_vec = grad_z_vecs[j]
-        with torch.no_grad():
-            tmp_influence = (
-                    -sum(
-                        [
-                            ####################
-                            # TODO: potential bottle neck, takes 17% execution time
-                            # torch.sum(k * j).data.cpu().numpy()
-                            ####################
-                            torch.sum(k * j).data
-                            for k, j in zip(grad_z_vec, s_test_vec)
-                        ]
-                    )
-                    / train_size
-            )
-        influences[i, j] = tmp_influence
-influences = influences.cpu().numpy()
-harmful = np.argsort(influences, axis=1)
-helpful = harmful[:, ::-1]
+# logger.info('Running row sum Influence Functions attack...')
+# member_train_scores = influences_member_train.sum(axis=1)          # -2.8e-6 +- 1.16e-5 | min/max = [-2.13e-4, 1.25e-5]
+# non_member_train_scores = influences_non_member_train.sum(axis=1)  # 0.0126 +- 0.051    | min/max = [-1.74e-1, 2.45e-1]
+# member_test_scores = influences_member_test.sum(axis=1)            # -1.4e-6 +- 4.96e-6 | min/max = [-3.89e-5, 1.83e-5]
+# non_member_test_scores = influences_non_member_test.sum(axis=1)    # 0.0135 +- 0.048    | min/max = [-1.27e-1, 2.31e-1]
+# attack = SelfInfluenceFunctionAttack(classifier)
+#
+# attack.fit(member_train_scores, non_member_train_scores)
+# inferred_member = attack.infer(X_member_test, y_member_test, **{'self_influences': member_test_scores})
+# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': non_member_test_scores})
+# calc_acc_precision_recall(inferred_non_member, inferred_member)
+# # 03/29/2022 10:57:44 PM root INFO member acc: 1.0, non-member acc: 0.858, balanced acc: 0.929, precision/recall(member): 0.8756567425569177/1.0, precision/recall(non-member): 1.0/0.858
 
-
-
-
-# e_s_test, _ = load_s_test(train_dataset_size=train_dataset_size)
-# e_s_test, _ = load_s_test(s_test_dir=os.path.join(OUTPUT_DIR, 's_test', 'member_train_set'),
-#                           r_sample_size=X_member_train.shape[0],
-#                           train_dataset_size=train_size,
-#                           suffix='recdep{}_r1'.format(train_size))
-
+logger.info('Running match Influence Functions attack...')
 
 
 
