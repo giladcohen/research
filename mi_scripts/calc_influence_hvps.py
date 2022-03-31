@@ -30,7 +30,7 @@ from pytorch_influence_functions.influence_functions.influence_functions import 
 parser = argparse.ArgumentParser(description='Influence functions tutorial using pytorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--output_dir', default='influence_functions_aug', type=str, help='checkpoint path file name')
+parser.add_argument('--output_dir', default='influence_functions', type=str, help='checkpoint path file name')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--use_augmented_train_set', type=boolean_string, default=False, help='Include both member_train and non_member_train in the train loader')
 parser.add_argument('--calc_grad_z', type=boolean_string, default=False, help='Calculate grad_z for train inputs')
