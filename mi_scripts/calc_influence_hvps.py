@@ -9,6 +9,7 @@ import logging
 import sys
 import json
 import time
+from tqdm import tqdm
 
 sys.path.insert(0, ".")
 sys.path.insert(0, "./research")
@@ -20,21 +21,25 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
     get_max_train_size
 from research.models.utils import get_strides, get_conv1_params, get_model
 import influence_functions.pytorch_influence_functions as ptif
+from pytorch_influence_functions import calc_influence_single
 from pytorch_influence_functions.influence_functions import calc_s_test, calc_grad_z, \
     calc_all_influences
-from pytorch_influence_functions.influence_functions.influence_functions import calc_self_influence
+from pytorch_influence_functions.influence_functions.influence_functions import calc_self_influence, \
+    calc_single_influences
 
 parser = argparse.ArgumentParser(description='Influence functions tutorial using pytorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--output_dir', default='influence_functions_aug', type=str, help='checkpoint path file name')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
+parser.add_argument('--use_augmented_train_set', type=boolean_string, default=False, help='Include both member_train and non_member_train in the train loader')
 parser.add_argument('--calc_grad_z', type=boolean_string, default=False, help='Calculate grad_z for train inputs')
 parser.add_argument('--calc_s_test', type=boolean_string, default=False, help='Calculate s_test for test inputs')
 parser.add_argument('--calc_self_influences', type=boolean_string, default=False, help='Calculate the self influence scores for all s_test sets')
+parser.add_argument('--calc_single_influences', type=boolean_string, default=False, help='Calculate the single influence scores for s_test set over every individual train sample')
 parser.add_argument('--calc_influences', type=boolean_string, default=False, help='Calculate the influence scores for the s_test_set')
-parser.add_argument('--use_augmented_train_set', type=boolean_string, default=False, help='Include both member_train and non_member_train in the train loader')
 parser.add_argument('--s_test_set', default='', type=str, help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
+parser.add_argument('--s_train_set', default='', type=str, help='train set to calculate single influences: member_train_set/non_member_train_set')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -249,6 +254,17 @@ if args.calc_self_influences:
     np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_train.npy'), self_influences_non_member_train)
     np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_test.npy'), self_influences_member_test)
     np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_test.npy'), self_influences_non_member_test)
+
+if args.calc_single_influences:
+    if args.s_train_set == 'member_train_set':
+        X1, y1 = X_member_train, y_member_train
+    elif args.s_train_set == 'non_member_train_set':
+        X1, y1 = X_non_member_train, y_non_member_train
+    else:
+        raise AssertionError('invalid args.s_train_set={}'.format(args.s_train_set))
+
+    single_influences = calc_single_influences(X1, y1, test_loader, net)
+    np.save(os.path.join(OUTPUT_DIR, 'influences', 'single_influences_of_{}_on_{}.npy'.format(args.s_train_set, args.s_test_set)))
 
 if args.calc_s_test:
     logger.info('Start s_test calculation for {}...'.format(args.s_test_set))

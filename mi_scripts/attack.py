@@ -51,7 +51,7 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 # parser.add_argument('--attack', default='shadow_models', type=str, help='attack: shadow_models')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='influence_functions', type=str, help='attack directory')
+parser.add_argument('--output_dir', default='influence_functions_aug', type=str, help='attack directory')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -351,11 +351,6 @@ influences_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'inf
 # inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': non_member_test_scores})
 # calc_acc_precision_recall(inferred_non_member, inferred_member)
 # # 03/29/2022 10:57:44 PM root INFO member acc: 1.0, non-member acc: 0.858, balanced acc: 0.929, precision/recall(member): 0.8756567425569177/1.0, precision/recall(non-member): 1.0/0.858
-
-logger.info('Running match Influence Functions attack...')
-
-
-
 
 
 
