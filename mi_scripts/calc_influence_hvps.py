@@ -58,7 +58,7 @@ if args.calc_grad_z:
     os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z', args.grad_z_set), exist_ok=True)
 if args.calc_s_test:
     os.makedirs(os.path.join(OUTPUT_DIR, 's_test', args.s_test_set), exist_ok=True)
-if args.calc_influences:
+if args.calc_influences or args.calc_self_influences or args.calc_single_influences:
     os.makedirs(os.path.join(OUTPUT_DIR, 'influences'), exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
