@@ -32,14 +32,13 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/res
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--output_dir', default='influence_functions', type=str, help='checkpoint path file name')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
-parser.add_argument('--use_augmented_train_set', type=boolean_string, default=False, help='Include both member_train and non_member_train in the train loader')
 parser.add_argument('--calc_grad_z', type=boolean_string, default=False, help='Calculate grad_z for train inputs')
 parser.add_argument('--calc_s_test', type=boolean_string, default=False, help='Calculate s_test for test inputs')
-parser.add_argument('--calc_self_influences', type=boolean_string, default=False, help='Calculate the self influence scores for all s_test sets')
+parser.add_argument('--calc_self_influences', type=boolean_string, default=False, help='Calculate the self influence scores for all subsets')
 parser.add_argument('--calc_single_influences', type=boolean_string, default=False, help='Calculate the single influence scores for s_test set over every individual train sample')
 parser.add_argument('--calc_influences', type=boolean_string, default=False, help='Calculate the influence scores for the s_test_set')
+parser.add_argument('--grad_z_set', default='', type=str, help='train set to calculate single influences: member_train_set/non_member_train_set')
 parser.add_argument('--s_test_set', default='', type=str, help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
-parser.add_argument('--s_train_set', default='', type=str, help='train set to calculate single influences: member_train_set/non_member_train_set')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -55,7 +54,7 @@ OUTPUT_DIR = os.path.join(args.checkpoint_dir, args.output_dir)
 DATA_DIR = os.path.join(args.checkpoint_dir, 'data')
 
 if args.calc_grad_z:
-    os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z'), exist_ok=True)
+    os.makedirs(os.path.join(OUTPUT_DIR, 'grad_z', args.grad_z_set), exist_ok=True)
 if args.calc_s_test:
     os.makedirs(os.path.join(OUTPUT_DIR, 's_test', args.s_test_set), exist_ok=True)
 if args.calc_influences:
@@ -201,46 +200,34 @@ else:
     X_non_member_test = np.load(os.path.join(DATA_DIR, 'X_non_member_test.npy'))
     y_non_member_test = np.load(os.path.join(DATA_DIR, 'y_non_member_test.npy'))
 
-if args.use_augmented_train_set:
-    X_train = np.vstack((X_member_train, X_non_member_train))
-    y_train = np.hstack((y_member_train, y_non_member_train))
-else:
-    X_train = X_member_train
-    y_train = y_member_train
 
-tensor_dataset = TensorDataset(torch.from_numpy(X_train),
-                               torch.from_numpy(y_train))
-train_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                          pin_memory=False, drop_last=False)
+def get_tensor_dataset(subset_name: str):
+    if subset_name == 'member_train_set':
+        tensor_dataset = TensorDataset(torch.from_numpy(X_member_train), torch.from_numpy(y_member_train))
+    elif subset_name == 'non_member_train_set':
+        tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_train), torch.from_numpy(y_non_member_train))
+    elif subset_name == 'member_test_set':
+        tensor_dataset = TensorDataset(torch.from_numpy(X_member_test), torch.from_numpy(y_member_test))
+    elif subset_name == 'non_member_test_set':
+        tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_test), torch.from_numpy(y_non_member_test))
+    else:
+        raise AssertionError('Unrecognized subset name {}'.format(subset_name))
+    return tensor_dataset
 
-if args.s_test_set == 'member_train_set':
-    tensor_dataset = TensorDataset(torch.from_numpy(X_member_train),
-                                   torch.from_numpy(y_member_train))
-elif args.s_test_set == 'non_member_train_set':
-    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_train),
-                                   torch.from_numpy(y_non_member_train))
-elif args.s_test_set == 'member_test_set':
-    tensor_dataset = TensorDataset(torch.from_numpy(X_member_test),
-                                   torch.from_numpy(y_member_test))
-elif args.s_test_set == 'non_member_test_set':
-    tensor_dataset = TensorDataset(torch.from_numpy(X_non_member_test),
-                                   torch.from_numpy(y_non_member_test))
-else:
-    raise AssertionError('Unrecognized s_test_set {}'.format(args.s_test_set))
-test_loader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False,
-                         pin_memory=False, drop_last=False)
+# fetching train/test loaders
+train_loader = DataLoader(get_tensor_dataset(args.grad_z_set), batch_size=batch_size, shuffle=False, pin_memory=False, drop_last=False)
+test_loader = DataLoader(get_tensor_dataset(args.s_test_set), batch_size=batch_size, shuffle=False, pin_memory=False, drop_last=False)
 
 if args.calc_grad_z:
     logger.info('Start grad_z calculation...')
     calc_grad_z(
         model=net,
         train_loader=train_loader,
-        save_pth=os.path.join(OUTPUT_DIR, 'grad_z'),
+        save_pth=os.path.join(OUTPUT_DIR, 'grad_z', args.grad_z_set),
         gpu=0,
         start=0)
 
 if args.calc_self_influences:
-    assert not args.use_augmented_train_set
     logger.info('Start self influence calculation for member train set...')
     self_influences_member_train = calc_self_influence(X_member_train, y_member_train, net)
     logger.info('Start self influence calculation for non member train set...')
@@ -256,15 +243,19 @@ if args.calc_self_influences:
     np.save(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_test.npy'), self_influences_non_member_test)
 
 if args.calc_single_influences:
-    if args.s_train_set == 'member_train_set':
+    if args.grad_z_set == 'member_train_set':
         X1, y1 = X_member_train, y_member_train
-    elif args.s_train_set == 'non_member_train_set':
+    elif args.grad_z_set == 'non_member_train_set':
         X1, y1 = X_non_member_train, y_non_member_train
+    elif args.grad_z_set == 'member_test_set':
+        X1, y1 = X_member_test, y_member_test
+    elif args.grad_z_set == 'non_member_test_set':
+        X1, y1 = X_non_member_test, y_non_member_test
     else:
-        raise AssertionError('invalid args.s_train_set={}'.format(args.s_train_set))
+        raise AssertionError('invalid args.grad_z_set={}'.format(args.grad_z_set))
 
     single_influences = calc_single_influences(X1, y1, test_loader, net)
-    np.save(os.path.join(OUTPUT_DIR, 'influences', 'single_influences_of_{}_on_{}.npy'.format(args.s_train_set, args.s_test_set)))
+    np.save(os.path.join(OUTPUT_DIR, 'influences', 'single_influences_of_{}_on_{}.npy'.format(args.grad_z_set, args.s_test_set)), single_influences)
 
 if args.calc_s_test:
     logger.info('Start s_test calculation for {}...'.format(args.s_test_set))
