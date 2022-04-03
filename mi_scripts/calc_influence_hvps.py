@@ -28,7 +28,7 @@ from pytorch_influence_functions.influence_functions.influence_functions import 
     calc_single_influences
 
 parser = argparse.ArgumentParser(description='Influence functions tutorial using pytorch')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_1k_wo_aug_act_swish', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/s_100_wo_aug_act_swish', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--output_dir', default='influence_functions', type=str, help='checkpoint path file name')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
@@ -39,6 +39,7 @@ parser.add_argument('--calc_single_influences', type=boolean_string, default=Fal
 parser.add_argument('--calc_influences', type=boolean_string, default=False, help='Calculate the influence scores for the s_test_set')
 parser.add_argument('--grad_z_set', default='', type=str, help='train set to calculate single influences: member_train_set/non_member_train_set')
 parser.add_argument('--s_test_set', default='', type=str, help='set to calculate s_test for: member_train_set/non_member_train_set/member_test_set/non_member_test_set')
+parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -60,6 +61,7 @@ if args.calc_s_test:
 if args.calc_influences:
     os.makedirs(os.path.join(OUTPUT_DIR, 'influences'), exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
@@ -72,7 +74,7 @@ dataset = train_args['dataset']
 img_shape = get_image_shape(dataset)
 num_classes = get_num_classes(dataset)
 max_train_size = get_max_train_size(dataset)
-batch_size = 100
+batch_size = args.batch_size
 
 logger.info('==> Building model..')
 net_cls = get_model(train_args['net'])
@@ -103,7 +105,7 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     train_loader = get_loader_with_specific_inds(
         dataset='cifar10',
         dataset_args=dict(),
-        batch_size=100,
+        batch_size=batch_size,
         is_training=False,
         indices=train_inds,
         num_workers=0,
@@ -112,7 +114,7 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     unused_train_loader = get_loader_with_specific_inds(
         dataset='cifar10',
         dataset_args=dict(),
-        batch_size=100,
+        batch_size=batch_size,
         is_training=False,
         indices=unused_train_inds,
         num_workers=0,
@@ -121,7 +123,7 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     val_loader = get_loader_with_specific_inds(
         dataset='cifar10',
         dataset_args=dict(),
-        batch_size=100,
+        batch_size=batch_size,
         is_training=False,
         indices=val_inds,
         num_workers=0,
@@ -130,7 +132,7 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     test_loader = get_test_loader(
         dataset='cifar10',
         dataset_args=dict(),
-        batch_size=100,
+        batch_size=batch_size,
         num_workers=0,
         pin_memory=device=='cuda'
     )
