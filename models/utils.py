@@ -1,6 +1,4 @@
 import torch.nn.functional as F
-from research.models.dm_wide_resnet import DMWideResNetV2
-from research.models.resnet import ResNet18, ResNet34, ResNet50, ResNet101
 
 def get_strides(dataset: str):
     if dataset in ['cifar10', 'cifar100', 'svhn']:
@@ -21,6 +19,8 @@ def get_conv1_params(dataset: str):
     return conv1
 
 def get_model(moder_str):
+    from research.models.dm_wide_resnet import DMWideResNetV2
+    from research.models.resnet import ResNet18, ResNet34, ResNet50, ResNet101
     if moder_str == 'resnet18':
         return ResNet18
     elif moder_str == 'resnet34':
