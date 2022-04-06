@@ -10,8 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from research.models.utils import get_activation
-
+from .utils import get_activation
 
 class BasicBlock(nn.Module):
     expansion = 1
