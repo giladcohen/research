@@ -1,3 +1,4 @@
+import torch.nn.functional as F
 from research.models.dm_wide_resnet import DMWideResNetV2
 from research.models.resnet import ResNet18, ResNet34, ResNet50, ResNet101
 
@@ -32,3 +33,13 @@ def get_model(moder_str):
         return DMWideResNetV2
     else:
         raise AssertionError("network {} is unknown".format(moder_str))
+
+def get_activation(activation: str):
+    if activation == 'relu':
+        return F.relu
+    elif activation == 'softplus':
+        return F.softplus
+    elif activation == 'swish':
+        return F.silu
+    else:
+        raise AssertionError('activation function {} was not expected'.format(activation))

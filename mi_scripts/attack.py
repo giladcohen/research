@@ -19,6 +19,7 @@ import pickle
 import logging
 import sys
 import random
+from sklearn.neighbors import KNeighborsClassifier
 from pathlib import Path
 import matplotlib.pyplot as plt
 from cleverhans.utils import random_targets, to_categorical
@@ -40,7 +41,8 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
 from research.models.utils import get_strides, get_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
-    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack, SelfInfluenceFunctionAttack
+    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack, SelfInfluenceFunctionAttack, \
+    InfluenceFunctionDiff
 from art.estimators.classification import PyTorchClassifier
 from pytorch_influence_functions.influence_functions.influence_functions import load_grad_z, load_s_test, \
     calc_influence_single, calc_self_influence
@@ -51,7 +53,7 @@ parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='che
 # parser.add_argument('--attack', default='shadow_models', type=str, help='attack: shadow_models')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='influence_functions_aug', type=str, help='attack directory')
+parser.add_argument('--output_dir', default='influence_functions', type=str, help='attack directory')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -228,20 +230,30 @@ else:
     X_non_member_test = np.load(os.path.join(DATA_DIR, 'X_non_member_test.npy'))
     y_non_member_test = np.load(os.path.join(DATA_DIR, 'y_non_member_test.npy'))
 
-# # Rule based attack (aka Gap attack)
-# logger.info('Running Rule Based attack...')
-# attack = MembershipInferenceBlackBoxRuleBased(classifier)
-# inferred_member = attack.infer(X_member_test, y_member_test)
-# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
-# calc_acc_precision_recall(inferred_non_member, inferred_member)
-#
-# # Black-box attack
-# logger.info('Running black box attack...')
-# attack = MembershipInferenceBlackBox(classifier)
-# attack.fit(x=X_member_train, y=y_member_train, test_x=X_non_member_train, test_y=y_non_member_train)
-# inferred_member = attack.infer(X_member_test, y_member_test)
-# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
-# calc_acc_precision_recall(inferred_non_member, inferred_member)
+# Rule based attack (aka Gap attack)
+logger.info('Running Rule Based attack...')
+attack = MembershipInferenceBlackBoxRuleBased(classifier)
+inferred_member = attack.infer(X_member_test, y_member_test)
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=100:
+# 04/04/2022 12:29:17 AM root INFO member acc: 1.0, non-member acc: 0.8, balanced acc: 0.9, precision/recall(member): 0.8333333333333334/1.0, precision/recall(non-member): 1.0/0.8
+# for s=1000:
+# 04/04/2022 07:40:05 PM root INFO member acc: 1.0, non-member acc: 0.618, balanced acc: 0.809, precision/recall(member): 0.723589001447178/1.0, precision/recall(non-member): 1.0/0.618
+
+
+# Black-box attack
+logger.info('Running black box attack...')
+attack = MembershipInferenceBlackBox(classifier)
+attack.fit(x=X_member_train, y=y_member_train, test_x=X_non_member_train, test_y=y_non_member_train)
+inferred_member = attack.infer(X_member_test, y_member_test)
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=100:
+# 04/04/2022 12:31:45 AM root INFO member acc: 0.38, non-member acc: 0.5, balanced acc: 0.44, precision/recall(member): 0.4318181818181818/0.38, precision/recall(non-member): 0.44642857142857145/0.5
+# for s=1000:
+# 04/04/2022 07:41:09 PM root INFO member acc: 1.0, non-member acc: 0.574, balanced acc: 0.787, precision/recall(member): 0.7012622720897616/1.0, precision/recall(non-member): 1.0/0.574
+
 
 # shadow models attack
 # num_shadow_models = np.min([3, (X_non_member.shape[0] - non_membership_test_size) // (membership_train_size + membership_test_size)])
@@ -269,88 +281,151 @@ else:
 #     calc_acc_precision_recall(inferred_non_member, inferred_member)
 
 # Boundary distance
-# logger.info('Running Boundary distance attack...')
-# attack = LabelOnlyDecisionBoundary(classifier)
-# # attack.distance_threshold_tau = 0.357647066116333
-# attack.calibrate_distance_threshold(x_train=X_member_train, y_train=y_member_train,
-#                                     x_test=X_non_member_train, y_test=y_non_member_train)
-# inferred_member = attack.infer(X_member_test, y_member_test)
-# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
-# calc_acc_precision_recall(inferred_non_member, inferred_member)
+logger.info('Running Boundary distance attack...')
+attack = LabelOnlyDecisionBoundary(classifier)
+# attack.distance_threshold_tau = 0.357647066116333
+attack.calibrate_distance_threshold(x_train=X_member_train, y_train=y_member_train,
+                                    x_test=X_non_member_train, y_test=y_non_member_train)
+inferred_member = attack.infer(X_member_test, y_member_test)
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=100:
+# 04/04/2022 01:02:11 AM root INFO member acc: 0.98, non-member acc: 0.9, balanced acc: 0.94, precision/recall(member): 0.9074074074074074/0.98, precision/recall(non-member): 0.9782608695652174/0.9
+# for s=1000:
 # # 03/14/2022 02:48:28 AM root INFO member acc: 0.988, non-member acc: 0.866, balanced acc: 0.927, precision/recall(member): 0.8805704099821747/0.988, precision/recall(non-member): 0.9863325740318907/0.866
 
-# # TracIn
+# # TracIn - self influence method
 # logger.info('Running TracIn attack...')
-# # self influence method
-# # tracin = TracInCPFast(
-# #     model=net,
-# #     final_fc_layer=net.linear,
-# #     influence_src_dataset=member_src_set,
-# #     checkpoints_load_func=load_state_dict,
-# #     checkpoints=[CHECKPOINT_PATH],
-# #     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
-# #     batch_size=membership_train_size,
-# #     vectorize=False,
-# # )
-# # member_self_influence_scores = tracin.influence(
-# #     inputs=None,
-# #     targets=None,
-# # )
-# #
-# # tracin = TracInCPFast(
-# #     model=net,
-# #     final_fc_layer=net.linear,
-# #     influence_src_dataset=non_member_src_set,
-# #     checkpoints_load_func=load_state_dict,
-# #     checkpoints=[CHECKPOINT_PATH],
-# #     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
-# #     batch_size=non_membership_train_size,
-# #     vectorize=False,
-# # )
-# # non_member_self_influence_scores = tracin.influence(
-# #     inputs=None,
-# #     targets=None,
-# # )
+# tracin = TracInCPFast(
+#     model=net,
+#     final_fc_layer=net.linear,
+#     influence_src_dataset=member_src_set,
+#     checkpoints_load_func=load_state_dict,
+#     checkpoints=[CHECKPOINT_PATH],
+#     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
+#     batch_size=membership_train_size,
+#     vectorize=False,
+# )
+# member_self_influence_scores = tracin.influence(
+#     inputs=None,
+#     targets=None,
+# )
 #
-# # use the fact that we know some on the training set of the model
-# attack = TracInAttack(classifier)
-# attack.fit(X_member_train, y_member_train, X_non_member_train, y_non_member_train, CHECKPOINT_PATH)
-# inferred_member = attack.infer(X_member_test, y_member_test)
-# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
-# calc_acc_precision_recall(inferred_non_member, inferred_member)
-# # 03/21/2022 05:08:32 PM root INFO member acc: 0.942, non-member acc: 0.722, balanced acc: 0.832, precision/recall(member): 0.7721311475409836/0.942, precision/recall(non-member): 0.9256410256410257/0.722
+# tracin = TracInCPFast(
+#     model=net,
+#     final_fc_layer=net.linear,
+#     influence_src_dataset=non_member_src_set,
+#     checkpoints_load_func=load_state_dict,
+#     checkpoints=[CHECKPOINT_PATH],
+#     loss_fn=nn.CrossEntropyLoss(reduction="sum"),
+#     batch_size=non_membership_train_size,
+#     vectorize=False,
+# )
+# non_member_self_influence_scores = tracin.influence(
+#     inputs=None,
+#     targets=None,
+# )
 
-# Influence functions
-# logger.info('Running self Influence Functions attack...')
-# self_influences_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_train.npy'))
-# self_influences_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_train.npy'),)
-# self_influences_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_test.npy'))
-# self_influences_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_test.npy'))
-# attack = SelfInfluenceFunctionAttack(classifier)
-#
-# attack.fit(self_influences_member_train, self_influences_non_member_train)
-# inferred_member = attack.infer(X_member_test, y_member_test, **{'self_influences': self_influences_member_test})
-# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': self_influences_non_member_test})
-# calc_acc_precision_recall(inferred_non_member, inferred_member)
+# use the fact that we know some on the training set of the model
+attack = TracInAttack(classifier)
+attack.fit(X_member_train, y_member_train, X_non_member_train, y_non_member_train, CHECKPOINT_PATH)
+inferred_member = attack.infer(X_member_test, y_member_test)
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=100:
+# 04/04/2022 01:06:06 AM root INFO member acc: 0.96, non-member acc: 0.84, balanced acc: 0.9, precision/recall(member): 0.8571428571428571/0.96, precision/recall(non-member): 0.9545454545454546/0.84
+# for s=1000:
+# 04/04/2022 07:51:33 PM root INFO member acc: 0.932, non-member acc: 0.702, balanced acc: 0.817, precision/recall(member): 0.7577235772357723/0.932, precision/recall(non-member): 0.9116883116883117/0.702
+
+# self Influence functions
+logger.info('Running self Influence Functions attack...')
+self_influences_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_train.npy'))
+self_influences_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_train.npy'),)
+self_influences_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_member_test.npy'))
+self_influences_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'self_influences_non_member_test.npy'))
+attack = SelfInfluenceFunctionAttack(classifier)
+attack.fit(self_influences_member_train, self_influences_non_member_train)
+inferred_member = attack.infer(X_member_test, y_member_test, **{'self_influences': self_influences_member_test})
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': self_influences_non_member_test})
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=100:
+# 04/04/2022 01:07:26 AM root INFO member acc: 1.0, non-member acc: 1.0, balanced acc: 1.0, precision/recall(member): 1.0/1.0, precision/recall(non-member): 1.0/1.0
+# for s=1000:
 # 03/29/2022 10:43:18 PM root INFO member acc: 1.0, non-member acc: 0.864, balanced acc: 0.932, precision/recall(member): 0.8802816901408451/1.0, precision/recall(non-member): 1.0/0.864
 
+# Influence functions
 influences_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_member_train_set.npy'))
 influences_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_non_member_train_set.npy'))
 influences_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_member_test_set.npy'))
 influences_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'influences', 'influences_non_member_test_set.npy'))
 
-# logger.info('Running row sum Influence Functions attack...')
-# member_train_scores = influences_member_train.sum(axis=1)          # -2.8e-6 +- 1.16e-5 | min/max = [-2.13e-4, 1.25e-5]
-# non_member_train_scores = influences_non_member_train.sum(axis=1)  # 0.0126 +- 0.051    | min/max = [-1.74e-1, 2.45e-1]
-# member_test_scores = influences_member_test.sum(axis=1)            # -1.4e-6 +- 4.96e-6 | min/max = [-3.89e-5, 1.83e-5]
-# non_member_test_scores = influences_non_member_test.sum(axis=1)    # 0.0135 +- 0.048    | min/max = [-1.27e-1, 2.31e-1]
-# attack = SelfInfluenceFunctionAttack(classifier)
-#
-# attack.fit(member_train_scores, non_member_train_scores)
-# inferred_member = attack.infer(X_member_test, y_member_test, **{'self_influences': member_test_scores})
-# inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': non_member_test_scores})
-# calc_acc_precision_recall(inferred_non_member, inferred_member)
-# # 03/29/2022 10:57:44 PM root INFO member acc: 1.0, non-member acc: 0.858, balanced acc: 0.929, precision/recall(member): 0.8756567425569177/1.0, precision/recall(non-member): 1.0/0.858
+
+
+
+logger.info('Running row sum Influence Functions attack...')
+member_train_scores = influences_member_train.sum(axis=1)          # -2.8e-6 +- 1.16e-5 | min/max = [-2.13e-4, 1.25e-5]
+non_member_train_scores = influences_non_member_train.sum(axis=1)  # 0.0126 +- 0.051    | min/max = [-1.74e-1, 2.45e-1]
+member_test_scores = influences_member_test.sum(axis=1)            # -1.4e-6 +- 4.96e-6 | min/max = [-3.89e-5, 1.83e-5]
+non_member_test_scores = influences_non_member_test.sum(axis=1)    # 0.0135 +- 0.048    | min/max = [-1.27e-1, 2.31e-1]
+attack = SelfInfluenceFunctionAttack(classifier)
+attack.fit(member_train_scores, non_member_train_scores)
+inferred_member = attack.infer(X_member_test, y_member_test, **{'self_influences': member_test_scores})
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': non_member_test_scores})
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=1000:
+# 03/29/2022 10:57:44 PM root INFO member acc: 1.0, non-member acc: 0.858, balanced acc: 0.929, precision/recall(member): 0.8756567425569177/1.0, precision/recall(non-member): 1.0/0.858
+
+logger.info('Running Influence Functions sum attack for all the input classes that match the test class')
+def calc_same_label_score(X, y, infl_scores):
+    scores = np.zeros(X.shape[0])
+    for i in range(X.shape[0]):
+        tmp_cls = y[i]
+        cls_inds = np.where(y_member_train == tmp_cls)[0]
+        scores[i] = infl_scores[i, cls_inds].mean()
+    return scores
+
+member_train_scores = calc_same_label_score(X_member_train, y_member_train, influences_member_train)
+non_member_train_scores = calc_same_label_score(X_non_member_train, y_non_member_train, influences_non_member_train)
+member_test_scores = calc_same_label_score(X_member_test, y_member_test, influences_member_test)
+non_member_test_scores = calc_same_label_score(X_non_member_test, y_non_member_test, influences_non_member_test)
+attack = SelfInfluenceFunctionAttack(classifier)
+attack.fit(member_train_scores, non_member_train_scores)
+inferred_member = attack.infer(X_member_test, y_member_test, **{'self_influences': member_test_scores})
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'self_influences': non_member_test_scores})
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=1000:
+# 04/04/2022 11:13:28 PM root INFO member acc: 1.0, non-member acc: 0.844, balanced acc: 0.922, precision/recall(member): 0.8650519031141869/1.0, precision/recall(non-member): 1.0/0.844
+
+logger.info('Top M infl - min M infl')
+def calc_top_infl_diff(infl):
+    scores = np.zeros(infl.shape[0])
+    for i in range(infl.shape[0]):
+        scores[i] = np.median(np.sort(infl[i])[-5:]) - np.median(np.sort(infl[i])[:5].sum())
+    return scores
+
+member_train_scores = calc_top_infl_diff(influences_member_train)
+non_member_train_scores = calc_top_infl_diff(influences_non_member_train)
+member_test_scores = calc_top_infl_diff(influences_member_test)
+non_member_test_scores = calc_top_infl_diff(influences_non_member_test)
+attack = InfluenceFunctionDiff(classifier, influence_thd=2.08e-5)
+inferred_member = attack.infer(X_member_test, y_member_test, **{'influences': member_test_scores})
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'influences': non_member_test_scores})
+calc_acc_precision_recall(inferred_non_member, inferred_member)
+# for s=1000:
+# 04/05/2022 02:14:43 AM root INFO member acc: 1.0, non-member acc: 0.852, balanced acc: 0.926, precision/recall(member): 0.8710801393728222/1.0, precision/recall(non-member): 1.0/0.852
+
+
+
+
+
+
+
+
+
+
+# net.field = None
+# member_train_most_helpful_inds = np.argsort(influences_member_train, axis=1)[:, ::-1][:, :5]
+
 
 
 

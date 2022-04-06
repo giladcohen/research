@@ -31,7 +31,7 @@ parser.add_argument('--augmentations', default=False, type=boolean_string, help=
 
 # architecture:
 parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
-parser.add_argument('--activation', default='swish', type=str, help='network activation: relu, softplus, or swish')
+parser.add_argument('--activation', default='relu', type=str, help='network activation: relu, softplus, or swish')
 
 # optimization:
 parser.add_argument('--resume', default=None, type=str, help='Path to checkpoint to be resumed')

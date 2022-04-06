@@ -10,6 +10,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from research.models.utils import get_activation
+
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -74,14 +76,7 @@ class ResNet(nn.Module):
         self.in_planes = 64
         self.use_ext_linear = ext_linear is not None
 
-        if activation == 'relu':
-            self.activation = F.relu
-        elif activation == 'softplus':
-            self.activation = F.softplus
-        elif activation == 'swish':
-            self.activation = F.silu
-        else:
-            raise AssertionError('activation function {} was not expected'.format(activation))
+        self.activation = get_activation(activation)
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=conv1['kernel_size'], stride=conv1['stride'],
                                padding=conv1['padding'], bias=False)
