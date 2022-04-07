@@ -54,6 +54,7 @@ parser.add_argument('--attack', default='black_box', type=str, help='MI attack: 
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='', type=str, help='attack directory')
+parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -120,6 +121,7 @@ classifier = PyTorchClassifier(model=net, clip_values=(0, 1), loss=loss, optimiz
 
 # Data
 if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
+    assert args.generate_mi_data, 'MI data does not exist. Generate it by setting generate_mi_data = True'
     logger.info('==> Preparing data..')
     all_train_inds = np.arange(max_train_size)
     train_inds = np.load(os.path.join(args.checkpoint_dir, 'train_inds.npy'))
