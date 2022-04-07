@@ -1,6 +1,6 @@
 commands:
-  # s=100
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_100_wo_aug --attack gap --generate_mi_data True, 11000]
+#  # s=100
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_100_wo_aug --attack gap --generate_mi_data True, 11000]
 
   # s=1k
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_1k_wo_aug --attack gap --generate_mi_data True, 11000]
