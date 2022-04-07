@@ -246,7 +246,7 @@ elif args.attack == 'boundary_distance':
     attack.calibrate_distance_threshold(x_train=X_member_train, y_train=y_member_train,
                                         x_test=X_non_member_train, y_test=y_non_member_train)
 elif args.attack == 'self_influence':
-    attack = SelfInfluenceFunctionAttack(classifier)
+    attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
