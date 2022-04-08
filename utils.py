@@ -656,3 +656,8 @@ def load_state_dict(model: nn.Module, path: str, device='cpu') -> int:
     model.load_state_dict(global_state)
     model.to(device)
     return 1
+
+def save_to_path(path: str, x: np.ndarray, overwrite=False):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not os.path.exists(path) or overwrite:
+        np.save(path, x)

@@ -235,6 +235,14 @@ else:
     X_non_member_test = np.load(os.path.join(DATA_DIR, 'X_non_member_test.npy'))
     y_non_member_test = np.load(os.path.join(DATA_DIR, 'y_non_member_test.npy'))
 
+def randomize_max_p_points(x: np.ndarray, y: np.ndarray, p: int):
+    if x.shape[0] > p:
+        logger.info('Selecting {} random rows out of {}'.format(p, x.shape[0]))
+        inds = rand_gen.choice(x.shape[0], p, replace=False)
+        return x[inds], y[inds]
+    else:
+        return x, y
+
 # Rule based attack (aka Gap attack)
 logger.info('Running {} attack...'.format(args.attack))
 if args.attack == 'gap':
@@ -244,9 +252,9 @@ elif args.attack == 'black_box':
     attack.fit(x=X_member_train, y=y_member_train, test_x=X_non_member_train, test_y=y_non_member_train)
 elif args.attack == 'boundary_distance':
     attack = LabelOnlyDecisionBoundary(classifier)
-    # attack.distance_threshold_tau = 0.357647066116333
-    attack.calibrate_distance_threshold(x_train=X_member_train, y_train=y_member_train,
-                                        x_test=X_non_member_train, y_test=y_non_member_train)
+    x_train, y_train = randomize_max_p_points(X_member_train, y_member_train, 500)
+    x_test, y_test = randomize_max_p_points(X_non_member_train, y_non_member_train, 500)
+    attack.calibrate_distance_threshold(x_train, y_train, x_test, y_test)
 elif args.attack == 'self_influence':
     attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
@@ -259,9 +267,12 @@ else:
 with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
-inferred_member = attack.infer(X_member_test, y_member_test)
-inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+start = time.time()
+inferred_member = attack.infer(X_member_test, y_member_test, **{'infer_set': 'member_test'})
+inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'infer_set': 'non_member_test'})
 calc_acc_precision_recall(inferred_non_member, inferred_member)
+end = time.time()
+logger.info('Inference time: {} sec'.format(end - start))
 
 logger.info('done')
 logger.handlers[0].flush()
