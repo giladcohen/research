@@ -48,9 +48,9 @@ from pytorch_influence_functions.influence_functions.influence_functions import 
     calc_influence_single, calc_self_influence
 
 parser = argparse.ArgumentParser(description='Membership attack script')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_100_wo_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_5k_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--attack', default='black_box', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
+parser.add_argument('--attack', default='boundary_distance', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='', type=str, help='attack directory')
@@ -268,8 +268,14 @@ with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
 start = time.time()
-inferred_member = attack.infer(X_member_test, y_member_test, **{'infer_set': 'member_test'})
-inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'infer_set': 'non_member_test'})
+if args.attack == 'boundary_distance':
+    X_member_test_mini, y_member_test_mini = randomize_max_p_points(X_member_test, y_member_test, 500)
+    X_non_member_test_mini, y_non_member_test_mini = randomize_max_p_points(X_non_member_test, y_non_member_test, 500)
+    inferred_member = attack.infer(X_member_test_mini, y_member_test_mini)
+    inferred_non_member = attack.infer(X_non_member_test_mini, y_non_member_test_mini)
+else:
+    inferred_member = attack.infer(X_member_test, y_member_test, **{'infer_set': 'member_test'})
+    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'infer_set': 'non_member_test'})
 calc_acc_precision_recall(inferred_non_member, inferred_member)
 end = time.time()
 logger.info('Inference time: {} sec'.format(end - start))
