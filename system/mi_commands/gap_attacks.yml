@@ -1,21 +1,70 @@
 commands:
 #  # s=100
 #  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_100_wo_aug --attack gap --generate_mi_data True, 11000]
+#
+#  # s=1k
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_1k_wo_aug --attack gap --generate_mi_data True, 11000]
+#
+#  # s=5k
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_5k_wo_aug --attack gap --generate_mi_data True, 11000]
+#
+#  # s=10k
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_10k_wo_aug --attack gap --generate_mi_data True, 11000]
+#
+#  # s=15k
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_15k_wo_aug --attack gap --generate_mi_data True, 11000]
+#
+#  # s=20k
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_20k_wo_aug --attack gap --generate_mi_data True, 11000]
+#
+#  # s=25k
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug --attack gap --generate_mi_data True, 11000]
+#
+
+  # CIFAR100
+  # s=100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_100_wo_aug --attack gap --generate_mi_data True, 11000]
 
   # s=1k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_1k_wo_aug --attack gap --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_1k_wo_aug --attack gap --generate_mi_data True, 11000]
 
   # s=5k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_5k_wo_aug --attack gap --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_5k_wo_aug --attack gap --generate_mi_data True, 11000]
 
   # s=10k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_10k_wo_aug --attack gap --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_10k_wo_aug --attack gap --generate_mi_data True, 11000]
 
   # s=15k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_15k_wo_aug --attack gap --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_15k_wo_aug --attack gap --generate_mi_data True, 11000]
 
   # s=20k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_20k_wo_aug --attack gap --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_20k_wo_aug --attack gap --generate_mi_data True, 11000]
 
   # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug --attack gap --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack gap --generate_mi_data True, 11000]
+
+
+
+
+
+  # Tiny Imagenet
+  # s=100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_100_wo_aug --attack gap --generate_mi_data True, 11000]
+
+  # s=1k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_1k_wo_aug --attack gap --generate_mi_data True, 11000]
+
+  # s=5k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_5k_wo_aug --attack gap --generate_mi_data True, 11000]
+
+  # s=10k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_10k_wo_aug --attack gap --generate_mi_data True, 11000]
+
+  # s=15k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_15k_wo_aug --attack gap --generate_mi_data True, 11000]
+
+  # s=20k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_20k_wo_aug --attack gap --generate_mi_data True, 11000]
+
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack gap --generate_mi_data True, 11000]
