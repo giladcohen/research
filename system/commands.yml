@@ -1,11 +1,48 @@
 commands:
-  - [python research/scripts/train.py --num_workers 4 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/orthogonal_1024_adv_robust                                                 --glove True  --adv_trades True --net resnet50  --glove_dim 1024 --emb_selection orthogonal       --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
-  - [python research/scripts/train.py --num_workers 4 --dataset cifar10        --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/farthest_points_1024_adv_robust                                            --glove True  --adv_trades True --net resnet50  --glove_dim 1024 --emb_selection farthest_points  --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
+  # CIFAR100
+  # s=100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_100_wo_aug --attack self_influence, 11000]
 
-  - [python research/scripts/train.py --num_workers 4 --dataset cifar100        --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/random_1024_adv_robust                                                  --glove True  --adv_trades True --net resnet50  --glove_dim 1024  --emb_selection random           --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
-  - [python research/scripts/train.py --num_workers 4 --dataset cifar100        --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/orthogonal_1024_adv_robust                                              --glove True  --adv_trades True --net resnet50  --glove_dim 1024  --emb_selection orthogonal       --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
-  - [python research/scripts/train.py --num_workers 4 --dataset cifar100        --checkpoint_dir /data/gilad/logs/glove_emb/cifar100/resnet50/bert_word_1024_adv_robust                                               --glove True  --adv_trades True  --net resnet50  --glove_dim 1024 --emb_selection bert_word       --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
+  # s=1k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_1k_wo_aug --attack self_influence, 11000]
 
-  - [python research/scripts/train.py --num_workers 4 --dataset tiny_imagenet   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/random_1024_adv_robust                                             --glove True  --adv_trades True --net resnet50  --glove_dim 1024 --emb_selection random           --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
-  - [python research/scripts/train.py --num_workers 4 --dataset tiny_imagenet   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/orthogonal_1024_adv_robust                                         --glove True  --adv_trades True --net resnet50  --glove_dim 1024 --emb_selection orthogonal       --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
-  - [python research/scripts/train.py --num_workers 4 --dataset tiny_imagenet   --checkpoint_dir /data/gilad/logs/glove_emb/tiny_imagenet/resnet50/farthest_points_1024_adv_robust                                    --glove True  --adv_trades True --net resnet50  --glove_dim 1024 --emb_selection farthest_points  --emb_loss cosine --eval_method cosine --metric accuracy, 11000]
+  # s=5k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+  # s=10k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+  # s=15k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  # s=20k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack self_influence, 11000]
+
+
+
+
+
+  # Tiny Imagenet
+  # s=100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_100_wo_aug --attack self_influence, 11000]
+
+  # s=1k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_1k_wo_aug --attack self_influence, 11000]
+
+  # s=5k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+  # s=10k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+  # s=15k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  # s=20k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack self_influence, 11000]
