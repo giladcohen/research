@@ -48,9 +48,9 @@ from pytorch_influence_functions.influence_functions.influence_functions import 
     calc_influence_single, calc_self_influence
 
 parser = argparse.ArgumentParser(description='Membership attack script')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar100/resnet18/relu/s_100_wo_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_100_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
-parser.add_argument('--attack', default='gap', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
+parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='', type=str, help='attack directory')
@@ -284,3 +284,6 @@ logger.info('done')
 logger.handlers[0].flush()
 
 
+# debug
+# self_influences_member = np.load('/data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug/self_influence_debug/self_influences_member_train.npy')
+# self_influences_non_member = np.load('/data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug/self_influence_debug/self_influences_non_member_train.npy')
