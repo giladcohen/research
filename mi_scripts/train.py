@@ -24,13 +24,13 @@ parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug', type=str, help='checkpoint dir')
 
 # dataset
-parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--train_size', default=0.5, type=float, help='Fraction of train size out of entire trainset')
+parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
+parser.add_argument('--train_size', default=0.25, type=float, help='Fraction of train size out of entire trainset')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size out of entire trainset')
 parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to include data augmentations')
 
 # architecture:
-parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
+parser.add_argument('--net', default='alexnet', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu, softplus, or swish')
 
 # optimization:
@@ -39,7 +39,7 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
 parser.add_argument('--epochs', default='400', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
-parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
@@ -127,11 +127,13 @@ np.save(os.path.join(args.checkpoint_dir, 'val_inds.npy'), val_inds)
 
 # Model
 logger.info('==> Building model..')
-net_cls = get_model(args.net)
+net_cls = get_model(args.net, args.dataset)
 if 'resnet' in args.net:
     conv1 = get_conv1_params(args.dataset)
     strides = get_strides(args.dataset)
     net = net_cls(num_classes=num_classes, activation=args.activation, conv1=conv1, strides=strides)
+elif args.net == 'alexnet':
+    net = net_cls(num_classes=num_classes, activation=args.activation)
 else:
     raise AssertionError('Does not support non Resnet architectures')
 net = net.to(device)

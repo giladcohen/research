@@ -18,9 +18,10 @@ def get_conv1_params(dataset: str):
         raise AssertionError('Unsupported dataset {}'.format(dataset))
     return conv1
 
-def get_model(moder_str):
-    from research.models.dm_wide_resnet import DMWideResNetV2
-    from research.models.resnet import ResNet18, ResNet34, ResNet50, ResNet101
+def get_model(moder_str, dataset):
+    from research.models import ResNet18, ResNet34, ResNet50, ResNet101, DMWideResNetV2, \
+        AlexNetCIFAR, AlexNetImageNet, AlexNetTinyImageNet
+
     if moder_str == 'resnet18':
         return ResNet18
     elif moder_str == 'resnet34':
@@ -31,6 +32,11 @@ def get_model(moder_str):
         return ResNet101
     elif moder_str in ['Rebuffi2021Fixing_70_16_cutmix_extra', 'Rebuffi2021Fixing_28_10_cutmix_ddpm']:
         return DMWideResNetV2
+    elif moder_str == 'alexnet':
+        if 'cifar' in dataset:
+            return AlexNetCIFAR
+        else:
+            return AlexNetTinyImageNet
     else:
         raise AssertionError("network {} is unknown".format(moder_str))
 
