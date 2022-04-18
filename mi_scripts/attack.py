@@ -97,11 +97,11 @@ if 'resnet' in train_args['net']:
     strides = get_strides(dataset)
     net = net_cls(num_classes=num_classes, activation=train_args['activation'], conv1=conv1, strides=strides, field='probs')
 elif train_args['net'] == 'alexnet':
-    net = net_cls(num_classes=num_classes, activation=train_args['activation'])
+    net = net_cls(num_classes=num_classes, activation=train_args['activation'], field='probs')
 elif train_args['net'] == 'densenet':
     assert train_args['activation'] == 'relu'
     conv1 = get_densenet_conv1_params(dataset)
-    net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1)
+    net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1, field='probs')
 else:
     raise AssertionError('Does not support non Resnet architectures')
 net = net.to(device)
