@@ -18,19 +18,19 @@ import sys
 import logging
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
-from research.models.utils import get_strides, get_conv1_params, get_model
+from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug', type=str, help='checkpoint dir')
 
 # dataset
 parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--train_size', default=0.25, type=float, help='Fraction of train size out of entire trainset')
+parser.add_argument('--train_size', default=0.5, type=float, help='Fraction of train size out of entire trainset')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size out of entire trainset')
 parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to include data augmentations')
 
 # architecture:
-parser.add_argument('--net', default='alexnet', type=str, help='network architecture')
+parser.add_argument('--net', default='densenet', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu, softplus, or swish')
 
 # optimization:
@@ -39,7 +39,7 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
 parser.add_argument('--epochs', default='400', type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
-parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=100, type=int, help='batch size')
 
@@ -134,6 +134,10 @@ if 'resnet' in args.net:
     net = net_cls(num_classes=num_classes, activation=args.activation, conv1=conv1, strides=strides)
 elif args.net == 'alexnet':
     net = net_cls(num_classes=num_classes, activation=args.activation)
+elif args.net == 'densenet':
+    assert args.activation == 'relu'
+    conv1 = get_densenet_conv1_params(args.dataset)
+    net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1)
 else:
     raise AssertionError('Does not support non Resnet architectures')
 net = net.to(device)
