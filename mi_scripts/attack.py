@@ -38,7 +38,7 @@ from research.datasets.train_val_test_data_loaders import get_test_loader, get_t
 from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape, get_num_classes, \
     get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall
-from research.models.utils import get_strides, get_conv1_params, get_model
+from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
     MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack, SelfInfluenceFunctionAttack, \
@@ -91,11 +91,17 @@ batch_size = 100
 
 # Model
 logger.info('==> Building model..')
-net_cls = get_model(train_args['net'])
+net_cls = get_model(train_args['net'], dataset)
 if 'resnet' in train_args['net']:
     conv1 = get_conv1_params(dataset)
     strides = get_strides(dataset)
     net = net_cls(num_classes=num_classes, activation=train_args['activation'], conv1=conv1, strides=strides, field='probs')
+elif train_args['net'] == 'alexnet':
+    net = net_cls(num_classes=num_classes, activation=train_args['activation'])
+elif train_args['net'] == 'densenet':
+    assert train_args['activation'] == 'relu'
+    conv1 = get_densenet_conv1_params(dataset)
+    net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1)
 else:
     raise AssertionError('Does not support non Resnet architectures')
 net = net.to(device)
