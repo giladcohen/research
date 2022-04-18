@@ -1,15 +1,193 @@
 commands:
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.5_eval_cosine --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+  # CIFAR10
+  # s=100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_100_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_100_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_100_wo_aug --attack self_influence, 11000]
 
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.1_eval_cosine --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_100_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_100_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_100_wo_aug --attack self_influence, 11000]
 
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack fgsm --attack_loss cross_entropy --attack_dir fgsm, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack pgd  --attack_loss cross_entropy --attack_dir pgd, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack fgsm --attack_loss cosine        --attack_dir fgsm_cosine, 8000]
-  - [python research/scripts/attack.py --checkpoint_dir /data/gilad/logs/glove_emb/cifar10/resnet50/aux_bert_1024_w_0.9_eval_cosine --attack pgd  --attack_loss cosine        --attack_dir pgd_cosine, 8000]
+  # s=1k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_1k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_1k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_1k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_1k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_1k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_1k_wo_aug --attack self_influence, 11000]
+
+  # s=5k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_5k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_5k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_5k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_5k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+
+
+  # s=10k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_10k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_10k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_10k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_10k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+
+  # s=15k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_15k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_15k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_15k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_15k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  # s=20k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_20k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_20k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_20k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_20k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack self_influence, 11000]
+
+
+
+
+  # CIFAR100
+  # s=100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_100_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_100_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_100_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_100_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_100_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_100_wo_aug --attack self_influence, 11000]
+
+  # s=1k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_1k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_1k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_1k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_1k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_1k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_1k_wo_aug --attack self_influence, 11000]
+
+  # s=5k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_5k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_5k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_5k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_5k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+  # s=10k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_10k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_10k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_10k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_10k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+  # s=15k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_15k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_15k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_15k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_15k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  # s=20k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_20k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_20k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_20k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_20k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack self_influence, 11000]
+
+
+
+
+  # Tiny Imagenet
+  # s=1k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_1k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_1k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_1k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_1k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_1k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_1k_wo_aug --attack self_influence, 11000]
+
+  # s=5k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_5k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_5k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_5k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_5k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_5k_wo_aug --attack self_influence, 11000]
+
+  # s=10k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_10k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_10k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_10k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_10k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_10k_wo_aug --attack self_influence, 11000]
+
+  # s=15k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_15k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_15k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_15k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_15k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_15k_wo_aug --attack self_influence, 11000]
+
+  # s=20k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_20k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_20k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_20k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_20k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_20k_wo_aug --attack self_influence, 11000]
+
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack self_influence, 11000]
+
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack black_box, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack boundary_distance, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack self_influence, 11000]
+
