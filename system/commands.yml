@@ -1,48 +1,27 @@
 commands:
-  # CIFAR100
-  # s=100
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_100_wo_aug --attack self_influence, 11000]
+  # CIFAR10 - Alexnet
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar10           --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_100_wo_aug           --train_size 0.002 --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar10           --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_1k_wo_aug            --train_size 0.02  --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar10           --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_5k_wo_aug            --train_size 0.1   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar10           --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_10k_wo_aug           --train_size 0.2   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar10           --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_15k_wo_aug           --train_size 0.3   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar10           --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_20k_wo_aug           --train_size 0.4   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar10           --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug           --train_size 0.5   --augmentations False --net alexnet --activation relu, 11000]
 
-  # s=1k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_1k_wo_aug --attack self_influence, 11000]
+  # CIFAR100 - Alexnet
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar100           --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_100_wo_aug           --train_size 0.002 --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar100           --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_1k_wo_aug            --train_size 0.02  --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar100           --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_5k_wo_aug            --train_size 0.1   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar100           --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_10k_wo_aug           --train_size 0.2   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar100           --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_15k_wo_aug           --train_size 0.3   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar100           --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_20k_wo_aug           --train_size 0.4   --augmentations False --net alexnet --activation relu, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset cifar100           --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug           --train_size 0.5   --augmentations False --net alexnet --activation relu, 11000]
 
-  # s=5k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_5k_wo_aug --attack self_influence, 11000]
-
-  # s=10k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_10k_wo_aug --attack self_influence, 11000]
-
-  # s=15k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_15k_wo_aug --attack self_influence, 11000]
-
-  # s=20k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_20k_wo_aug --attack self_influence, 11000]
-
-  # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack self_influence, 11000]
-
-
-
-
-
-  # Tiny Imagenet
-  # s=100
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_100_wo_aug --attack self_influence, 11000]
-
-  # s=1k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_1k_wo_aug --attack self_influence, 11000]
-
-  # s=5k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_5k_wo_aug --attack self_influence, 11000]
-
-  # s=10k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_10k_wo_aug --attack self_influence, 11000]
-
-  # s=15k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_15k_wo_aug --attack self_influence, 11000]
-
-  # s=20k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_20k_wo_aug --attack self_influence, 11000]
-
-  # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack self_influence, 11000]
+  # tiny imagenet - Alexnet
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_100_wo_aug      --train_size 0.001 --augmentations False --net alexnet --activation relu --lr 0.01, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_1k_wo_aug       --train_size 0.01  --augmentations False --net alexnet --activation relu --lr 0.01, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_5k_wo_aug       --train_size 0.05  --augmentations False --net alexnet --activation relu --lr 0.01, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_10k_wo_aug      --train_size 0.1   --augmentations False --net alexnet --activation relu --lr 0.01, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_15k_wo_aug      --train_size 0.15  --augmentations False --net alexnet --activation relu --lr 0.01, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_20k_wo_aug      --train_size 0.2   --augmentations False --net alexnet --activation relu --lr 0.01, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug      --train_size 0.25  --augmentations False --net alexnet --activation relu --lr 0.01, 11000]
