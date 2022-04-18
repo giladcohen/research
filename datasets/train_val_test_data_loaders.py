@@ -23,7 +23,6 @@ from research.datasets.my_cifar100 import MyCIFAR100
 from research.datasets.my_svhn import MySVHN
 from research.datasets.tiny_imagenet import TinyImageNet
 from research.utils import get_image_shape
-from art.utils import get_labels_np_array, to_categorical
 
 BASE_DATASET_DIR = '/Users/giladcohen/data/dataset'
 def dataset_factory(dataset):
