@@ -258,8 +258,8 @@ elif args.attack == 'black_box':
     attack.fit(x=X_member_train, y=y_member_train, test_x=X_non_member_train, test_y=y_non_member_train)
 elif args.attack == 'boundary_distance':
     attack = LabelOnlyDecisionBoundary(classifier)
-    x_train, y_train = randomize_max_p_points(X_member_train, y_member_train, 500)
-    x_test, y_test = randomize_max_p_points(X_non_member_train, y_non_member_train, 500)
+    x_train, y_train = randomize_max_p_points(X_member_train, y_member_train, 50)  # reduced to 50 to save time
+    x_test, y_test = randomize_max_p_points(X_non_member_train, y_non_member_train, 50)
     attack.calibrate_distance_threshold(x_train, y_train, x_test, y_test)
 elif args.attack == 'self_influence':
     attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR)

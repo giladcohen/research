@@ -137,7 +137,7 @@ commands:
 
   # tiny imagenet - Alexnet
   - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_1k_w_aug       --train_size 0.01  --augmentations True  --net alexnet --activation relu --lr 0.1 --patience 15, 11000]
-  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_5k_w_aug       --train_size 0.05  --augmentations True  --net alexnet --activation relu --lr 0.1 --patience 15, 11000]
+  - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_5k_w_aug       --train_size 0.05  --augmentations True  --net alexnet --activation relu --lr 0.1 --patience 10, 11000]
   - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_10k_w_aug      --train_size 0.1   --augmentations True  --net alexnet --activation relu --lr 0.01, 11000]
   - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_15k_w_aug      --train_size 0.15  --augmentations True  --net alexnet --activation relu --lr 0.01, 11000]
   - [python research/mi_scripts/train.py --num_workers 4 --dataset tiny_imagenet      --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_20k_w_aug      --train_size 0.2   --augmentations True  --net alexnet --activation relu --lr 0.01, 11000]
