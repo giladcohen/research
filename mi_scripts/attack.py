@@ -48,9 +48,10 @@ from pytorch_influence_functions.influence_functions.influence_functions import 
     calc_influence_single, calc_self_influence
 
 parser = argparse.ArgumentParser(description='Membership attack script')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar100/resnet18/relu/s_100_wo_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_1k_wo_aug_v2', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
+parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='', type=str, help='attack directory')
@@ -262,7 +263,7 @@ elif args.attack == 'boundary_distance':
     x_test, y_test = randomize_max_p_points(X_non_member_train, y_non_member_train, 50)
     attack.calibrate_distance_threshold(x_train, y_train, x_test, y_test)
 elif args.attack == 'self_influence':
-    attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR)
+    attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
