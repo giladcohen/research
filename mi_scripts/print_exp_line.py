@@ -16,8 +16,8 @@ parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm 
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 args = parser.parse_args()
 
-ATTACKS_DIRS = ['gap', 'black_box', 'boundary_distance', 'self_influence']
-CHECKPOINT_DIR = '/data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_10k_w_aug'  # args.checkpoint_dir
+ATTACKS_DIRS = ['gap', 'black_box', 'boundary_distance', 'self_influence', 'self_influence_v2', 'self_influence_v3']
+CHECKPOINT_DIR = '/data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug'  # args.checkpoint_dir
 
 def get_log(dir_path: str):
     path = os.path.join(dir_path, 'log.log')
@@ -50,7 +50,7 @@ def get_stats_from_line(attack_dir, line: str):
 
 def print_to_excel(data):
     # print('{:2f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f}  {:4f} {:4f} {:4f} {:4f} {:4f} {:4f} {:4f}'.format(
-    print('{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} '.format(
+    print('{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}'.format(
         data['test_acc'],
         data['gap']['member_acc'], data['gap']['member_p'], data['gap']['member_r'],
         data['gap']['non_member_acc'], data['gap']['non_member_p'], data['gap']['non_member_r'], data['gap']['balanced_acc'],
@@ -59,7 +59,11 @@ def print_to_excel(data):
         data['boundary_distance']['member_acc'], data['boundary_distance']['member_p'], data['boundary_distance']['member_r'],
         data['boundary_distance']['non_member_acc'], data['boundary_distance']['non_member_p'], data['boundary_distance']['non_member_r'], data['boundary_distance']['balanced_acc'],
         data['self_influence']['member_acc'], data['self_influence']['member_p'], data['self_influence']['member_r'],
-        data['self_influence']['non_member_acc'], data['self_influence']['non_member_p'], data['self_influence']['non_member_r'], data['self_influence']['balanced_acc']
+        data['self_influence']['non_member_acc'], data['self_influence']['non_member_p'], data['self_influence']['non_member_r'], data['self_influence']['balanced_acc'],
+        data['self_influence_v2']['member_acc'], data['self_influence_v2']['member_p'], data['self_influence_v2']['member_r'],
+        data['self_influence_v2']['non_member_acc'], data['self_influence_v2']['non_member_p'], data['self_influence_v2']['non_member_r'], data['self_influence_v2']['balanced_acc'],
+        data['self_influence_v3']['member_acc'], data['self_influence_v3']['member_p'], data['self_influence_v3']['member_r'],
+        data['self_influence_v3']['non_member_acc'], data['self_influence_v3']['non_member_p'], data['self_influence_v3']['non_member_r'], data['self_influence_v3']['balanced_acc'],
     ))
 
 data = dict()
