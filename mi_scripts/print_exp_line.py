@@ -17,7 +17,7 @@ parser.add_argument('--port', default='null', type=str, help='to bypass pycharm 
 args = parser.parse_args()
 
 ATTACKS_DIRS = ['gap', 'black_box', 'boundary_distance', 'self_influence', 'self_influence_v2', 'self_influence_v3']
-CHECKPOINT_DIR = '/data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug'  # args.checkpoint_dir
+CHECKPOINT_DIR = '/data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug'  # args.checkpoint_dir
 
 def get_log(dir_path: str):
     path = os.path.join(dir_path, 'log.log')
