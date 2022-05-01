@@ -54,7 +54,7 @@ parser.add_argument('--attack', default='self_influence', type=str, help='MI att
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='self_influence_debug', type=str, help='attack directory')
+parser.add_argument('--output_dir', default='self_influence_debug3', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
