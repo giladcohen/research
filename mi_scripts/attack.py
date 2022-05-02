@@ -50,14 +50,19 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/res
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
+parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5,
                     help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='self_influence_debug8', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
+parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
 args = parser.parse_args()
+
+if args.attack == 'boundary_distance':
+    assert args.fast, 'boundary distance attack is slow and needs to work only with fast=True argument'
 
 # for reproduce:
 # seed = 9
@@ -248,6 +253,12 @@ def randomize_max_p_points(x: np.ndarray, y: np.ndarray, p: int):
     else:
         return x, y
 
+if args.fast:
+    X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, 50)  # reduced to 50 to save time
+    X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, 50)
+    X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 500)
+    X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 500)
+
 # Rule based attack (aka Gap attack)
 logger.info('Running {} attack...'.format(args.attack))
 if args.attack == 'gap':
@@ -257,12 +268,9 @@ elif args.attack == 'black_box':
     attack.fit(x=X_member_train, y=y_member_train, test_x=X_non_member_train, test_y=y_non_member_train)
 elif args.attack == 'boundary_distance':
     attack = LabelOnlyDecisionBoundary(classifier)
-    x_train, y_train = randomize_max_p_points(X_member_train, y_member_train, 50)  # reduced to 50 to save time
-    x_test, y_test = randomize_max_p_points(X_non_member_train, y_non_member_train, 50)
-    attack.calibrate_distance_threshold(x_train, y_train, x_test, y_test)
+    attack.calibrate_distance_threshold(X_member_train, y_member_train, X_non_member_train, y_non_member_train)
 elif args.attack == 'self_influence':
-    attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm,
-                                         adaptive=True)
+    attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm, adaptive=args.adaptive)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
@@ -274,11 +282,10 @@ with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
 start = time.time()
+
 if args.attack == 'boundary_distance':
-    X_member_test_mini, y_member_test_mini = randomize_max_p_points(X_member_test, y_member_test, 500)
-    X_non_member_test_mini, y_non_member_test_mini = randomize_max_p_points(X_non_member_test, y_non_member_test, 500)
-    inferred_member = attack.infer(X_member_test_mini, y_member_test_mini)
-    inferred_non_member = attack.infer(X_non_member_test_mini, y_non_member_test_mini)
+    inferred_member = attack.infer(X_member_test, y_member_test)
+    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
 else:
     inferred_member = attack.infer(X_member_test, y_member_test, **{'infer_set': 'member_test'})
     inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'infer_set': 'non_member_test'})
