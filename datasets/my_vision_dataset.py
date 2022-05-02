@@ -2,6 +2,7 @@ from typing import Any, Tuple
 import torch
 from torchvision.datasets import VisionDataset
 import numpy as np
+from PIL import Image
 
 #debug:
 import matplotlib.pyplot as plt
@@ -13,11 +14,10 @@ class MyVisionDataset(VisionDataset):
     def __init__(self, data: np.ndarray, y_gt: np.ndarray, *args, **kwargs) -> None:
         root = None
         super().__init__(root, *args, **kwargs)
-        self.data = torch.from_numpy(np.expand_dims(data, 0))
-        self.y_gt = torch.from_numpy(np.expand_dims(y_gt, 0))
-        assert type(self.data) == type(self.y_gt) == torch.Tensor, \
-            'types of data, y_gt must be tensor type'
-        self.img_shape = tuple(self.data.size()[1:])
+        assert isinstance(data, np.ndarray), 'type of data must be np.ndarray type, but got {} instead'.format(type(data))
+        assert isinstance(y_gt, (np.int32, np.int64)), 'type of y_gt must be np.int type, but got {} instead'.format(type(y_gt))
+        self.data = np.expand_dims(convert_tensor_to_image(data), 0)
+        self.y_gt = np.expand_dims(y_gt, 0)
 
     def __len__(self) -> int:
         return len(self.data)
@@ -25,7 +25,7 @@ class MyVisionDataset(VisionDataset):
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         assert index == 0
         img, y_gt = self.data[index], self.y_gt[index]
-
+        img = Image.fromarray(img)
         if self.transform is not None:
             img = self.transform(img)
 
