@@ -49,13 +49,17 @@ parser = argparse.ArgumentParser(description='Membership attack script')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_100_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
-parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
-parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations')
-parser.add_argument('--attacker_knowledge', type=float, default=0.5,
-                    help='The portion of samples available to the attacker.')
+parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='self_influence_debug8', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
 parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
+
+# self_influence attack params
+parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
+parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations')
+parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of the influence functions.')
+parser.add_argument('--r', type=int, default=1, help='number of iterations of which to take the avg of the h_estimate calculation.')
+
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -256,8 +260,8 @@ def randomize_max_p_points(x: np.ndarray, y: np.ndarray, p: int):
 if args.fast:
     X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, 50)  # reduced to 50 to save time
     X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, 50)
-    X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 500)
-    X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 500)
+    X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 50)
+    X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 50)
 
 # Rule based attack (aka Gap attack)
 logger.info('Running {} attack...'.format(args.attack))
@@ -270,7 +274,8 @@ elif args.attack == 'boundary_distance':
     attack = LabelOnlyDecisionBoundary(classifier)
     attack.calibrate_distance_threshold(X_member_train, y_member_train, X_non_member_train, y_non_member_train)
 elif args.attack == 'self_influence':
-    attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm, adaptive=args.adaptive)
+    attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm,
+                                         adaptive=args.adaptive, rec_dep=args.rec_dep, r=args.r)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
