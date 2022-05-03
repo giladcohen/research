@@ -1,0 +1,9 @@
+commands:
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_1_r_10   --fast True --adaptive True --rec_dep 1  --r 10, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_1_r_30   --fast True --adaptive True --rec_dep 1  --r 30, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_10_r_1   --fast True --adaptive True --rec_dep 10 --r 1, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_10_r_10  --fast True --adaptive True --rec_dep 10 --r 10, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_10_r_30  --fast True --adaptive True --rec_dep 10 --r 30, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_30_r_1   --fast True --adaptive True --rec_dep 30 --r 1, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_30_r_10  --fast True --adaptive True --rec_dep 30 --r 10, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_30_r_30  --fast True --adaptive True --rec_dep 30 --r 30, 11000]
