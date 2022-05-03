@@ -258,10 +258,10 @@ def randomize_max_p_points(x: np.ndarray, y: np.ndarray, p: int):
         return x, y
 
 if args.fast:
-    X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, 50)  # reduced to 50 to save time
-    X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, 50)
-    X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 50)
-    X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 50)
+    X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, 500)  # reduced to 50 to save time
+    X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, 500)
+    X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 500)
+    X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 500)
 
 # Rule based attack (aka Gap attack)
 logger.info('Running {} attack...'.format(args.attack))
