@@ -1,0 +1,80 @@
+commands:
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take1   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take2   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take3   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take4   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take5   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take1   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take2   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take3   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take4   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take5   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take1   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take2   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take4   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take5   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take1   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take2   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take3   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take4   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take5   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+
+
+
+
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take1   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take2   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take3   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take4   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take5   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take1   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take2   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take3   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take4   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take5   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take1   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take2   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take4   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take5   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take1   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take2   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take3   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take4   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take5   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+
+
+
+
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take1   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take2   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take3   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take4   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_2_take5   --fast True --adaptive True --rec_dep 8 --r 2, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take1   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take2   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take3   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take4   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_4_take5   --fast True --adaptive True --rec_dep 8 --r 4, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take1   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take2   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take4   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_8_take5   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take1   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take2   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take3   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take4   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
+   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_sfast_rec_dep_8_r_16_take5   --fast True --adaptive True --rec_dep 8 --r 16, 3666]
