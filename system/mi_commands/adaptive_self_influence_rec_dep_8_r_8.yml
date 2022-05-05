@@ -1,0 +1,2 @@
+commands:
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_100_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8   --fast False --adaptive True --rec_dep 8 --r 8, 3666]
