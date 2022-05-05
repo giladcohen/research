@@ -7,17 +7,17 @@ datasets = ['cifar10', 'cifar100', 'svhn']
 target_models = ['1', '2', '3', '4', '5', '6', '7']
 attacks  = ['Gap', 'Black-box', 'Boundary dist', 'SIF']
 
-dataset = datasets[0]
+dataset = datasets[1]
 n_groups = len(target_models)
 
 attack_score_dict = {dataset: {
-    '1': {'Gap': 0.89,    'Black-box': 0.54,    'Boundary dist': 0.95,  'SIF': 0.99},    # 100
-    '2': {'Gap': 0.807,   'Black-box': 0.808,   'Boundary dist': 0.904, 'SIF': 0.951},   # 1k
-    '3': {'Gap': 0.7068,  'Black-box': 0.833,   'Boundary dist': 0.849, 'SIF': 0.9088},  # 5k
-    '4': {'Gap': 0.678,   'Black-box': 0.8159,  'Boundary dist': 0.799, 'SIF': 0.8689},  # 10k
-    '5': {'Gap': 0.627,   'Black-box': 0.7572,  'Boundary dist': 0.769, 'SIF': 0.813133333333333},  # 15k
-    '6': {'Gap': 0.62205, 'Black-box': 0.7583,  'Boundary dist': 0.737, 'SIF': 0.8001},  # 20k
-    '7': {'Gap': 0.61556, 'Black-box': 0.78896, 'Boundary dist': 0.764, 'SIF': 0.7766},  # 25k
+    '1': {'Gap': 1.0,     'Black-box': 0.46,    'Boundary dist': 1.0,   'SIF': 1},       # 100
+    '2': {'Gap': 0.923,   'Black-box': 0.926,   'Boundary dist': 0.977, 'SIF': 0.996},   # 1k
+    '3': {'Gap': 0.8816,  'Black-box': 0.9674,  'Boundary dist': 0.963, 'SIF': 0.9904},  # 5k
+    '4': {'Gap': 0.8458,  'Black-box': 0.9566,  'Boundary dist': 0.947, 'SIF': 0.9801},  # 10k
+    '5': {'Gap': 0.8006,  'Black-box': 0.953266666666666,  'Boundary dist': 0.918, 'SIF': 0.976266666666666},  # 15k
+    '6': {'Gap': 0.76725, 'Black-box': 0.94175, 'Boundary dist': 0.913, 'SIF': 0.9661},  # 20k
+    '7': {'Gap': 0.76196, 'Black-box': 0.92728, 'Boundary dist': 0.888, 'SIF': 0.94924},  # 25k
 }}
 
 fig, ax = plt.subplots(figsize=(5, 5))
@@ -68,12 +68,12 @@ rects4 = plt.bar(index + 4*bar_width, values4, bar_width,
 
 plt.xlabel('Target Model $\mathcal{M}$')
 plt.ylabel('Balanced Acc')
-plt.ylim(bottom=0.46, top=1.04)
+plt.ylim(bottom=0.44, top=1.04)
 plt.xticks(index + 2.5*bar_width, ('1', '2', '3', '4', '5', '6', '7'))
 plt.yticks([0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
-plt.legend((rects1, rects2, rects3, rects4), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)'),
-           loc=(0.63, 0.77), ncol=1, fancybox=True, prop={'size': 10})
+# plt.legend((rects1, rects2, rects3, rects4), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)'),
+#            loc=(0.63, 0.77), ncol=1, fancybox=True, prop={'size': 10})
 plt.tight_layout()
-plt.show()
-plt.savefig('cifar10_attack_scores.png', dpi=350)
+# plt.show()
+plt.savefig('cifar00_attack_scores.png', dpi=350)
 
