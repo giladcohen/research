@@ -75,5 +75,5 @@ plt.yticks([0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
 #            loc=(0.63, 0.77), ncol=1, fancybox=True, prop={'size': 10})
 plt.tight_layout()
 # plt.show()
-plt.savefig('cifar00_attack_scores.png', dpi=350)
+plt.savefig('cifar100_attack_scores.png', dpi=350)
 
