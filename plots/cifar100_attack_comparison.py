@@ -73,6 +73,7 @@ plt.xticks(index + 2.5*bar_width, ('1', '2', '3', '4', '5', '6', '7'))
 plt.yticks([0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
 # plt.legend((rects1, rects2, rects3, rects4), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)'),
 #            loc=(0.63, 0.77), ncol=1, fancybox=True, prop={'size': 10})
+plt.title('CIFAR-100')
 plt.tight_layout()
 # plt.show()
 plt.savefig('cifar100_attack_scores.png', dpi=350)

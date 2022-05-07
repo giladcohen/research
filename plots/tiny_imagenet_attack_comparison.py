@@ -72,6 +72,7 @@ plt.xticks(index + 2.5*bar_width, ('2', '3', '4', '5', '6', '7'))
 plt.yticks([0.9, 0.95, 1.0])
 # plt.legend((rects1, rects2, rects3, rects4), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)'),
 #            loc=(0.63, 0.77), ncol=1, fancybox=True, prop={'size': 10})
+plt.title('Tiny ImageNet')
 plt.tight_layout()
 # plt.show()
 plt.savefig('tiny_imagenet_attack_scores.png', dpi=350)
