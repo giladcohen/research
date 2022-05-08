@@ -44,6 +44,7 @@ rects2 = plt.bar(index + 2*bar_width, values2, bar_width,
                  alpha=opacity,
                  color='blue',
                  edgecolor='black',
+                 hatch='-',
                  label='Black-box')
 
 values3 = [attack_score_dict[dataset]['1']['Boundary dist'], attack_score_dict[dataset]['2']['Boundary dist'],
@@ -54,6 +55,7 @@ rects3 = plt.bar(index + 3*bar_width, values3, bar_width,
                  alpha=opacity,
                  color='green',
                  edgecolor='black',
+                 hatch='.',
                  label='Boundary dist')
 
 values4 = [attack_score_dict[dataset]['1']['SIF'], attack_score_dict[dataset]['2']['SIF'],
@@ -64,6 +66,7 @@ rects4 = plt.bar(index + 4*bar_width, values4, bar_width,
                  alpha=opacity,
                  color='red',
                  edgecolor='black',
+                 hatch='/',
                  label='SIF (ours)')
 
 plt.xlabel('Target Model $\mathcal{M}$')
