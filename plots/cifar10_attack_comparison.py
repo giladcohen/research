@@ -78,6 +78,6 @@ plt.title('CIFAR-10')
 plt.legend((rects1, rects2, rects3, rects4), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)'),
            loc=(0.63, 0.77), ncol=1, fancybox=True, prop={'size': 10})
 plt.tight_layout()
-plt.show()
-# plt.savefig('cifar10_attack_scores.png', dpi=350)
+# plt.show()
+plt.savefig('cifar10_attack_scores.png', dpi=350)
 
