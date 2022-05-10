@@ -55,7 +55,7 @@ parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit
 
 # self_influence attack params
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
-parser.add_argument('--adaptive', default=True, type=boolean_string, help='Using train loader of influence function with augmentations')
+parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations')
 parser.add_argument('--rec_dep', type=int, default=4, help='recursion_depth of the influence functions.')
 parser.add_argument('--r', type=int, default=5, help='number of iterations of which to take the avg of the h_estimate calculation.')
 
