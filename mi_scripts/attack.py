@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 from cleverhans.utils import random_targets, to_categorical
 from robustbench.model_zoo.architectures.dm_wide_resnet import Swish, CIFAR10_MEAN, CIFAR10_STD, CIFAR100_MEAN, \
     CIFAR100_STD
-from captum.influence import TracInCPFast
 
 sys.path.insert(0, ".")
 sys.path.insert(0, "./adversarial_robustness_toolbox")
@@ -41,24 +40,24 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
-    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, TracInAttack, SelfInfluenceFunctionAttack, \
+    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, SelfInfluenceFunctionAttack, \
     InfluenceFunctionDiff
 from art.estimators.classification import PyTorchClassifier
 
 parser = argparse.ArgumentParser(description='Membership attack script')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_100_w_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='self_influence_debug9', type=str, help='attack directory')
+parser.add_argument('--output_dir', default='self_influence_debug13', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
 parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
 
 # self_influence attack params
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
-parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations')
-parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of the influence functions.')
-parser.add_argument('--r', type=int, default=1, help='number of iterations of which to take the avg of the h_estimate calculation.')
+parser.add_argument('--adaptive', default=True, type=boolean_string, help='Using train loader of influence function with augmentations')
+parser.add_argument('--rec_dep', type=int, default=4, help='recursion_depth of the influence functions.')
+parser.add_argument('--r', type=int, default=5, help='number of iterations of which to take the avg of the h_estimate calculation.')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
