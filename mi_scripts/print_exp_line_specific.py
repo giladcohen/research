@@ -11,7 +11,7 @@ sns.set_style("whitegrid")
 # np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
 parser = argparse.ArgumentParser(description='Print experiment line')
-parser.add_argument('--attack_dir', default='/data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_1k_w_aug/adaptive/self_influence_adaptive_rec_dep_8_r_8', type=str, help='checkpoint dir')
+parser.add_argument('--attack_dir', default='/data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug/adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3', type=str, help='checkpoint dir')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 args = parser.parse_args()

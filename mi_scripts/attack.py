@@ -263,7 +263,8 @@ if args.fast:
     X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 2500)
 
 # Rule based attack (aka Gap attack)
-logger.info('Running {} attack...'.format(args.attack))
+logger.info('Fitting {} attack...'.format(args.attack))
+start = time.time()
 if args.attack == 'gap':
     attack = MembershipInferenceBlackBoxRuleBased(classifier)
 elif args.attack == 'black_box':
@@ -281,6 +282,7 @@ else:
     err_str = 'Invalid attack {}'.format(args.attack)
     logger.error(err_str)
     raise AssertionError(err_str)
+logger.info('Fitting time: {} sec'.format(time.time() - start))
 
 with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
@@ -294,9 +296,7 @@ else:
     inferred_member = attack.infer(X_member_test, y_member_test, **{'infer_set': 'member_test'})
     inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'infer_set': 'non_member_test'})
 calc_acc_precision_recall(inferred_non_member, inferred_member)
-end = time.time()
-logger.info('Inference time: {} sec'.format(end - start))
-
+logger.info('Inference time: {} sec'.format(time.time() - start))
 logger.info('done')
 logger.handlers[0].flush()
 
