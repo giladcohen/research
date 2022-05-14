@@ -1,8 +1,7 @@
 commands:
-  # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --miscls_as_nm True  --output_dir self_influence_v2  , 11000]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --miscls_as_nm False --output_dir self_influence_v3  , 11000]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug  --attack self_influence --miscls_as_nm True  --output_dir self_influence_v2  , 11000]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug  --attack self_influence --miscls_as_nm False --output_dir self_influence_v3  , 11000]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack self_influence --miscls_as_nm True  --output_dir self_influence_v2  , 11000]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack self_influence --miscls_as_nm False --output_dir self_influence_v3  , 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack black_box        --output_dir black_box_timimng, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence   --output_dir self_influence_timimng, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug  --attack black_box        --output_dir black_box_timimng, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug  --attack self_influence   --output_dir self_influence_timimng, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack black_box        --output_dir black_box_timimng, 11000]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack self_influence   --output_dir self_influence_timimng, 11000]
