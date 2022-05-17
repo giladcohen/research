@@ -146,7 +146,9 @@ def get_loader_with_specific_inds(dataset,
     """
     Same like get_train_valid_loader but with exact indices for training and validation
     """
-    data_dir, database, train_transform, test_transform = dataset_factory(dataset)
+    data_dir, database, default_train_transform, default_test_transform = dataset_factory(dataset)
+    train_transform = dataset_args.pop('train_transform', default_train_transform)
+    test_transform = dataset_args.pop('test_transform', default_test_transform)
 
     if is_training:
         transform = train_transform

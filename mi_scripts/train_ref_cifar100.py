@@ -16,35 +16,37 @@ from tqdm import tqdm
 import time
 import sys
 import logging
-from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
+
+from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
+    get_loader_with_specific_inds
 from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training networks using PyTorch')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug13', type=str, help='checkpoint dir')
 
 # dataset
-parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
-parser.add_argument('--train_size', default=0.5, type=float, help='Fraction of train size out of entire trainset')
-parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size out of entire trainset')
+parser.add_argument('--dataset', default='cifar100', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
+parser.add_argument('--train_size', default=1.0, type=float, help='Fraction of train size out of entire trainset')
 parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to include data augmentations')
 
 # architecture:
-parser.add_argument('--net', default='densenet', type=str, help='network architecture')
+parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu, softplus, or swish')
 
 # optimization:
 parser.add_argument('--resume', default=None, type=str, help='Path to checkpoint to be resumed')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
-parser.add_argument('--epochs', default='400', type=int, help='number of epochs')
-parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
-parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
+parser.add_argument('--epochs', default='300', type=int, help='number of epochs')
+parser.add_argument('--wd', default=0.0005, type=float, help='weight decay')  # was 5e-4 for batch_size=128
+parser.add_argument('--num_workers', default=8, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
-parser.add_argument('--batch_size', default=100, type=int, help='batch size')
+parser.add_argument('--batch_size', default=128, type=int, help='batch size')
+parser.add_argument('--test_batch_size', default=100, type=int, help='batch size')
 
 # LR scheduler
-parser.add_argument('--lr_scheduler', default='reduce_on_plateau', type=str, help='reduce_on_plateau/multi_step')
+parser.add_argument('--lr_scheduler', default='multi_step', type=str, help='reduce_on_plateau/multi_step')
 parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
 parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
 parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
@@ -65,6 +67,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
 log_file = os.path.join(args.checkpoint_dir, 'log.log')
 batch_size = args.batch_size
+test_batch_size = args.test_batch_size
 
 set_logger(log_file)
 logger = logging.getLogger()
@@ -89,20 +92,21 @@ dataset_args = dict()
 if not args.augmentations:
     dataset_args['train_transform'] = transforms.ToTensor()
 
-trainloader, valloader, train_inds, val_inds = get_train_valid_loader(
+train_inds = np.arange(50000)
+val_inds = []
+trainloader = get_loader_with_specific_inds(
     dataset=args.dataset,
     dataset_args=dataset_args,
     batch_size=batch_size,
-    rand_gen=rand_gen,
-    train_size=args.train_size,
-    valid_size=args.val_size,
+    is_training=True,
+    indices=train_inds,
     num_workers=args.num_workers,
     pin_memory=device=='cuda'
 )
 testloader = get_test_loader(
     dataset=args.dataset,
     dataset_args=dataset_args,
-    batch_size=batch_size,
+    batch_size=test_batch_size,
     num_workers=args.num_workers,
     pin_memory=device=='cuda'
 )
@@ -111,11 +115,10 @@ img_shape = get_image_shape(args.dataset)
 classes = trainloader.dataset.classes
 num_classes = len(classes)
 train_size = len(trainloader.dataset)
-val_size   = len(valloader.dataset)
 test_size  = len(testloader.dataset)
 
 y_train    = np.asarray(trainloader.dataset.targets)
-y_val      = np.asarray(valloader.dataset.targets)
+y_val      = np.asarray([])
 y_test     = np.asarray(testloader.dataset.targets)
 
 # dump to dir:
@@ -157,7 +160,7 @@ optimizer = optim.SGD([{'params': decay.values(), 'weight_decay': args.wd}, {'pa
 if args.lr_scheduler == 'multi_step':
     lr_scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer,
-        milestones=[150, 250, 350],
+        milestones=[50, 100, 200],
         gamma=0.1,
         verbose=True
     )
@@ -231,50 +234,9 @@ def train():
     train_acc = 100.0 * np.mean(predicted == labels)
     logger.info('Epoch #{} (TRAIN): loss={}\tacc={:.2f}'.format(epoch + 1, train_loss, train_acc))
 
-def validate():
-    global global_state
-    global best_metric
-    global net
-
-    net.eval()
-    val_loss = 0
-    predicted = []
-
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(valloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs, loss_dict = loss_func(inputs, targets)
-            preds = pred_func(outputs)
-
-            loss = loss_dict['loss']
-            val_loss += loss.item()
-            predicted.extend(preds)
-
-    N = batch_idx + 1
-    val_loss    = val_loss / N
-    predicted = np.asarray(predicted)
-    val_acc = 100.0 * np.mean(predicted == y_val)
-
-    val_writer.add_scalar('losses/loss', val_loss, global_step)
-    val_writer.add_scalar('metrics/acc', val_acc, global_step)
-
-    if args.metric == 'accuracy':
-        metric = val_acc
-    elif args.metric == 'loss':
-        metric = val_loss
-    else:
-        raise AssertionError('Unknown metric for optimization {}'.format(args.metric))
-
-    if (args.metric == 'accuracy' and metric > best_metric) or (args.metric == 'loss' and metric < best_metric):
-        best_metric = metric
-        logger.info('Found new best model. Saving...')
-        save_global_state()
-    logger.info('Epoch #{} (VAL): loss={}\tacc={:.2f}\tbest_metric({})={}'.format(epoch + 1, val_loss, val_acc, args.metric, best_metric))
-
-    # updating learning rate if we see no improvement
-    lr_scheduler.step(metrics=metric)
-
 def test():
+    global net
+    global best_metric
     global net
 
     net.eval()
@@ -299,7 +261,24 @@ def test():
     test_writer.add_scalar('losses/loss', test_loss, global_step)
     test_writer.add_scalar('metrics/acc', test_acc, global_step)
 
+    if args.metric == 'accuracy':
+        metric = test_acc
+    elif args.metric == 'loss':
+        metric = test_loss
+    else:
+        raise AssertionError('Unknown metric for optimization {}'.format(args.metric))
+
+    if (args.metric == 'accuracy' and metric > best_metric) or (args.metric == 'loss' and metric < best_metric):
+        best_metric = metric
+        logger.info('Found new best model. Saving...')
+        save_global_state()
     logger.info('Epoch #{} (TEST): loss={}\tacc={:.2f}'.format(epoch + 1, test_loss, test_acc))
+
+    # updating learning rate if we see no improvement
+    if args.lr_scheduler == 'reduce_on_plateau':
+        lr_scheduler.step(metrics=metric)
+    else:
+        lr_scheduler.step()
 
 def save_global_state():
     global global_state
@@ -325,7 +304,7 @@ def load_best_net():
 
 if __name__ == "__main__":
     best_metric = WORST_METRIC
-    epoch = 0
+    epoch = -1
     global_step = 0
     global_state = {}
 
@@ -335,9 +314,7 @@ if __name__ == "__main__":
     logger.info('Start training from epoch #{} for {} epochs'.format(epoch + 1, args.epochs))
     for epoch in tqdm(range(epoch, epoch + args.epochs)):
         train()
-        validate()
-        if epoch % 10 == 0 and epoch > 0:
-            test()
+        test()
         if epoch % 100 == 0 and epoch > 0:  # increase value for large models
             save_current_state()  # once every 10 epochs, save network to a new, distinctive checkpoint file
     save_current_state()
