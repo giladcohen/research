@@ -12,7 +12,7 @@ sns.set_style("whitegrid")
 
 parser = argparse.ArgumentParser(description='Print experiments statistics over multiple runs')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug', type=str, help='checkpoint dir')
-parser.add_argument('--exp_name', default='self_influence_sfast_rec_dep_8_r_8', type=str, help='checkpoint dir')
+parser.add_argument('--exp_name', default='self_influence_sfast_rec_dep_128_r_1', type=str, help='checkpoint dir')
 parser.add_argument('--num_takes', default=5, type=int, help='number of takes for each experiment')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')

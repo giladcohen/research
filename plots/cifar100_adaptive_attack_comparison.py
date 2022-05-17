@@ -26,8 +26,8 @@ attack_score_adaptive_dict = {dataset: {
     '3': {'Gap': 0.8548,  'Black-box': 0.9134,  'Boundary dist': 0.901, 'SIF': 0.9766},  # 5k
     '4': {'Gap': 0.7618,  'Black-box': 0.8753,  'Boundary dist': 0.866, 'SIF': 0.9308},  # 10k
     '5': {'Gap': 0.7142,  'Black-box': 0.838066666666666,  'Boundary dist': 0.795, 'SIF': 0.9022},  # 15k
-    '6': {'Gap': 0.6819,  'Black-box': 0.82325, 'Boundary dist': 0.785, 'SIF': 0.7896},  # 20k
-    '7': {'Gap': 0.685,   'Black-box': 0.83164, 'Boundary dist': 0.803, 'SIF': 0.8688},  # 25k
+    '6': {'Gap': 0.6819,  'Black-box': 0.82325, 'Boundary dist': 0.785, 'SIF': 0.897},  # 20k
+    '7': {'Gap': 0.685,   'Black-box': 0.83164, 'Boundary dist': 0.803, 'SIF': 0.8982},  # 25k
 }}
 
 adaptive_boost_dict = {}
