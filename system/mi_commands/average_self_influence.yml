@@ -1,0 +1,26 @@
+commands:
+  # CIFAR10
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_100_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_1k_w_aug  --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_5k_w_aug  --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_10k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_15k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_20k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+
+  # CIFAR100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_100_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_1k_w_aug  --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_5k_w_aug  --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_10k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_15k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_20k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+
+  # Tiny Imagenet
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_1k_w_aug  --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_5k_w_aug  --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_10k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_15k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_20k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_average   --fast True --average True, 3666]
