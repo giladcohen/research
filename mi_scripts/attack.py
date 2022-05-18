@@ -49,13 +49,14 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/res
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='self_influence_debug13', type=str, help='attack directory')
+parser.add_argument('--output_dir', default='debug20', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
 parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
 
 # self_influence attack params
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
-parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations')
+parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, adaSIF method')
+parser.add_argument('--average', default=True, type=boolean_string, help='Using train loader of influence function with augmentations, ensemble method')
 parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of the influence functions.')
 parser.add_argument('--r', type=int, default=1, help='number of iterations of which to take the avg of the h_estimate calculation.')
 
@@ -275,7 +276,7 @@ elif args.attack == 'boundary_distance':
     attack.calibrate_distance_threshold(X_member_train, y_member_train, X_non_member_train, y_non_member_train)
 elif args.attack == 'self_influence':
     attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm,
-                                         adaptive=args.adaptive, rec_dep=args.rec_dep, r=args.r)
+                                         adaptive=args.adaptive, average=args.average, rec_dep=args.rec_dep, r=args.r)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
