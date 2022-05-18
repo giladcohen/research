@@ -45,13 +45,13 @@ from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDe
 from art.estimators.classification import PyTorchClassifier
 
 parser = argparse.ArgumentParser(description='Membership attack script')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_100_w_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar100/resnet18/relu/s_50k_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
-parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='self_influence_debug13', type=str, help='attack directory')
+# parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
+parser.add_argument('--output_dir', default='debug', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
-parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
+parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (500 samples) and inference (2500 samples)')
 
 # self_influence attack params
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
@@ -138,8 +138,6 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     logger.info('==> Preparing data..')
     all_train_inds = np.arange(max_train_size)
     train_inds = np.load(os.path.join(args.checkpoint_dir, 'train_inds.npy'))
-    val_inds   = np.load(os.path.join(args.checkpoint_dir, 'val_inds.npy'))
-    unused_train_inds = np.asarray([i for i in all_train_inds if i not in np.concatenate((train_inds, val_inds))])
 
     train_loader = get_loader_with_specific_inds(
         dataset=dataset,
@@ -147,24 +145,6 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
         batch_size=batch_size,
         is_training=False,
         indices=train_inds,
-        num_workers=0,
-        pin_memory=device=='cuda'
-    )
-    unused_train_loader = get_loader_with_specific_inds(
-        dataset=dataset,
-        dataset_args=dict(),
-        batch_size=batch_size,
-        is_training=False,
-        indices=unused_train_inds,
-        num_workers=0,
-        pin_memory=device=='cuda'
-    )
-    val_loader = get_loader_with_specific_inds(
-        dataset=dataset,
-        dataset_args=dict(),
-        batch_size=batch_size,
-        is_training=False,
-        indices=val_inds,
         num_workers=0,
         pin_memory=device=='cuda'
     )
@@ -178,14 +158,9 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
 
     X_train_member = get_normalized_tensor(train_loader, img_shape, batch_size)
     y_train_member = np.asarray(train_loader.dataset.targets)
-    X_train_non_member = get_normalized_tensor(unused_train_loader, img_shape, batch_size)
-    y_train_non_member = np.asarray(unused_train_loader.dataset.targets)
-    X_val = get_normalized_tensor(val_loader, img_shape, batch_size)
-    y_val = np.asarray(val_loader.dataset.targets)
     X_test = get_normalized_tensor(test_loader, img_shape, batch_size)
     y_test = np.asarray(test_loader.dataset.targets)
 
-    del train_loader, unused_train_loader, val_loader, test_loader
     # debug
     # X_train_member_img = convert_tensor_to_image(X_train_member)
     # X_train_non_member_img = convert_tensor_to_image(X_train_non_member)
@@ -195,13 +170,12 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     # combine members and non members and define train/test set
     X_member = X_train_member
     y_member = y_train_member
-    X_non_member = np.concatenate((X_train_non_member, X_test))
-    y_non_member = np.concatenate((y_train_non_member, y_test))
+    X_non_member = X_test
+    y_non_member = y_test
     # building new training and test set
-    assert X_non_member.shape[0] >= X_member.shape[0], 'For testing, we require more non members than members'
     # building train/test set for members
-    membership_train_size = int(args.attacker_knowledge * X_member.shape[0])
-    membership_test_size = X_member.shape[0] - membership_train_size
+    membership_train_size = 5000
+    membership_test_size = 5000
     train_member_inds = rand_gen.choice(X_member.shape[0], membership_train_size, replace=False)
     train_member_inds.sort()
     X_member_train = X_member[train_member_inds]
