@@ -102,7 +102,7 @@ rects44 = plt.bar(index + 4*bar_width, values44, bar_width,
                   hatch='/',
                   bottom=values4)
 
-colorless_patch = mpatches.Patch(label='Adaptive', hatch='/', edgecolor='black', facecolor='red')
+colorless_patch = mpatches.Patch(label='adaSIF', hatch='/', edgecolor='black', facecolor='red')
 
 plt.xlabel('Target Model $\mathcal{M}$')
 plt.ylabel('Balanced Acc')
@@ -110,7 +110,7 @@ plt.ylim(bottom=0.46, top=0.9)
 plt.xticks(index + 2.5*bar_width, ('1', '2', '3', '4', '5', '6', '7'))
 plt.yticks([0.5, 0.6, 0.7, 0.8, 0.9])
 plt.title('CIFAR-10')
-plt.legend((rects1, rects2, rects3, rects4, colorless_patch), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)', 'Adaptive'),
+plt.legend((rects1, rects2, rects3, rects4, colorless_patch), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)', 'adaSIF (ours)'),
            loc=(0.63, 0.70), ncol=1, fancybox=True, prop={'size': 10})
 plt.tight_layout()
 plt.savefig('cifar10_adaptive_attack_scores.png', dpi=350)

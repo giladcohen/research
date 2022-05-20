@@ -6,11 +6,13 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torchsummary import summary
+from torchvision import transforms
 from torch.utils.data import TensorDataset, DataLoader
 
 from typing import Callable, Optional, Tuple, Union, Any, List
 import numpy as np
 import json
+from collections import OrderedDict
 from tqdm import tqdm
 import os
 import argparse
@@ -37,6 +39,7 @@ from research.datasets.train_val_test_data_loaders import get_test_loader, get_t
 from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape, get_num_classes, \
     get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall
+from research.models import AlexNetRef, ResNet110Ref, DenseNetRef
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
@@ -45,8 +48,9 @@ from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDe
 from art.estimators.classification import PyTorchClassifier
 
 parser = argparse.ArgumentParser(description='Membership attack script')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar100/resnet18/relu/s_50k_wo_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar100/alexnet_ref', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
+parser.add_argument('--arch', default='', type=str, help='can be alexnet/resnet/densenet')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 # parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='debug', type=str, help='attack directory')
@@ -74,8 +78,6 @@ if args.attack == 'boundary_distance':
 # np.random.seed(seed)
 rand_gen = np.random.RandomState(int(time.time()))
 
-with open(os.path.join(args.checkpoint_dir, 'commandline_args.txt'), 'r') as f:
-    train_args = json.load(f)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, args.checkpoint_file)
 if args.output_dir != '':
@@ -90,7 +92,7 @@ log_file = os.path.join(OUTPUT_DIR, 'log.log')
 set_logger(log_file)
 logger = logging.getLogger()
 
-dataset = train_args['dataset']
+dataset = 'cifar100'
 img_shape = get_image_shape(dataset)
 num_classes = get_num_classes(dataset)
 max_train_size = get_max_train_size(dataset)
@@ -98,23 +100,20 @@ batch_size = 100
 
 # Model
 logger.info('==> Building model..')
-net_cls = get_model(train_args['net'], dataset)
-if 'resnet' in train_args['net']:
-    conv1 = get_conv1_params(dataset)
-    strides = get_strides(dataset)
-    net = net_cls(num_classes=num_classes, activation=train_args['activation'], conv1=conv1, strides=strides, field='probs')
-elif train_args['net'] == 'alexnet':
-    net = net_cls(num_classes=num_classes, activation=train_args['activation'], field='probs')
-elif train_args['net'] == 'densenet':
-    assert train_args['activation'] == 'relu'
-    conv1 = get_densenet_conv1_params(dataset)
-    net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1, field='probs')
+if args.arch == 'alexnet':
+    net = AlexNetRef()
+elif args.arch == 'resnet':
+    net = ResNet110Ref()
+elif args.arch == 'densenet':
+    net = DenseNetRef()
 else:
-    raise AssertionError('Does not support non Resnet architectures')
+    raise AssertionError('Must provide architecture name. args.arch={}'.format(args.arch))
+
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
-if 'best_net' in global_state:
-    global_state = global_state['best_net']
+logger.info('The best accuracy for arch {} is {}'.format(args.arch, global_state['best_acc']))
+global_state = global_state['state_dict']
+global_state = OrderedDict((key.split('module.')[1], value) for (key, value) in global_state.items())
 net.load_state_dict(global_state)
 net.eval()
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
@@ -124,10 +123,10 @@ if device == 'cuda':
 
 optimizer = optim.SGD(
     net.parameters(),
-    lr=train_args['lr'],
-    momentum=train_args['mom'],
-    weight_decay=0.0,  # train_args['wd'],
-    nesterov=train_args['mom'] > 0)
+    lr=0.1,
+    momentum=0.9,
+    weight_decay=0.0,
+    nesterov=True)
 loss = nn.CrossEntropyLoss()
 classifier = PyTorchClassifier(model=net, clip_values=(0, 1), loss=loss, optimizer=optimizer,
                                input_shape=(img_shape[2], img_shape[0], img_shape[1]), nb_classes=num_classes)
@@ -136,8 +135,7 @@ classifier = PyTorchClassifier(model=net, clip_values=(0, 1), loss=loss, optimiz
 if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     assert args.generate_mi_data, 'MI data does not exist. Generate it by setting generate_mi_data = True'
     logger.info('==> Preparing data..')
-    all_train_inds = np.arange(max_train_size)
-    train_inds = np.load(os.path.join(args.checkpoint_dir, 'train_inds.npy'))
+    train_inds = np.arange(50000)
 
     train_loader = get_loader_with_specific_inds(
         dataset=dataset,
@@ -249,7 +247,7 @@ elif args.attack == 'boundary_distance':
     attack.calibrate_distance_threshold(X_member_train, y_member_train, X_non_member_train, y_non_member_train)
 elif args.attack == 'self_influence':
     attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm,
-                                         adaptive=args.adaptive, rec_dep=args.rec_dep, r=args.r)
+                                         adaptive_for_ref=args.adaptive, rec_dep=args.rec_dep, r=args.r)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:

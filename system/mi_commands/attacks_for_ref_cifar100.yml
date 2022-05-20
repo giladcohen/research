@@ -1,11 +1,11 @@
 commands:
-#  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_50k_wo_aug --attack self_influence --output_dir self_influence_v2 --generate_mi_data True, 11000]
-#  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_50k_wo_aug  --attack self_influence --output_dir self_influence_v2 --generate_mi_data True, 11000]
-#  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_50k_wo_aug --attack self_influence --output_dir self_influence_v2 --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_50k_wo_aug --attack self_influence --output_dir self_influence_v2 --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_50k_wo_aug  --attack self_influence --output_dir self_influence_v2 --generate_mi_data True, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_50k_wo_aug --attack self_influence --output_dir self_influence_v2 --generate_mi_data True, 11000]
 
-#  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_50k_w_aug  --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data True --fast True --adaptive True --rec_dep 8 --r 8, 11000]
-#  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_50k_w_aug   --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data True --fast True --adaptive True --rec_dep 8 --r 8, 11000]
-#  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_50k_w_aug  --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data True --fast True --adaptive True --rec_dep 8 --r 8, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_50k_w_aug  --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data True --fast True --adaptive True --rec_dep 8 --r 8, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_50k_w_aug   --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data True --fast True --adaptive True --rec_dep 8 --r 8, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_50k_w_aug  --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data True --fast True --adaptive True --rec_dep 8 --r 8, 11000]
 
   - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_50k_wo_aug  --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data False --fast True --adaptive True --rec_dep 8 --r 8, 11000]
   - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_50k_wo_aug   --attack self_influence --output_dir adaptive/self_influence_v3 --generate_mi_data False --fast True --adaptive True --rec_dep 8 --r 8, 11000]
