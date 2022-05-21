@@ -86,7 +86,7 @@ class Bottleneck(nn.Module):
 
 class ResNet110Ref(nn.Module):
 
-    def __init__(self, depth=110, num_classes=100, block_name='BasicBlock'):
+    def __init__(self, depth=110, num_classes=100, block_name='Basicblock'):
         super().__init__()
         # Model type specifies number of layers for CIFAR-10 model
         if block_name.lower() == 'basicblock':
