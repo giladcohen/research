@@ -8,6 +8,10 @@ import sys
 import time
 import math
 import torch
+from torchvision import transforms
+import torch.nn as nn
+import torch.nn.init as init
+import torch.utils.data as data
 import numpy as np
 from tqdm import tqdm
 import pickle
@@ -17,9 +21,6 @@ from functools import wraps
 import matplotlib.pyplot as plt
 from numba import njit, jit
 from typing import Dict, List, Tuple
-import torch.nn as nn
-import torch.nn.init as init
-import torch.utils.data as data
 import logging
 from collections import OrderedDict
 import scipy
@@ -661,3 +662,16 @@ def save_to_path(path: str, x: np.ndarray, overwrite=False):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     if not os.path.exists(path) or overwrite:
         np.save(path, x)
+
+def normalize(x, rgb_mean, rgb_std):
+    """
+    :param x: np.ndaaray of image RGB of (3, W, H), normalized between [0,1]
+    :param rgb_mean: Tuple of (RED mean, GREEN mean, BLUE mean)
+    :param rgb_std: Tuple of (RED std, GREEN std, BLUE std)
+    :return np.ndarray transformed by x = (x-mean)/std
+    """
+    transform = transforms.Normalize(rgb_mean, rgb_std)
+    x_tensor = torch.tensor(x)
+    x_new = transform(x_tensor)
+    x_new = x_new.cpu().numpy()
+    return x_new
