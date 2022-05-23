@@ -11,8 +11,12 @@ import seaborn as sns
 sns.set_style("whitegrid")
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
+from research.utils import boolean_string
+
 parser = argparse.ArgumentParser(description='Print best accuracy a the model')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/alexnet/relu/s_100_wo_aug', type=str, help='checkpoint dir')
+parser.add_argument('--common', default=True, type=boolean_string, help='print for all datasets')
+parser.add_argument('--common_path', default='alexnet/relu/s_1k_wo_aug', type=str, help='path for all datasets')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 args = parser.parse_args()
@@ -34,17 +38,46 @@ def get_best_acc_test(log: str):
     assert "INFO Epoch #400 (TEST)" in ret
     return ret
 
-CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
-global_state = torch.load(CHECKPOINT_PATH)
-best_epoch = global_state['epoch'] + 1
-best_val = np.round(global_state['best_metric'], 2)
+if not args.common:
+    # use only the path in checkpoint_dir
+    CHECKPOINT_PATH = os.path.join(args.checkpoint_dir, 'ckpt.pth')
+    global_state = torch.load(CHECKPOINT_PATH)
+    best_epoch = global_state['epoch'] + 1
+    best_val = np.round(global_state['best_metric'], 2)
 
-LOG_FILE = os.path.join(args.checkpoint_dir, 'log.log')
-train_loss_line = get_best_acc_train(LOG_FILE, best_epoch)
-test_loss_line = get_best_acc_test(LOG_FILE)
-best_train = np.round(float(train_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
-best_test = np.round(float(test_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
+    LOG_FILE = os.path.join(args.checkpoint_dir, 'log.log')
+    train_loss_line = get_best_acc_train(LOG_FILE, best_epoch)
+    test_loss_line = get_best_acc_test(LOG_FILE)
+    best_train = np.round(float(train_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
+    best_test = np.round(float(test_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
 
-print('Train/Val/Test accuracies are:')
-# print(str(best_train) + ' & ' + str(best_val) + ' & ' + str(best_test))
-print('{} & {} & {}'.format(best_train, best_val, best_test))
+    print('Train/Val/Test accuracies are:')
+    # print(str(best_train) + ' & ' + str(best_val) + ' & ' + str(best_test))
+    print('{} & {} & {}'.format(best_train, best_val, best_test))
+else:
+    # Use all the paths for all datasets
+    ROOT = '/data/gilad/logs/mi'
+    CHECKPOINT_PATHS = [
+    os.path.join(ROOT, 'cifar10', args.common_path, 'ckpt.pth'),
+    os.path.join(ROOT, 'cifar100', args.common_path, 'ckpt.pth'),
+    os.path.join(ROOT, 'tiny_imagenet', args.common_path, 'ckpt.pth'),
+    ]
+    data = []
+    for CHECKPOINT_PATH in CHECKPOINT_PATHS:
+        global_state = torch.load(CHECKPOINT_PATH)
+        best_epoch = global_state['epoch'] + 1
+        best_val = np.round(global_state['best_metric'], 2)
+
+        LOG_FILE = os.path.join(args.checkpoint_dir, 'log.log')
+        train_loss_line = get_best_acc_train(LOG_FILE, best_epoch)
+        test_loss_line = get_best_acc_test(LOG_FILE)
+        best_train = np.round(float(train_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
+        best_test = np.round(float(test_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
+
+        data.append(best_train)
+        data.append(best_val)
+        data.append(best_test)
+
+        data = np.asarray(data)
+        print('{:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} \\\\'
+              .format(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8]))
