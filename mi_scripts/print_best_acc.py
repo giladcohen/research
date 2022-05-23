@@ -14,7 +14,7 @@ np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 from research.utils import boolean_string
 
 parser = argparse.ArgumentParser(description='Print best accuracy a the model')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/alexnet/relu/s_100_wo_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='alexnet/relu/s_1k_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--common', default=True, type=boolean_string, help='print for all datasets')
 parser.add_argument('--common_path', default='alexnet/relu/s_1k_wo_aug', type=str, help='path for all datasets')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
@@ -79,6 +79,6 @@ else:
         data.append(best_val)
         data.append(best_test)
 
-        data = np.asarray(data)
-        print('{:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} \\\\'
-              .format(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8]))
+    data = np.asarray(data)
+    print('{:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} & {:.2f} \\\\'
+          .format(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8]))
