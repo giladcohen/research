@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 sns.set_style("whitegrid")
-# np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
+np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
 parser = argparse.ArgumentParser(description='Print best accuracy a the model')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/alexnet/relu/s_100_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 args = parser.parse_args()
@@ -46,4 +46,5 @@ best_train = np.round(float(train_loss_line.split("\tacc=")[1].split('\n')[0]), 
 best_test = np.round(float(test_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
 
 print('Train/Val/Test accuracies are:')
-print(str(best_train) + ' & ' + str(best_val) + ' & ' + str(best_test))
+# print(str(best_train) + ' & ' + str(best_val) + ' & ' + str(best_test))
+print('{} & {} & {}'.format(best_train, best_val, best_test))
