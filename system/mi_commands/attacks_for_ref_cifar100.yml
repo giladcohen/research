@@ -26,3 +26,18 @@ commands:
   - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet110_ref          --arch resnet   --attack self_influence --output_dir self_influence_v2 --generate_mi_data False --fast True  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
   - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet_ref            --arch alexnet  --attack self_influence --output_dir self_influence_v2 --generate_mi_data False --fast True  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
   - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet_ref           --arch densenet --attack self_influence --output_dir self_influence_v2 --generate_mi_data False --fast True  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+
+  # GAP
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet110_ref          --arch resnet   --attack gap --output_dir gap --generate_mi_data False --fast False  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet_ref            --arch alexnet  --attack gap --output_dir gap --generate_mi_data False --fast False  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet_ref           --arch densenet --attack gap --output_dir gap --generate_mi_data False --fast False  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+
+  # Black-box
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet110_ref          --arch resnet   --attack black_box --output_dir black_box --generate_mi_data False --fast False  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet_ref            --arch alexnet  --attack black_box --output_dir black_box --generate_mi_data False --fast False  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet_ref           --arch densenet --attack black_box --output_dir black_box --generate_mi_data False --fast False  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+
+  # Boundary distance
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet110_ref          --arch resnet   --attack boundary_distance --output_dir boundary_distance --generate_mi_data False --fast True  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet_ref            --arch alexnet  --attack boundary_distance --output_dir boundary_distance --generate_mi_data False --fast True  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
+  - [python research/mi_scripts/attack_ref_cifar100.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet_ref           --arch densenet --attack boundary_distance --output_dir boundary_distance --generate_mi_data False --fast True  --miscls_as_nm True --adaptive False --average False --rec_dep 1 --r 1, 11000]
