@@ -55,11 +55,11 @@ parser.add_argument('--attack', default='self_influence', type=str, help='MI att
 # parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='debug', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
-parser.add_argument('--fast', default=True, type=boolean_string, help='Fast fit (500 samples) and inference (2500 samples)')
+parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (500 samples) and inference (2500 samples)')
 
 # self_influence attack params
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
-parser.add_argument('--adaptive', default=True, type=boolean_string, help='Using train loader of influence function with augmentations')
+parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations')
 parser.add_argument('--average', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, ensemble method')
 parser.add_argument('--rec_dep', type=int, default=8, help='recursion_depth of the influence functions.')
 parser.add_argument('--r', type=int, default=8, help='number of iterations of which to take the avg of the h_estimate calculation.')
