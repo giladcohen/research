@@ -57,18 +57,19 @@ if not args.common:
 else:
     # Use all the paths for all datasets
     ROOT = '/data/gilad/logs/mi'
-    CHECKPOINT_PATHS = [
-    os.path.join(ROOT, 'cifar10', args.common_path, 'ckpt.pth'),
-    os.path.join(ROOT, 'cifar100', args.common_path, 'ckpt.pth'),
-    os.path.join(ROOT, 'tiny_imagenet', args.common_path, 'ckpt.pth'),
+    CHECKPOINT_DIRS = [
+    os.path.join(ROOT, 'cifar10', args.common_path),
+    os.path.join(ROOT, 'cifar100', args.common_path),
+    os.path.join(ROOT, 'tiny_imagenet', args.common_path),
     ]
     data = []
-    for CHECKPOINT_PATH in CHECKPOINT_PATHS:
+    for CHECKPOINT_DIR in CHECKPOINT_DIRS:
+        CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, 'ckpt.pth')
         global_state = torch.load(CHECKPOINT_PATH)
         best_epoch = global_state['epoch'] + 1
         best_val = np.round(global_state['best_metric'], 2)
 
-        LOG_FILE = os.path.join(args.checkpoint_dir, 'log.log')
+        LOG_FILE = os.path.join(CHECKPOINT_DIR, 'log.log')
         train_loss_line = get_best_acc_train(LOG_FILE, best_epoch)
         test_loss_line = get_best_acc_test(LOG_FILE)
         best_train = np.round(float(train_loss_line.split("\tacc=")[1].split('\n')[0]), 2)
