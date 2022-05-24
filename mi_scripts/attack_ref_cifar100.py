@@ -32,13 +32,13 @@ sys.path.insert(0, ".")
 sys.path.insert(0, "./adversarial_robustness_toolbox")
 sys.path.insert(0, "./influence_functions")
 
-# from research.classifiers.pytorch_classifier_specific import PyTorchClassifierSpecific
+from research.consts import RGB_MEAN, RGB_STD
 from research.losses.losses import L2Loss, LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor, get_dataset_with_specific_records
 from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape, get_num_classes, \
-    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall
+    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall, normalize
 from research.models import AlexNetRef, ResNet110Ref, DenseNetRef
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
@@ -282,6 +282,11 @@ with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
 start = time.time()
+
+if args.attack != 'self_influence':  # for self influence we normalize differently inside the influence function
+    logger.info('Normalizing images prior to inference...')
+    X_member_test = normalize(X_member_test, RGB_MEAN, RGB_STD)
+    X_non_member_test = normalize(X_non_member_test, RGB_MEAN, RGB_STD)
 
 if args.attack == 'boundary_distance':
     inferred_member = attack.infer(X_member_test, y_member_test)
