@@ -255,6 +255,13 @@ if args.fast:
         X_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'X_non_member_test_fast.npy'))
         y_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'y_non_member_test_fast.npy'))
 
+if args.attack != 'self_influence':  # for self influence we normalize differently inside the influence function
+    logger.info('Normalizing images prior to fitting and inference...')
+    X_member_train = normalize(X_member_train, RGB_MEAN, RGB_STD)
+    X_non_member_train = normalize(X_non_member_train, RGB_MEAN, RGB_STD)
+    X_member_test = normalize(X_member_test, RGB_MEAN, RGB_STD)
+    X_non_member_test = normalize(X_non_member_test, RGB_MEAN, RGB_STD)
+
 # Rule based attack (aka Gap attack)
 logger.info('Fitting {} attack...'.format(args.attack))
 start = time.time()
@@ -282,11 +289,6 @@ with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
 start = time.time()
-
-if args.attack != 'self_influence':  # for self influence we normalize differently inside the influence function
-    logger.info('Normalizing images prior to inference...')
-    X_member_test = normalize(X_member_test, RGB_MEAN, RGB_STD)
-    X_non_member_test = normalize(X_non_member_test, RGB_MEAN, RGB_STD)
 
 if args.attack == 'boundary_distance':
     inferred_member = attack.infer(X_member_test, y_member_test)
