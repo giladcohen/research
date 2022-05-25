@@ -7,7 +7,6 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torchsummary import summary
 from torchvision import transforms
-from torch.utils.data import TensorDataset, DataLoader
 
 from typing import Callable, Optional, Tuple, Union, Any, List
 import numpy as np
@@ -52,7 +51,6 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar100/al
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--arch', default='alexnet', type=str, help='can be alexnet/resnet/densenet')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
-# parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='debug', type=str, help='attack directory')
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
 parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (500 samples) and inference (2500 samples)')
@@ -109,7 +107,6 @@ elif args.arch == 'densenet':
     net = DenseNetRef()
 else:
     raise AssertionError('Must provide architecture name. args.arch={}'.format(args.arch))
-
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 logger.info('The best accuracy for arch {} is {}'.format(args.arch, global_state['best_acc']))

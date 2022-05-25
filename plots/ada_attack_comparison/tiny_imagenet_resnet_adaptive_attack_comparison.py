@@ -111,5 +111,5 @@ plt.title('Tiny ImageNet')
 # plt.legend((rects1, rects2, rects3, rects4, colorless_patch), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)', 'Adaptive'),
 #            loc=(0.63, 0.70), ncol=1, fancybox=True, prop={'size': 10})
 plt.tight_layout()
-plt.savefig('tiny_imagenet_adaptive_attack_scores.png', dpi=350)
+plt.savefig('tiny_imagenet_resnet_adaptive_attack_scores.png', dpi=350)
 plt.show()

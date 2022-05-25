@@ -7,27 +7,27 @@ datasets = ['cifar10', 'cifar100', 'tiny_imagenet']
 target_models = ['1', '2', '3', '4', '5', '6', '7']
 attacks  = ['Gap', 'Black-box', 'Boundary dist', 'SIF']
 
-dataset = datasets[0]
+dataset = datasets[1]
 n_groups = len(target_models)
 
 attack_score_dict = {dataset: {
-    '1': {'Gap': 0.830,   'Black-box': 0.500,   'Boundary dist': 0.860, 'SIF': 0.890},   # 100
-    '2': {'Gap': 0.787,   'Black-box': 0.784,   'Boundary dist': 0.859, 'SIF': 0.856},   # 1k
-    '3': {'Gap': 0.6592,  'Black-box': 0.7066,  'Boundary dist': 0.729, 'SIF': 0.7602},  # 5k
-    '4': {'Gap': 0.6098,  'Black-box': 0.6834,  'Boundary dist': 0.709, 'SIF': 0.6789},  # 10k
-    '5': {'Gap': 0.569666666666666,   'Black-box': 0.6188,  'Boundary dist': 0.643, 'SIF': 0.6106},  # 15k
-    '6': {'Gap': 0.54975, 'Black-box': 0.60765,  'Boundary dist': 0.611, 'SIF': 0.5857},  # 20k
-    '7': {'Gap': 0.54656, 'Black-box': 0.57312, 'Boundary dist': 0.61, 'SIF': 0.59704},  # 25k
+    '1': {'Gap': 0.84,     'Black-box': 0.54,    'Boundary dist': 0.84,  'SIF': 0.83},   # 100
+    '2': {'Gap': 0.946,    'Black-box': 0.8,     'Boundary dist': 0.949, 'SIF': 0.949},   # 1k
+    '3': {'Gap': 0.829,    'Black-box': 0.7808,  'Boundary dist': 0.847, 'SIF': 0.8394},  # 5k
+    '4': {'Gap': 0.7479,   'Black-box': 0.6279,  'Boundary dist': 0.744, 'SIF': 0.7485},  # 10k
+    '5': {'Gap': 0.735666666666666,  'Black-box': 0.631133333333333,  'Boundary dist': 0.713, 'SIF': 0.7376},  # 15k
+    '6': {'Gap': 0.6958,  'Black-box': 0.589,  'Boundary dist': 0.683, 'SIF': 0.6944},  # 20k
+    '7': {'Gap': 0.63516, 'Black-box': 0.53832, 'Boundary dist': 0.615, 'SIF': 0.63484},  # 25k
 }}
 
 attack_score_adaptive_dict = {dataset: {
-    '1': {'Gap': 0.830,   'Black-box': 0.500,   'Boundary dist': 0.860, 'SIF': 0.87},   # 100
-    '2': {'Gap': 0.787,   'Black-box': 0.784,   'Boundary dist': 0.859, 'SIF': 0.881},   # 1k
-    '3': {'Gap': 0.6592,  'Black-box': 0.7066,  'Boundary dist': 0.729, 'SIF': 0.8406},  # 5k
-    '4': {'Gap': 0.6098,  'Black-box': 0.6834,  'Boundary dist': 0.709, 'SIF': 0.763},  # 10k
-    '5': {'Gap': 0.569666666666666,   'Black-box': 0.6188,  'Boundary dist': 0.643, 'SIF': 0.6966},  # 15k
-    '6': {'Gap': 0.54975, 'Black-box': 0.60765,  'Boundary dist': 0.611, 'SIF': 0.673},  # 20k
-    '7': {'Gap': 0.54656, 'Black-box': 0.57312, 'Boundary dist': 0.61, 'SIF': 0.6624},  # 25k
+    '1': {'Gap': 0.84,     'Black-box': 0.54,    'Boundary dist': 0.84,  'SIF': 0.84},   # 100
+    '2': {'Gap': 0.946,    'Black-box': 0.8,     'Boundary dist': 0.949, 'SIF': 0.946},   # 1k
+    '3': {'Gap': 0.829,    'Black-box': 0.7808,  'Boundary dist': 0.847, 'SIF': 0.9042},  # 5k
+    '4': {'Gap': 0.7479,   'Black-box': 0.6279,  'Boundary dist': 0.744, 'SIF': 0.756},  # 10k
+    '5': {'Gap': 0.735666666666666,  'Black-box': 0.631133333333333,  'Boundary dist': 0.713, 'SIF': 0.7462},  # 15k
+    '6': {'Gap': 0.6958,  'Black-box': 0.589,  'Boundary dist': 0.683, 'SIF': 0.6966},  # 20k
+    '7': {'Gap': 0.63516, 'Black-box': 0.53832, 'Boundary dist': 0.615, 'SIF': 0.6306},  # 25k
 }}
 
 adaptive_boost_dict = {}
@@ -102,16 +102,16 @@ rects44 = plt.bar(index + 4*bar_width, values44, bar_width,
                   hatch='/',
                   bottom=values4)
 
-colorless_patch = mpatches.Patch(label='adaSIF', hatch='/', edgecolor='black', facecolor='red')
+colorless_patch = mpatches.Patch(label='Adaptive', hatch='/', edgecolor='black', facecolor='red')
 
 plt.xlabel('Target Model $\mathcal{M}$')
 plt.ylabel('Balanced Acc')
-plt.ylim(bottom=0.46, top=0.9)
+plt.ylim(bottom=0.5, top=0.96)
 plt.xticks(index + 2.5*bar_width, ('1', '2', '3', '4', '5', '6', '7'))
-plt.yticks([0.5, 0.6, 0.7, 0.8, 0.9])
-plt.title('CIFAR-10')
-plt.legend((rects1, rects2, rects3, rects4, colorless_patch), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)', 'adaSIF (ours)'),
-           loc=(0.63, 0.70), ncol=1, fancybox=True, prop={'size': 10})
+# plt.yticks([0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+plt.title('CIFAR-100')
+# plt.legend((rects1, rects2, rects3, rects4, colorless_patch), ('Gap', 'Black-box', 'Boundary dist', 'SIF (ours)', 'Adaptive'),
+#            loc=(0.63, 0.70), ncol=1, fancybox=True, prop={'size': 10})
 plt.tight_layout()
-plt.savefig('cifar10_adaptive_attack_scores.png', dpi=350)
+plt.savefig('cifar100_densenet_adaptive_attack_scores.png', dpi=350)
 plt.show()

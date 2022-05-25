@@ -11,6 +11,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from typing import Callable, Optional, Tuple, Union, Any, List
 import numpy as np
 import json
+
 from tqdm import tqdm
 import os
 import argparse
@@ -30,7 +31,6 @@ sys.path.insert(0, ".")
 sys.path.insert(0, "./adversarial_robustness_toolbox")
 sys.path.insert(0, "./influence_functions")
 
-# from research.classifiers.pytorch_classifier_specific import PyTorchClassifierSpecific
 from research.losses.losses import L2Loss, LinfLoss, CosineEmbeddingLossV2
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader, \
     get_loader_with_specific_inds, get_normalized_tensor, get_dataset_with_specific_records
@@ -258,10 +258,30 @@ def randomize_max_p_points(x: np.ndarray, y: np.ndarray, p: int):
         return x, y
 
 if args.fast:
-    X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, 500)  # reduced to 50 to save time
-    X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, 500)
-    X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 2500)
-    X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 2500)
+    # to reproduce, we collect the same samples that were selected from a previous "fast" run, it they exist
+    if not os.path.exists(os.path.join(OUTPUT_DIR, 'X_member_train_fast.npy')):
+        X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, 500)
+        X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, 500)
+        X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 2500)
+        X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 2500)
+        np.save(os.path.join(OUTPUT_DIR, 'X_member_train_fast.npy'), X_member_train)
+        np.save(os.path.join(OUTPUT_DIR, 'y_member_train_fast.npy'), y_member_train)
+        np.save(os.path.join(OUTPUT_DIR, 'X_non_member_train_fast.npy'), X_non_member_train)
+        np.save(os.path.join(OUTPUT_DIR, 'y_non_member_train_fast.npy'), y_non_member_train)
+        np.save(os.path.join(OUTPUT_DIR, 'X_member_test_fast.npy'), X_member_test)
+        np.save(os.path.join(OUTPUT_DIR, 'y_member_test_fast.npy'), y_member_test)
+        np.save(os.path.join(OUTPUT_DIR, 'X_non_member_test_fast.npy'), X_non_member_test)
+        np.save(os.path.join(OUTPUT_DIR, 'y_non_member_test_fast.npy'), y_non_member_test)
+    else:
+        logger.info('loading fast data..')
+        X_member_train = np.load(os.path.join(OUTPUT_DIR, 'X_member_train_fast.npy'))
+        y_member_train = np.load(os.path.join(OUTPUT_DIR, 'y_member_train_fast.npy'))
+        X_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'X_non_member_train_fast.npy'))
+        y_non_member_train = np.load(os.path.join(OUTPUT_DIR, 'y_non_member_train_fast.npy'))
+        X_member_test = np.load(os.path.join(OUTPUT_DIR, 'X_member_test_fast.npy'))
+        y_member_test = np.load(os.path.join(OUTPUT_DIR, 'y_member_test_fast.npy'))
+        X_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'X_non_member_test_fast.npy'))
+        y_non_member_test = np.load(os.path.join(OUTPUT_DIR, 'y_non_member_test_fast.npy'))
 
 # Rule based attack (aka Gap attack)
 logger.info('Fitting {} attack...'.format(args.attack))
@@ -276,7 +296,8 @@ elif args.attack == 'boundary_distance':
     attack.calibrate_distance_threshold(X_member_train, y_member_train, X_non_member_train, y_non_member_train)
 elif args.attack == 'self_influence':
     attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm,
-                                         adaptive=args.adaptive, average=args.average, rec_dep=args.rec_dep, r=args.r)
+                                         adaptive=args.adaptive, average=args.average, for_ref=False,
+                                         rec_dep=args.rec_dep, r=args.r)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
