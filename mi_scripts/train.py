@@ -27,7 +27,7 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug', typ
 parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--train_size', default=0.5, type=float, help='Fraction of train size out of entire trainset')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size out of entire trainset')
-parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to include data augmentations')
+parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to incl  ude data augmentations')
 
 # architecture:
 parser.add_argument('--net', default='densenet', type=str, help='network architecture')
@@ -272,7 +272,10 @@ def validate():
     logger.info('Epoch #{} (VAL): loss={}\tacc={:.2f}\tbest_metric({})={}'.format(epoch + 1, val_loss, val_acc, args.metric, best_metric))
 
     # updating learning rate if we see no improvement
-    lr_scheduler.step(metrics=metric)
+    if args.lr_scheduler == 'reduce_on_plateau':
+        lr_scheduler.step(metrics=metric)
+    else:
+        lr_scheduler.step()
 
 def test():
     global net

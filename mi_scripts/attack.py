@@ -111,7 +111,7 @@ elif train_args['net'] == 'densenet':
     conv1 = get_densenet_conv1_params(dataset)
     net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1, field='probs')
 else:
-    raise AssertionError('Does not support non Resnet architectures')
+    raise AssertionError('Does not support architecture {}'.format(train_args['net']))
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
