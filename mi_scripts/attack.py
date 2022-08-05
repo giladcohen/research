@@ -48,10 +48,10 @@ parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/res
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='debug', type=str, help='attack directory')
+parser.add_argument('--output_dir', default='self_influence_m_10_nm_100', type=str, help='attack directory')
 
 # member/non-member data config
-parser.add_argument('--generate_mi_data', default=True, type=boolean_string, help='To generate MI data')
+parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
 parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
 parser.add_argument('--data_dir', default='data', type=str, help='Directory to save the member and non-member training/test data')
 
@@ -70,6 +70,7 @@ parser.add_argument('--n_non_mem_test', default=2500, type=int, help='If not non
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
+parser.add_argument('--host', default='null', type=str, help='to bypass pycharm bug')
 
 args = parser.parse_args()
 
