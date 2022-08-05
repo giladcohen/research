@@ -40,18 +40,20 @@ from research.utils import boolean_string, pytorch_evaluate, set_logger, get_ima
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
-    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, SelfInfluenceFunctionAttack, \
-    InfluenceFunctionDiff
+    MembershipInferenceBlackBoxRuleBased, MembershipInferenceBlackBox, SelfInfluenceFunctionAttack
 from art.estimators.classification import PyTorchClassifier
 
 parser = argparse.ArgumentParser(description='Membership attack script')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_100_w_aug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
-parser.add_argument('--output_dir', default='debug20', type=str, help='attack directory')
-parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
+parser.add_argument('--output_dir', default='debug', type=str, help='attack directory')
+
+# member/non-member data config
+parser.add_argument('--generate_mi_data', default=True, type=boolean_string, help='To generate MI data')
 parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
+parser.add_argument('--data_dir', default='data_m_10_nm_100', type=str, help='Directory to save the member and non-member training/test data')
 
 # self_influence attack params
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
@@ -59,6 +61,8 @@ parser.add_argument('--adaptive', default=False, type=boolean_string, help='Usin
 parser.add_argument('--average', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, ensemble method')
 parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of the influence functions.')
 parser.add_argument('--r', type=int, default=1, help='number of iterations of which to take the avg of the h_estimate calculation.')
+parser.add_argument('--n_mem_train', default=10, type=int, help='If not none, use n members for training set.')
+parser.add_argument('--n_non_mem_train', default=100, type=int, help='If not none, use n non-members for training set.')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -67,6 +71,8 @@ args = parser.parse_args()
 
 if args.attack == 'boundary_distance':
     assert args.fast, 'boundary distance attack is slow and needs to work only with fast=True argument'
+if (args.n_mem_train is not None) or (args.n_non_mem_train is not None):
+    assert (args.n_mem_train is not None and args.n_non_mem_train is not None), "args.n_mem_train must be set with args.n_non_mem_train"
 
 # for reproduce:
 # seed = 9
@@ -83,7 +89,7 @@ if args.output_dir != '':
     OUTPUT_DIR = os.path.join(args.checkpoint_dir, args.output_dir)
 else:
     OUTPUT_DIR = os.path.join(args.checkpoint_dir, args.attack)
-DATA_DIR = os.path.join(args.checkpoint_dir, 'data')
+DATA_DIR = os.path.join(args.checkpoint_dir, args.data_dir)
 os.makedirs(os.path.join(OUTPUT_DIR), exist_ok=True)
 os.makedirs(os.path.join(DATA_DIR), exist_ok=True)
 
@@ -201,8 +207,16 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     # building new training and test set
     assert X_non_member.shape[0] >= X_member.shape[0], 'For testing, we require more non members than members'
     # building train/test set for members
-    membership_train_size = int(args.attacker_knowledge * X_member.shape[0])
-    membership_test_size = X_member.shape[0] - membership_train_size
+    if args.n_mem_train is not None:
+        membership_train_size = args.n_mem_train
+        non_membership_train_size = args.n_non_mem_train
+    else:
+        membership_train_size = int(args.attacker_knowledge * X_member.shape[0])
+        non_membership_train_size = membership_train_size
+
+    membership_test_size = int(0.5 * X_member.shape[0])  # to match previous experiments
+    non_membsership_test_size = membership_test_size  # to match previous experiments
+
     train_member_inds = rand_gen.choice(X_member.shape[0], membership_train_size, replace=False)
     train_member_inds.sort()
     X_member_train = X_member[train_member_inds]
@@ -216,8 +230,6 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     assert test_member_inds.shape[0] == membership_test_size
 
     # building train/test set for non members
-    non_membership_train_size = membership_train_size
-    non_membsership_test_size = membership_test_size
     train_non_member_inds = rand_gen.choice(X_non_member.shape[0], non_membership_train_size, replace=False)
     train_non_member_inds.sort()
     X_non_member_train = X_non_member[train_non_member_inds]
