@@ -53,7 +53,7 @@ parser.add_argument('--output_dir', default='debug', type=str, help='attack dire
 # member/non-member data config
 parser.add_argument('--generate_mi_data', default=True, type=boolean_string, help='To generate MI data')
 parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
-parser.add_argument('--data_dir', default='data_m_10_nm_100', type=str, help='Directory to save the member and non-member training/test data')
+parser.add_argument('--data_dir', default='data', type=str, help='Directory to save the member and non-member training/test data')
 
 # self_influence attack params
 parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
@@ -61,8 +61,12 @@ parser.add_argument('--adaptive', default=False, type=boolean_string, help='Usin
 parser.add_argument('--average', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, ensemble method')
 parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of the influence functions.')
 parser.add_argument('--r', type=int, default=1, help='number of iterations of which to take the avg of the h_estimate calculation.')
+
+# more specific mem/non-mem training/test sizes
 parser.add_argument('--n_mem_train', default=10, type=int, help='If not none, use n members for training set.')
 parser.add_argument('--n_non_mem_train', default=100, type=int, help='If not none, use n non-members for training set.')
+parser.add_argument('--n_mem_test', default=2500, type=int, help='If not none, use n members for test set.')
+parser.add_argument('--n_non_mem_test', default=2500, type=int, help='If not none, use n non-members for test set.')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
@@ -71,8 +75,9 @@ args = parser.parse_args()
 
 if args.attack == 'boundary_distance':
     assert args.fast, 'boundary distance attack is slow and needs to work only with fast=True argument'
-if (args.n_mem_train is not None) or (args.n_non_mem_train is not None):
-    assert (args.n_mem_train is not None and args.n_non_mem_train is not None), "args.n_mem_train must be set with args.n_non_mem_train"
+if args.n_mem_train or args.n_non_mem_train or args.n_mem_test or args.n_non_mem_test:
+    assert not args.fast and args.n_mem_train and args.n_non_mem_train and args.n_mem_test and args.n_non_mem_test, \
+        "All specific mem/non-mem training and test sizes must be set together."
 
 # for reproduce:
 # seed = 9
@@ -207,16 +212,8 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     # building new training and test set
     assert X_non_member.shape[0] >= X_member.shape[0], 'For testing, we require more non members than members'
     # building train/test set for members
-    if args.n_mem_train is not None:
-        membership_train_size = args.n_mem_train
-        non_membership_train_size = args.n_non_mem_train
-    else:
-        membership_train_size = int(args.attacker_knowledge * X_member.shape[0])
-        non_membership_train_size = membership_train_size
-
-    membership_test_size = int(0.5 * X_member.shape[0])  # to match previous experiments
-    non_membsership_test_size = membership_test_size  # to match previous experiments
-
+    membership_train_size = int(args.attacker_knowledge * X_member.shape[0])
+    membership_test_size = X_member.shape[0] - membership_train_size
     train_member_inds = rand_gen.choice(X_member.shape[0], membership_train_size, replace=False)
     train_member_inds.sort()
     X_member_train = X_member[train_member_inds]
@@ -230,6 +227,8 @@ if not os.path.exists(os.path.join(DATA_DIR, 'X_member_train.npy')):
     assert test_member_inds.shape[0] == membership_test_size
 
     # building train/test set for non members
+    non_membership_train_size = membership_train_size
+    non_membsership_test_size = membership_test_size
     train_non_member_inds = rand_gen.choice(X_non_member.shape[0], non_membership_train_size, replace=False)
     train_non_member_inds.sort()
     X_non_member_train = X_non_member[train_non_member_inds]
@@ -269,13 +268,18 @@ def randomize_max_p_points(x: np.ndarray, y: np.ndarray, p: int):
     else:
         return x, y
 
-if args.fast:
-    # to reproduce, we collect the same samples that were selected from a previous "fast" run, it they exist
+if args.fast or args.n_mem_train:
+    if args.fast:
+        n_mem_train, n_non_mem_train, n_mem_test, n_non_mem_test = 500, 500, 2500, 2500
+    else:
+        n_mem_train, n_non_mem_train, n_mem_test, n_non_mem_test = args.n_mem_train, args.n_non_mem_train, \
+                                                                   args.n_mem_test, args.n_non_mem_test
+
     if not os.path.exists(os.path.join(OUTPUT_DIR, 'X_member_train_fast.npy')):
-        X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, 500)
-        X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, 500)
-        X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, 2500)
-        X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, 2500)
+        X_member_train, y_member_train = randomize_max_p_points(X_member_train, y_member_train, n_mem_train)
+        X_non_member_train, y_non_member_train = randomize_max_p_points(X_non_member_train, y_non_member_train, n_non_mem_train)
+        X_member_test, y_member_test = randomize_max_p_points(X_member_test, y_member_test, n_mem_test)
+        X_non_member_test, y_non_member_test = randomize_max_p_points(X_non_member_test, y_non_member_test, n_non_mem_test)
         np.save(os.path.join(OUTPUT_DIR, 'X_member_train_fast.npy'), X_member_train)
         np.save(os.path.join(OUTPUT_DIR, 'y_member_train_fast.npy'), y_member_train)
         np.save(os.path.join(OUTPUT_DIR, 'X_non_member_train_fast.npy'), X_non_member_train)
