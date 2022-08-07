@@ -75,7 +75,8 @@ parser.add_argument('--host', default='null', type=str, help='to bypass pycharm 
 args = parser.parse_args()
 
 if args.attack == 'boundary_distance':
-    assert args.fast, 'boundary distance attack is slow and needs to work only with fast=True argument'
+    assert args.fast or args.n_mem_train, \
+        'boundary distance attack is slow and needs to work only with fast=True argument or explicit training/test size'
 if args.n_mem_train or args.n_non_mem_train or args.n_mem_test or args.n_non_mem_test:
     assert not args.fast and args.n_mem_train and args.n_non_mem_train and args.n_mem_test and args.n_non_mem_test, \
         "All specific mem/non-mem training and test sizes must be set together."
