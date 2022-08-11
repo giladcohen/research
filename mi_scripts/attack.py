@@ -63,10 +63,10 @@ parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of t
 parser.add_argument('--r', type=int, default=1, help='number of iterations of which to take the avg of the h_estimate calculation.')
 
 # more specific mem/non-mem training/test sizes
-parser.add_argument('--n_mem_train', default=10, type=int, help='If not none, use n members for training set.')
-parser.add_argument('--n_non_mem_train', default=100, type=int, help='If not none, use n non-members for training set.')
-parser.add_argument('--n_mem_test', default=2500, type=int, help='If not none, use n members for test set.')
-parser.add_argument('--n_non_mem_test', default=2500, type=int, help='If not none, use n non-members for test set.')
+parser.add_argument('--n_mem_train', default=None, type=int, help='If not none, use n members for training set.')
+parser.add_argument('--n_non_mem_train', default=None, type=int, help='If not none, use n non-members for training set.')
+parser.add_argument('--n_mem_test', default=None, type=int, help='If not none, use n members for test set.')
+parser.add_argument('--n_non_mem_test', default=None, type=int, help='If not none, use n non-members for test set.')
 
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
