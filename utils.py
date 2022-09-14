@@ -607,14 +607,14 @@ def get_parameter_groups(net: nn.Module) -> Tuple[Dict[str, torch.Tensor], Dict[
         if isinstance(m, (nn.Linear, nn.Conv2d)):
             decay[name + '.weight'] = m.weight
             decay[name + '.bias'] = m.bias
-        elif isinstance(m, nn.BatchNorm2d):
+        elif isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d, nn.LayerNorm)):
             no_decay[name + '.weight'] = m.weight
             no_decay[name + '.bias'] = m.bias
         else:
             if hasattr(m, 'weight'):
                 no_decay[name + '.weight'] = m.weight
             if hasattr(m, 'bias'):
-                no_decay[name + '.bias'] = m.weight
+                no_decay[name + '.bias'] = m.bias
 
     # remove all None values:
     del_items = []
