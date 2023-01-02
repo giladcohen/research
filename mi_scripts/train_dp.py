@@ -145,11 +145,11 @@ elif args.net == 'densenet':
 else:
     raise AssertionError('Does not support non Resnet architectures')
 
-errors = ModuleValidator.validate(net, strict=False)
-logger.info('error before fixing are:\n{}'.format(errors))
+# errors = ModuleValidator.validate(net, strict=False)
+# logger.infofo('error before fixing are:\n{}'.format(errors))
 net = ModuleValidator.fix(net)
-errors = ModuleValidator.validate(net, strict=False)
-logger.info('error after fixing are:\n{}'.format(errors))
+# errors = ModuleValidator.validate(net, strict=False)
+# logger.info('error after fixing are:\n{}'.format(errors))
 
 net = net.to(device)
 if device == 'cuda':
