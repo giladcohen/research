@@ -16,39 +16,43 @@ from tqdm import tqdm
 import time
 import sys
 import logging
+
+from opacus.validators import ModuleValidator
+from opacus import PrivacyEngine
+from opacus.utils.batch_memory_manager import BatchMemoryManager
+
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
-parser = argparse.ArgumentParser(description='Training networks using PyTorch')
+parser = argparse.ArgumentParser(description='Training DP networks using PyTorch')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug', type=str, help='checkpoint dir')
 
 # dataset
 parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--train_size', default=0.5, type=float, help='Fraction of train size out of entire trainset')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size out of entire trainset')
-parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to incl  ude data augmentations')
+parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to include data augmentations')
 
 # architecture:
 parser.add_argument('--net', default='densenet', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu, softplus, or swish')
 
 # optimization:
-parser.add_argument('--resume', default=None, type=str, help='Path to checkpoint to be resumed')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('--mom', default=0.9, type=float, help='weight momentum of SGD optimizer')
-parser.add_argument('--epochs', default='400', type=int, help='number of epochs')
-parser.add_argument('--wd', default=0.0001, type=float, help='weight decay')  # was 5e-4 for batch_size=128
+parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
+parser.add_argument('--epochs', default=400, type=int, help='number of epochs')
+parser.add_argument('--wd', default=0.0, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
-parser.add_argument('--batch_size', default=100, type=int, help='batch size')
+parser.add_argument('--batch_size', default=400, type=int, help='batch size')
+parser.add_argument('--max_physical_batch_size', default=100, type=int, help='batch size')
 
-# LR scheduler
-parser.add_argument('--lr_scheduler', default='reduce_on_plateau', type=str, help='reduce_on_plateau/multi_step')
-parser.add_argument('--factor', default=0.9, type=float, help='LR schedule factor')
-parser.add_argument('--patience', default=3, type=int, help='LR schedule patience')
-parser.add_argument('--cooldown', default=0, type=int, help='LR cooldown')
+# differential privacy
+parser.add_argument('--epsilon', default=50.0, type=float, help='learning rate')
+parser.add_argument('--delta', default=0.000005, type=float, help='weight momentum of SGD optimizer')
+parser.add_argument('--max_grad_norm', default=1.2, type=int, help='number of epochs')
 
+parser.add_argument('--host', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--port', default='null', type=str, help='to bypass pycharm bug')
 
@@ -140,39 +144,20 @@ elif args.net == 'densenet':
     net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1)
 else:
     raise AssertionError('Does not support non Resnet architectures')
+
+errors = ModuleValidator.validate(net, strict=False)
+logger.info('error before fixing are:\n{}'.format(errors))
+net = ModuleValidator.fix(net)
+errors = ModuleValidator.validate(net, strict=False)
+logger.info('error after fixing are:\n{}'.format(errors))
+
 net = net.to(device)
-if args.resume:
-    global_state = torch.load(args.resume, map_location=torch.device(device))
-    if 'best_net' in global_state:
-        global_state = global_state['best_net']
-    net.load_state_dict(global_state, strict=False)
 if device == 'cuda':
     # net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 
-decay, no_decay = get_parameter_groups(net)
-optimizer = optim.SGD([{'params': decay.values(), 'weight_decay': args.wd}, {'params': no_decay.values(), 'weight_decay': 0.0}],
-                          lr=args.lr, momentum=args.mom, nesterov=args.mom > 0)
-if args.lr_scheduler == 'multi_step':
-    lr_scheduler = optim.lr_scheduler.MultiStepLR(
-        optimizer,
-        milestones=[150, 250, 350],
-        gamma=0.1,
-        verbose=True
-    )
-elif args.lr_scheduler == 'reduce_on_plateau':
-    lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer,
-        mode=metric_mode,
-        factor=args.factor,
-        patience=args.patience,
-        verbose=True,
-        cooldown=args.cooldown
-    )
-else:
-    raise AssertionError('illegal LR scheduler {}'.format(args.lr_scheduler))
-
+optimizer = optim.RMSprop(net.parameters(), lr=args.lr)
 ce_criterion = nn.CrossEntropyLoss()
 
 def loss_func(inputs, targets, kwargs=None) -> Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
@@ -188,6 +173,19 @@ def pred_func(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     return preds
 
 
+privacy_engine = PrivacyEngine()
+net, optimizer, trainloader = privacy_engine.make_private_with_epsilon(
+    module=net,
+    optimizer=optimizer,
+    data_loader=trainloader,
+    epochs=args.epochs,
+    target_epsilon=args.epsilon,
+    target_delta=args.delta,
+    max_grad_norm=args.max_grad_norm,
+)
+logger.info(f"Using sigma={optimizer.noise_multiplier} and C={args.max_grad_norm}")
+
+
 def train():
     """Train and validate"""
     # Training
@@ -198,31 +196,37 @@ def train():
     train_loss = 0
     predicted = []
     labels = []
-    for batch_idx, (inputs, targets) in enumerate(trainloader):  # train a single step
-        inputs, targets = inputs.to(device), targets.to(device)
-        optimizer.zero_grad()
-        outputs, loss_dict = loss_func(inputs, targets)
-        # print(loss_dict)
 
-        loss = loss_dict['loss']
-        loss.backward()
-        optimizer.step()
-        train_loss += loss.item()
+    with BatchMemoryManager(
+            data_loader=trainloader,
+            max_physical_batch_size=args.max_physical_batch_size,
+            optimizer=optimizer
+    ) as memory_safe_data_loader:
+        for batch_idx, (inputs, targets) in enumerate(memory_safe_data_loader):  # train a single step
+            inputs, targets = inputs.to(device), targets.to(device)
+            optimizer.zero_grad()
+            outputs, loss_dict = loss_func(inputs, targets)
+            # print(loss_dict)
 
-        preds = pred_func(outputs)
-        targets_np = targets.cpu().numpy()
-        predicted.extend(preds)
-        labels.extend(targets_np)
-        num_corrected = np.sum(preds == targets_np)
-        acc = num_corrected / targets.size(0)
+            loss = loss_dict['loss']
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item()
 
-        if global_step % 10 == 0:  # sampling, once ever 10 train iterations
-            for k, v in loss_dict.items():
-                train_writer.add_scalar('losses/' + k, v.item(), global_step)
-            train_writer.add_scalar('metrics/acc', 100.0 * acc, global_step)
-            train_writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+            preds = pred_func(outputs)
+            targets_np = targets.cpu().numpy()
+            predicted.extend(preds)
+            labels.extend(targets_np)
+            num_corrected = np.sum(preds == targets_np)
+            acc = num_corrected / targets.size(0)
 
-        global_step += 1
+            if global_step % 10 == 0:  # sampling, once ever 10 train iterations
+                for k, v in loss_dict.items():
+                    train_writer.add_scalar('losses/' + k, v.item(), global_step)
+                train_writer.add_scalar('metrics/acc', 100.0 * acc, global_step)
+                train_writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+
+            global_step += 1
 
     N = batch_idx + 1
     train_loss = train_loss / N
@@ -270,12 +274,6 @@ def validate():
         logger.info('Found new best model. Saving...')
         save_global_state()
     logger.info('Epoch #{} (VAL): loss={}\tacc={:.2f}\tbest_metric({})={}'.format(epoch + 1, val_loss, val_acc, args.metric, best_metric))
-
-    # updating learning rate if we see no improvement
-    if args.lr_scheduler == 'reduce_on_plateau':
-        lr_scheduler.step(metrics=metric)
-    else:
-        lr_scheduler.step()
 
 def test():
     global net
