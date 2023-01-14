@@ -17,32 +17,28 @@ import time
 import sys
 import logging
 
-from opacus.validators import ModuleValidator
-from opacus import PrivacyEngine
-from opacus.utils.batch_memory_manager import BatchMemoryManager
-
 from research.datasets.train_val_test_data_loaders import get_test_loader, get_train_valid_loader
 from research.utils import boolean_string, get_image_shape, set_logger, get_parameter_groups, force_lr
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 parser = argparse.ArgumentParser(description='Training DP networks using PyTorch')
-parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug', type=str, help='checkpoint dir')
+parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/debug_150123', type=str, help='checkpoint dir')
 
 # dataset
-parser.add_argument('--dataset', default='tiny_imagenet', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
+parser.add_argument('--dataset', default='cifar10', type=str, help='dataset: cifar10, cifar100, svhn, tiny_imagenet')
 parser.add_argument('--train_size', default=0.5, type=float, help='Fraction of train size out of entire trainset')
 parser.add_argument('--val_size', default=0.05, type=float, help='Fraction of validation size out of entire trainset')
 parser.add_argument('--augmentations', default=False, type=boolean_string, help='whether to include data augmentations')
 
 # architecture:
-parser.add_argument('--net', default='densenet', type=str, help='network architecture')
+parser.add_argument('--net', default='resnet18', type=str, help='network architecture')
 parser.add_argument('--activation', default='relu', type=str, help='network activation: relu, softplus, or swish')
 
 # optimization:
 parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
 parser.add_argument('--epochs', default=400, type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0, type=float, help='weight decay')  # was 5e-4 for batch_size=128
-parser.add_argument('--num_workers', default=4, type=int, help='Data loading threads')
+parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
 parser.add_argument('--batch_size', default=128, type=int, help='batch size')
 parser.add_argument('--max_physical_batch_size', default=32, type=int, help='batch size')
@@ -71,6 +67,12 @@ log_file = os.path.join(args.checkpoint_dir, 'log.log')
 batch_size = args.batch_size
 
 set_logger(log_file)
+
+# importing opacus just now not to override logger
+from opacus.validators import ModuleValidator
+from opacus import PrivacyEngine
+from opacus.utils.batch_memory_manager import BatchMemoryManager
+
 logger = logging.getLogger()
 if args.metric == 'accuracy':
     WORST_METRIC = 0.0
