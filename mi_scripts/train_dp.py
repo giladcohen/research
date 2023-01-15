@@ -42,8 +42,8 @@ parser.add_argument('--epochs', default=400, type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
-parser.add_argument('--batch_size', default=512, type=int, help='batch size')
-parser.add_argument('--max_physical_batch_size', default=128, type=int, help='batch size')
+parser.add_argument('--batch_size', default=256, type=int, help='batch size')
+parser.add_argument('--max_physical_batch_size', default=64, type=int, help='batch size')
 
 # differential privacy
 parser.add_argument('--epsilon', default=50.0, type=float, help='Noise level. Smaller -> more noise')
