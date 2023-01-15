@@ -1,4 +1,6 @@
-'''Train DNNs with GloVe via PyTorch.'''
+'''Train DNNs with differential privany via PyTorch.
+similar to: https://github.com/pytorch/opacus/blob/main/tutorials/building_image_classifier.ipynb
+'''
 import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
@@ -40,12 +42,11 @@ parser.add_argument('--epochs', default=400, type=int, help='number of epochs')
 parser.add_argument('--wd', default=0.0, type=float, help='weight decay')  # was 5e-4 for batch_size=128
 parser.add_argument('--num_workers', default=0, type=int, help='Data loading threads')
 parser.add_argument('--metric', default='accuracy', type=str, help='metric to optimize. accuracy or sparsity')
-parser.add_argument('--batch_size', default=128, type=int, help='batch size')
-parser.add_argument('--max_physical_batch_size', default=32, type=int, help='batch size')
+parser.add_argument('--batch_size', default=512, type=int, help='batch size')
+parser.add_argument('--max_physical_batch_size', default=128, type=int, help='batch size')
 
 # differential privacy
-parser.add_argument('--epsilon', default=50.0, type=float, help='learning rate')
-parser.add_argument('--delta', default=0.000005, type=float, help='weight momentum of SGD optimizer')
+parser.add_argument('--epsilon', default=50.0, type=float, help='Noise level. Smaller -> more noise')
 parser.add_argument('--max_grad_norm', default=1.2, type=int, help='number of epochs')
 
 parser.add_argument('--host', default='null', type=str, help='to bypass pycharm bug')
@@ -175,6 +176,7 @@ def pred_func(outputs: Dict[str, torch.Tensor]) -> np.ndarray:
     return preds
 
 
+delta = 0.5 * (1 / train_size)
 privacy_engine = PrivacyEngine()
 net, optimizer, trainloader = privacy_engine.make_private_with_epsilon(
     module=net,
@@ -182,7 +184,7 @@ net, optimizer, trainloader = privacy_engine.make_private_with_epsilon(
     data_loader=trainloader,
     epochs=args.epochs,
     target_epsilon=args.epsilon,
-    target_delta=args.delta,
+    target_delta=delta,
     max_grad_norm=args.max_grad_norm,
 )
 logger.info(f"Using sigma={optimizer.noise_multiplier} and C={args.max_grad_norm}")
