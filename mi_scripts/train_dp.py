@@ -47,7 +47,7 @@ parser.add_argument('--max_physical_batch_size', default=64, type=int, help='bat
 
 # differential privacy
 parser.add_argument('--epsilon', default=50.0, type=float, help='Noise level. Smaller -> more noise')
-parser.add_argument('--max_grad_norm', default=1.2, type=int, help='number of epochs')
+parser.add_argument('--max_grad_norm', default=1.2, type=float, help='Max gradient norm')
 
 parser.add_argument('--host', default='null', type=str, help='to bypass pycharm bug')
 parser.add_argument('--mode', default='null', type=str, help='to bypass pycharm bug')
