@@ -151,9 +151,9 @@ if device == 'cuda':
 optimizer = optim.SGD(
     net.parameters(),
     lr=train_args['lr'],
-    momentum=train_args['mom'],
+    momentum=0.9,
     weight_decay=0.0,  # train_args['wd'],
-    nesterov=train_args['mom'] > 0)
+    nesterov=True)
 loss = nn.CrossEntropyLoss()
 classifier = PyTorchClassifier(model=net, clip_values=(0, 1), loss=loss, optimizer=optimizer,
                                input_shape=(img_shape[2], img_shape[0], img_shape[1]), nb_classes=num_classes)
