@@ -53,7 +53,7 @@ parser.add_argument('--output_dir', default='self_influence_m_10_nm_100', type=s
 
 # member/non-member data config
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
-parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
+parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (1000 samples) and inference (5000 samples)')
 parser.add_argument('--data_dir', default='data', type=str, help='Directory to save the member and non-member training/test data')
 
 # self_influence attack params
