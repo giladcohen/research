@@ -36,7 +36,7 @@ from research.datasets.train_val_test_data_loaders import get_test_loader, get_t
     get_loader_with_specific_inds, get_normalized_tensor, get_dataset_with_specific_records
 from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape, get_num_classes, \
-    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall
+    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall, remove_substr_from_keys
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
@@ -139,7 +139,9 @@ net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
     global_state = global_state['best_net']
-net.load_state_dict(global_state)
+if '_module' in list(global_state.keys())[0]:
+    global_state = remove_substr_from_keys(global_state, '_module.')
+net.load_state_dict(global_state, strict=True)
 net.eval()
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 if device == 'cuda':
