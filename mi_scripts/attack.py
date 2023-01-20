@@ -46,6 +46,7 @@ from art.estimators.classification import PyTorchClassifier
 parser = argparse.ArgumentParser(description='Membership attack script')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
+parser.add_argument('--use_dp_arch', default=False, type=boolean_string, help='Use the same arch used in data privacy training')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='self_influence_m_10_nm_100', type=str, help='attack directory')
@@ -102,6 +103,10 @@ os.makedirs(os.path.join(DATA_DIR), exist_ok=True)
 
 log_file = os.path.join(OUTPUT_DIR, 'log.log')
 set_logger(log_file)
+
+# importing opacus just now not to override logger
+from opacus.validators import ModuleValidator
+
 logger = logging.getLogger()
 
 dataset = train_args['dataset']
@@ -125,6 +130,11 @@ elif train_args['net'] == 'densenet':
     net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1, field='probs')
 else:
     raise AssertionError('Does not support architecture {}'.format(train_args['net']))
+
+if args.use_dp_arch:
+    logger.info('Converting to DP architecture')
+    net = ModuleValidator.fix(net)
+
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:

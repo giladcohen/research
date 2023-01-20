@@ -1,0 +1,16 @@
+commands:
+# CIFAR10
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_0.1   --dataset cifar10 --epsilon 50 --max_grad_norm 0.1  --num_workers 4 --epochs 1000, 11000]
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_0.25  --dataset cifar10 --epsilon 50 --max_grad_norm 0.25 --num_workers 4 --epochs 1000, 11000]
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_0.5   --dataset cifar10 --epsilon 50 --max_grad_norm 0.5  --num_workers 4 --epochs 1000, 11000]
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_1     --dataset cifar10 --epsilon 50 --max_grad_norm 1    --num_workers 4 --epochs 1000, 11000]
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_1.2   --dataset cifar10 --epsilon 50 --max_grad_norm 1.2  --num_workers 4 --epochs 1000, 11000]
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_2.5   --dataset cifar10 --epsilon 50 --max_grad_norm 2.5  --num_workers 4 --epochs 1000, 11000]
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_5     --dataset cifar10 --epsilon 50 --max_grad_norm 5    --num_workers 4 --epochs 1000, 11000]
+#  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_10    --dataset cifar10 --epsilon 50 --max_grad_norm 10   --num_workers 4 --epochs 1000, 11000]
+
+# CIFAR100
+  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/dp/s_25k_eps_50_max_grad_1.2   --dataset cifar100 --epsilon 50 --max_grad_norm 1.2  --num_workers 4 --epochs 2000 --train_size 0.5, 11000]
+
+# Tiny-ImageNet
+  - [python research/mi_scripts/train_dp.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/dp/s_25k_eps_50_max_grad_1.2   --dataset tiny_imagenet --epsilon 50 --max_grad_norm 1.2  --num_workers 4 --epochs 2000 --train_size 0.25, 11000]
