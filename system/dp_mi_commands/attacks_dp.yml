@@ -21,3 +21,6 @@ commands:
 #  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/dp/s_25k_eps_50_max_grad_1.2 --attack boundary_distance --output_dir boundary_distance  --use_dp_arch True --fast True, 11000]
 #  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/dp/s_25k_eps_50_max_grad_1.2 --attack self_influence    --output_dir self_influence     --use_dp_arch True, 11000]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/dp/s_25k_eps_50_max_grad_1.2 --attack self_influence    --output_dir adaptive_self_influence_rec_dep_8_r_8 --fast True --adaptive True --rec_dep 8 --r 8 --use_dp_arch True, 11000]
+
+# super fast for tiny imagenet
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/dp/s_25k_eps_50_max_grad_1.2 --attack boundary_distance --output_dir boundary_distance_super_fast  --use_dp_arch True --n_mem_train 50 --n_non_mem_train 50 --n_mem_test 250 --n_non_mem_test 250, 11000]
