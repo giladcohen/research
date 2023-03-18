@@ -658,8 +658,13 @@ def calc_auc_roc(inferred_non_member, inferred_member):
     # find tpr @fpr=0.1 and 0.01
     tpr_at_fpr_0p1 = tpr[np.argmin(np.abs(fpr - 0.1))]
     tpr_at_fpr_0p01 = tpr[np.argmin(np.abs(fpr - 0.01))]
-    logger.info(f'AUC score: {auc}, TPR@FPR=0.1: {tpr_at_fpr_0p1}, TPR@FPR=0.01: {tpr_at_fpr_0p01}')
-
+    tpr_at_fpr_0p001 = tpr[np.argmin(np.abs(fpr - 0.001))]
+    tpr_at_fpr_0p0001 = tpr[np.argmin(np.abs(fpr - 0.0001))]
+    tpr_at_fpr_0p00001 = tpr[np.argmin(np.abs(fpr - 0.00001))]
+    strr = f'AUC score: {auc}, TPR@FPR=0.1: {tpr_at_fpr_0p1}, TPR@FPR=0.01: {tpr_at_fpr_0p01}, ' \
+           f'TPR@FPR=0.001: {tpr_at_fpr_0p001}, TPR@FPR=0.0001: {tpr_at_fpr_0p0001}, ' \
+           f'TPR@FPR=0.00001: {tpr_at_fpr_0p00001}'
+    logger.info(strr)
 
 def load_state_dict(model: nn.Module, path: str, device='cpu') -> int:
     global_state = torch.load(path, map_location=torch.device(device))
