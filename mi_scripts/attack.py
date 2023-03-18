@@ -36,7 +36,7 @@ from research.datasets.train_val_test_data_loaders import get_test_loader, get_t
     get_loader_with_specific_inds, get_normalized_tensor, get_dataset_with_specific_records
 from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape, get_num_classes, \
-    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall, remove_substr_from_keys
+    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall, remove_substr_from_keys, calc_auc_roc
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
@@ -50,6 +50,7 @@ parser.add_argument('--use_dp_arch', default=False, type=boolean_string, help='U
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='self_influence_m_10_nm_100', type=str, help='attack directory')
+parser.add_argument('--probabilities', default=True, type=boolean_string, help='Get probabilities for membership')
 
 # member/non-member data config
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
@@ -101,7 +102,7 @@ DATA_DIR = os.path.join(args.checkpoint_dir, args.data_dir)
 os.makedirs(os.path.join(OUTPUT_DIR), exist_ok=True)
 os.makedirs(os.path.join(DATA_DIR), exist_ok=True)
 
-log_file = os.path.join(OUTPUT_DIR, 'log.log')
+log_file = os.path.join(OUTPUT_DIR, 'log_auc.log')
 set_logger(log_file)
 
 # importing opacus just now not to override logger
@@ -340,14 +341,22 @@ with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
 start = time.time()
+infer_cfg = {'probabilities': args.probabilities}
 
 if args.attack == 'boundary_distance':
-    inferred_member = attack.infer(X_member_test, y_member_test)
-    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+    inferred_member = attack.infer(X_member_test, y_member_test, **infer_cfg)
+    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **infer_cfg)
 else:
-    inferred_member = attack.infer(X_member_test, y_member_test, **{'infer_set': 'member_test'})
-    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'infer_set': 'non_member_test'})
-calc_acc_precision_recall(inferred_non_member, inferred_member)
+    infer_cfg['infer_set'] = 'member_test'
+    inferred_member = attack.infer(X_member_test, y_member_test, **infer_cfg)
+    infer_cfg['infer_set'] = 'non_member_test'
+    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **infer_cfg)
+
+if args.probabilities:
+    calc_auc_roc(inferred_non_member, inferred_member)
+else:
+    calc_acc_precision_recall(inferred_non_member, inferred_member)
+
 logger.info('Inference time: {} sec'.format(time.time() - start))
 logger.info('done')
 logger.handlers[0].flush()
