@@ -353,7 +353,10 @@ else:
     inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **infer_cfg)
 
 if args.probabilities:
-    calc_auc_roc(inferred_non_member, inferred_member)
+    fpr, tpr, thresholds = calc_auc_roc(inferred_non_member, inferred_member)
+    np.save(os.path.join(OUTPUT_DIR, 'fpr.npy'), fpr)
+    np.save(os.path.join(OUTPUT_DIR, 'tpr.npy'), tpr)
+    np.save(os.path.join(OUTPUT_DIR, 'thresholds.npy'), thresholds)
 else:
     calc_acc_precision_recall(inferred_non_member, inferred_member)
 

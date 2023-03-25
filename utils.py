@@ -15,7 +15,6 @@ import torch.utils.data as data
 import numpy as np
 from tqdm import tqdm
 import pickle
-from typing import Tuple
 import logging
 from functools import wraps
 import matplotlib.pyplot as plt
@@ -650,7 +649,7 @@ def compute_roc(y_true, y_pred, plot=True):
 
     return fpr, tpr, thresholds, auc_score
 
-def calc_auc_roc(inferred_non_member, inferred_member):
+def calc_auc_roc(inferred_non_member, inferred_member) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     logger = logging.getLogger()
     y_true = np.concatenate((np.zeros(len(inferred_non_member)), np.ones(len(inferred_member))))
     y_pred = np.concatenate((inferred_non_member, inferred_member))
@@ -665,6 +664,7 @@ def calc_auc_roc(inferred_non_member, inferred_member):
            f'TPR@FPR=0.001: {tpr_at_fpr_0p001}, TPR@FPR=0.0001: {tpr_at_fpr_0p0001}, ' \
            f'TPR@FPR=0.00001: {tpr_at_fpr_0p00001}'
     logger.info(strr)
+    return fpr, tpr, thresholds
 
 def load_state_dict(model: nn.Module, path: str, device='cpu') -> int:
     global_state = torch.load(path, map_location=torch.device(device))
