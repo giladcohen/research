@@ -1,16 +1,16 @@
 commands:
 # CIFAR10
   # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
 
@@ -18,16 +18,16 @@ commands:
 
 ## CIFAR100
 # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
 
@@ -35,48 +35,52 @@ commands:
 
 ## Tiny Imagenet
 ## s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_wo_aug --attack self_influence --output_dir self_influence_v2, 3666]
 #
 #
 #
+
+# W AUGMENTATIONS adaSIF
+  # CIFAR10
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+
+  # CIFAR100
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+
+  # Tiny Imagenet
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack self_influence --output_dir adaptive/self_influence_adaptive_rec_dep_8_r_8_fast_500_2500_v3   --fast True --adaptive True --rec_dep 8 --r 8, 3666]
+
+
 #
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-# W AUGMENTATIONS
+# W AUGMENTATIONS SIF
   # CIFAR10
   # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/alexnet/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/densenet/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
 
@@ -84,16 +88,16 @@ commands:
 
   # CIFAR100
   # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/alexnet/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/densenet/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
 
@@ -101,14 +105,14 @@ commands:
 
   # Tiny Imagenet
   # s=25k
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/alexnet/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
 
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
-  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack gap --output_dir gap, 3666]
+#  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack black_box --output_dir black_box, 3666]
   - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/densenet/relu/s_25k_w_aug --attack self_influence --output_dir self_influence_v2, 3666]
