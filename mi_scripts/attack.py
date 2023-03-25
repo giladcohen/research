@@ -102,7 +102,7 @@ DATA_DIR = os.path.join(args.checkpoint_dir, args.data_dir)
 os.makedirs(os.path.join(OUTPUT_DIR), exist_ok=True)
 os.makedirs(os.path.join(DATA_DIR), exist_ok=True)
 
-log_file = os.path.join(OUTPUT_DIR, 'log_auc.log')
+log_file = os.path.join(OUTPUT_DIR, 'log_auc_opt.log')
 set_logger(log_file)
 
 # importing opacus just now not to override logger
@@ -328,7 +328,7 @@ elif args.attack == 'boundary_distance':
 elif args.attack == 'self_influence':
     attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm,
                                          adaptive=args.adaptive, average=args.average, for_ref=False,
-                                         rec_dep=args.rec_dep, r=args.r)
+                                         rec_dep=args.rec_dep, r=args.r, optimize_tpr_fpr=True)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
@@ -354,9 +354,9 @@ else:
 
 if args.probabilities:
     fpr, tpr, thresholds = calc_auc_roc(inferred_non_member, inferred_member)
-    np.save(os.path.join(OUTPUT_DIR, 'fpr.npy'), fpr)
-    np.save(os.path.join(OUTPUT_DIR, 'tpr.npy'), tpr)
-    np.save(os.path.join(OUTPUT_DIR, 'thresholds.npy'), thresholds)
+    np.save(os.path.join(OUTPUT_DIR, 'fpr_opt.npy'), fpr)
+    np.save(os.path.join(OUTPUT_DIR, 'tpr_opt.npy'), tpr)
+    np.save(os.path.join(OUTPUT_DIR, 'thresholds_opt.npy'), thresholds)
 else:
     calc_acc_precision_recall(inferred_non_member, inferred_member)
 
