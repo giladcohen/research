@@ -58,7 +58,7 @@ parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit
 parser.add_argument('--data_dir', default='data', type=str, help='Directory to save the member and non-member training/test data')
 
 # self_influence attack params
-parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
+parser.add_argument('--miscls_as_nm', default=False, type=boolean_string, help='Label misclassification is inferred as non members')
 parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, adaSIF method')
 parser.add_argument('--average', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, ensemble method')
 parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of the influence functions.')
@@ -102,7 +102,7 @@ DATA_DIR = os.path.join(args.checkpoint_dir, args.data_dir)
 os.makedirs(os.path.join(OUTPUT_DIR), exist_ok=True)
 os.makedirs(os.path.join(DATA_DIR), exist_ok=True)
 
-log_file = os.path.join(OUTPUT_DIR, 'log_auc_opt.log')
+log_file = os.path.join(OUTPUT_DIR, 'log_auc_opt_no_miscls_as_nm.log')
 set_logger(log_file)
 
 # importing opacus just now not to override logger
@@ -354,9 +354,9 @@ else:
 
 if args.probabilities:
     fpr, tpr, thresholds = calc_auc_roc(inferred_non_member, inferred_member)
-    np.save(os.path.join(OUTPUT_DIR, 'fpr_opt.npy'), fpr)
-    np.save(os.path.join(OUTPUT_DIR, 'tpr_opt.npy'), tpr)
-    np.save(os.path.join(OUTPUT_DIR, 'thresholds_opt.npy'), thresholds)
+    np.save(os.path.join(OUTPUT_DIR, 'fpr_opt_no_miscls_as_nm.npy'), fpr)
+    np.save(os.path.join(OUTPUT_DIR, 'tpr_opt_no_miscls_as_nm.npy'), tpr)
+    np.save(os.path.join(OUTPUT_DIR, 'thresholds_opt_no_miscls_as_nm.npy'), thresholds)
 else:
     calc_acc_precision_recall(inferred_non_member, inferred_member)
 
