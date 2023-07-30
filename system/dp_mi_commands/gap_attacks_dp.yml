@@ -1,0 +1,12 @@
+commands:
+  # CIFAR 10
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar10/resnet18/dp/s_25k_eps_50_max_grad_1.2       --attack gap --output_dir gap --generate_mi_data True --use_dp_arch True, 11000]
+
+  # CIFAR100
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/cifar100/resnet18/dp/s_25k_eps_50_max_grad_1.2      --attack gap --output_dir gap --generate_mi_data True --use_dp_arch True, 11000]
+
+  # Tiny Imagenet
+  # s=25k
+  - [python research/mi_scripts/attack.py --checkpoint_dir /data/gilad/logs/mi/tiny_imagenet/resnet18/dp/s_25k_eps_50_max_grad_1.2 --attack gap --output_dir gap --generate_mi_data True --use_dp_arch True, 11000]

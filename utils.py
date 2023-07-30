@@ -15,7 +15,6 @@ import torch.utils.data as data
 import numpy as np
 from tqdm import tqdm
 import pickle
-from typing import Tuple
 import logging
 from functools import wraps
 import matplotlib.pyplot as plt
@@ -323,28 +322,6 @@ def get_is_adv_prob_v2(preds):
 
     return p_is_adv
 
-def compute_roc(y_true, y_pred, plot=False):
-    """
-    TODO
-    :param y_true: ground truth
-    :param y_pred: predictions
-    :param plot:
-    :return:
-    """
-    fpr, tpr, _ = roc_curve(y_true, y_pred)
-    auc_score = roc_auc_score(y_true, y_pred)
-    if plot:
-        plt.figure(figsize=(7, 6))
-        plt.plot(fpr, tpr, color='blue',
-                 label='ROC (AUC = %0.4f)' % auc_score)
-        plt.legend(loc='lower right')
-        plt.title("ROC Curve")
-        plt.xlabel("FPR")
-        plt.ylabel("TPR")
-        plt.show()
-
-    return fpr, tpr, auc_score
-
 def get_ensemble_paths(ensemble_dir):
     ensemble_subdirs = next(os.walk(ensemble_dir))[1]
     ensemble_subdirs.sort()
@@ -649,6 +626,45 @@ def calc_acc_precision_recall(inferred_non_member, inferred_member):
     )
     logger.info('member acc: {}, non-member acc: {}, balanced acc: {}, precision/recall(member): {}/{}, precision/recall(non-member): {}/{}'
                 .format(member_acc, non_member_acc, acc, precision[1], recall[1], precision[0], recall[0]))
+
+def compute_roc(y_true, y_pred, plot=True):
+    """
+    TODO
+    :param y_true: ground truth
+    :param y_pred: predictions
+    :param plot:
+    :return:
+    """
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+    auc_score = roc_auc_score(y_true, y_pred)
+    if plot:
+        plt.figure(figsize=(7, 6))
+        plt.plot(fpr, tpr, color='blue',
+                 label='ROC (AUC = %0.4f)' % auc_score)
+        plt.legend(loc='lower right')
+        plt.title("ROC Curve")
+        plt.xlabel("FPR")
+        plt.ylabel("TPR")
+        plt.show()
+
+    return fpr, tpr, thresholds, auc_score
+
+def calc_auc_roc(inferred_non_member, inferred_member) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    logger = logging.getLogger()
+    y_true = np.concatenate((np.zeros(len(inferred_non_member)), np.ones(len(inferred_member))))
+    y_pred = np.concatenate((inferred_non_member, inferred_member))
+    fpr, tpr, thresholds, auc = compute_roc(y_true, y_pred)
+    # find tpr @fpr=0.1 and 0.01
+    tpr_at_fpr_0p1 = tpr[np.argmin(np.abs(fpr - 0.1))]
+    tpr_at_fpr_0p01 = tpr[np.argmin(np.abs(fpr - 0.01))]
+    tpr_at_fpr_0p001 = tpr[np.argmin(np.abs(fpr - 0.001))]
+    tpr_at_fpr_0p0001 = tpr[np.argmin(np.abs(fpr - 0.0001))]
+    tpr_at_fpr_0p00001 = tpr[np.argmin(np.abs(fpr - 0.00001))]
+    strr = f'AUC score: {auc}, TPR@FPR=0.1: {tpr_at_fpr_0p1}, TPR@FPR=0.01: {tpr_at_fpr_0p01}, ' \
+           f'TPR@FPR=0.001: {tpr_at_fpr_0p001}, TPR@FPR=0.0001: {tpr_at_fpr_0p0001}, ' \
+           f'TPR@FPR=0.00001: {tpr_at_fpr_0p00001}'
+    logger.info(strr)
+    return fpr, tpr, thresholds
 
 def load_state_dict(model: nn.Module, path: str, device='cpu') -> int:
     global_state = torch.load(path, map_location=torch.device(device))

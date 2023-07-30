@@ -36,7 +36,7 @@ from research.datasets.train_val_test_data_loaders import get_test_loader, get_t
     get_loader_with_specific_inds, get_normalized_tensor, get_dataset_with_specific_records
 from research.datasets.utils import get_robustness_inds
 from research.utils import boolean_string, pytorch_evaluate, set_logger, get_image_shape, get_num_classes, \
-    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall
+    get_max_train_size, convert_tensor_to_image, calc_acc_precision_recall, remove_substr_from_keys, calc_auc_roc
 from research.models.utils import get_strides, get_conv1_params, get_densenet_conv1_params, get_model
 
 from art.attacks.inference.membership_inference import ShadowModels, LabelOnlyDecisionBoundary, \
@@ -46,17 +46,19 @@ from art.estimators.classification import PyTorchClassifier
 parser = argparse.ArgumentParser(description='Membership attack script')
 parser.add_argument('--checkpoint_dir', default='/data/gilad/logs/mi/cifar10/resnet18/relu/s_25k_wo_aug', type=str, help='checkpoint dir')
 parser.add_argument('--checkpoint_file', default='ckpt.pth', type=str, help='checkpoint path file name')
+parser.add_argument('--use_dp_arch', default=False, type=boolean_string, help='Use the same arch used in data privacy training')
 parser.add_argument('--attack', default='self_influence', type=str, help='MI attack: gap/black_box/boundary_distance/self_influence')
 parser.add_argument('--attacker_knowledge', type=float, default=0.5, help='The portion of samples available to the attacker.')
 parser.add_argument('--output_dir', default='self_influence_m_10_nm_100', type=str, help='attack directory')
+parser.add_argument('--probabilities', default=True, type=boolean_string, help='Get probabilities for membership')
 
 # member/non-member data config
 parser.add_argument('--generate_mi_data', default=False, type=boolean_string, help='To generate MI data')
-parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (50 samples) and inference (500 samples)')
+parser.add_argument('--fast', default=False, type=boolean_string, help='Fast fit (1000 samples) and inference (5000 samples)')
 parser.add_argument('--data_dir', default='data', type=str, help='Directory to save the member and non-member training/test data')
 
 # self_influence attack params
-parser.add_argument('--miscls_as_nm', default=True, type=boolean_string, help='Label misclassification is inferred as non members')
+parser.add_argument('--miscls_as_nm', default=False, type=boolean_string, help='Label misclassification is inferred as non members')
 parser.add_argument('--adaptive', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, adaSIF method')
 parser.add_argument('--average', default=False, type=boolean_string, help='Using train loader of influence function with augmentations, ensemble method')
 parser.add_argument('--rec_dep', type=int, default=1, help='recursion_depth of the influence functions.')
@@ -100,8 +102,12 @@ DATA_DIR = os.path.join(args.checkpoint_dir, args.data_dir)
 os.makedirs(os.path.join(OUTPUT_DIR), exist_ok=True)
 os.makedirs(os.path.join(DATA_DIR), exist_ok=True)
 
-log_file = os.path.join(OUTPUT_DIR, 'log.log')
+log_file = os.path.join(OUTPUT_DIR, 'log_auc_opt_no_miscls_as_nm.log')
 set_logger(log_file)
+
+# importing opacus just now not to override logger
+from opacus.validators import ModuleValidator
+
 logger = logging.getLogger()
 
 dataset = train_args['dataset']
@@ -125,11 +131,18 @@ elif train_args['net'] == 'densenet':
     net = net_cls(growth_rate=6, num_layers=52, num_classes=num_classes, drop_rate=0.0, conv1=conv1, field='probs')
 else:
     raise AssertionError('Does not support architecture {}'.format(train_args['net']))
+
+if args.use_dp_arch:
+    logger.info('Converting to DP architecture')
+    net = ModuleValidator.fix(net)
+
 net = net.to(device)
 global_state = torch.load(CHECKPOINT_PATH, map_location=torch.device(device))
 if 'best_net' in global_state:
     global_state = global_state['best_net']
-net.load_state_dict(global_state)
+if '_module' in list(global_state.keys())[0]:
+    global_state = remove_substr_from_keys(global_state, '_module.')
+net.load_state_dict(global_state, strict=True)
 net.eval()
 # summary(net, (img_shape[2], img_shape[0], img_shape[1]))
 if device == 'cuda':
@@ -139,9 +152,9 @@ if device == 'cuda':
 optimizer = optim.SGD(
     net.parameters(),
     lr=train_args['lr'],
-    momentum=train_args['mom'],
+    momentum=0.9,
     weight_decay=0.0,  # train_args['wd'],
-    nesterov=train_args['mom'] > 0)
+    nesterov=True)
 loss = nn.CrossEntropyLoss()
 classifier = PyTorchClassifier(model=net, clip_values=(0, 1), loss=loss, optimizer=optimizer,
                                input_shape=(img_shape[2], img_shape[0], img_shape[1]), nb_classes=num_classes)
@@ -315,7 +328,7 @@ elif args.attack == 'boundary_distance':
 elif args.attack == 'self_influence':
     attack = SelfInfluenceFunctionAttack(classifier, debug_dir=OUTPUT_DIR, miscls_as_nm=args.miscls_as_nm,
                                          adaptive=args.adaptive, average=args.average, for_ref=False,
-                                         rec_dep=args.rec_dep, r=args.r)
+                                         rec_dep=args.rec_dep, r=args.r, optimize_tpr_fpr=True)
     attack.fit(x_member=X_member_train, y_member=y_member_train,
                x_non_member=X_non_member_train, y_non_member=y_non_member_train)
 else:
@@ -328,14 +341,25 @@ with open(os.path.join(OUTPUT_DIR, 'attack_args.txt'), 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
 start = time.time()
+infer_cfg = {'probabilities': args.probabilities}
 
 if args.attack == 'boundary_distance':
-    inferred_member = attack.infer(X_member_test, y_member_test)
-    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test)
+    inferred_member = attack.infer(X_member_test, y_member_test, **infer_cfg)
+    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **infer_cfg)
 else:
-    inferred_member = attack.infer(X_member_test, y_member_test, **{'infer_set': 'member_test'})
-    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **{'infer_set': 'non_member_test'})
-calc_acc_precision_recall(inferred_non_member, inferred_member)
+    infer_cfg['infer_set'] = 'member_test'
+    inferred_member = attack.infer(X_member_test, y_member_test, **infer_cfg)
+    infer_cfg['infer_set'] = 'non_member_test'
+    inferred_non_member = attack.infer(X_non_member_test, y_non_member_test, **infer_cfg)
+
+if args.probabilities:
+    fpr, tpr, thresholds = calc_auc_roc(inferred_non_member, inferred_member)
+    np.save(os.path.join(OUTPUT_DIR, 'fpr_opt_no_miscls_as_nm.npy'), fpr)
+    np.save(os.path.join(OUTPUT_DIR, 'tpr_opt_no_miscls_as_nm.npy'), tpr)
+    np.save(os.path.join(OUTPUT_DIR, 'thresholds_opt_no_miscls_as_nm.npy'), thresholds)
+else:
+    calc_acc_precision_recall(inferred_non_member, inferred_member)
+
 logger.info('Inference time: {} sec'.format(time.time() - start))
 logger.info('done')
 logger.handlers[0].flush()
