@@ -168,7 +168,9 @@ def train():
 
     vals.update(overall_losses)
     for key in vals.keys():
-        logger.info('Epoch #{} (TRAIN): {}\t{:.2f}'.format(epoch + 1, key, vals[key] / cnt))
+        val = vals[key] / cnt
+        train_writer.add_scalar(key, val, epoch + 1)
+        logger.info('Epoch #{} (TRAIN): {}\t{:.2f}'.format(epoch + 1, key, val))
 
     return overall_losses
 
@@ -198,7 +200,9 @@ def validate():
 
     vals.update(overall_losses)
     for key in vals.keys():
-        logger.info('Epoch #{} (VAL): {}\t{:.2f}'.format(epoch + 1, key, vals[key] / cnt))
+        val = vals[key] / cnt
+        val_writer.add_scalar(key, val, epoch + 1)
+        logger.info('Epoch #{} (VAL): {}\t{:.2f}'.format(epoch + 1, key, val))
 
     return vals
 
@@ -215,7 +219,7 @@ logger.info('Start training from epoch #{} for {} epochs'.format(epoch + 1, args
 for epoch in tqdm(range(epoch, epoch + args.epochs), total=args.epochs):
     train()
     validate()
-    save_current_state()
+save_current_state()
 
 
 def generate_digit(mean, var):
@@ -225,7 +229,7 @@ def generate_digit(mean, var):
     plt.title(f'[{mean},{var}]')
     plt.imshow(digit, cmap='gray')
     plt.axis('off')
-    plt.savefig(os.path.join(args.checkpoint_dir, f'fig_for_{mean}_{var}.png'))
+    plt.savefig(os.path.join(args.checkpoint_dir, f'fig_for_{mean}_{var}.png'), dpi=300)
     plt.show()
 
 
@@ -260,5 +264,5 @@ def plot_latent_space(model, scale=5.0, n=25, digit_size=28, figsize=15):
     plt.xlabel("mean, z [0]")
     plt.ylabel("var, z [1]")
     plt.imshow(figure, cmap="Greys_r")
-    plt.savefig(os.path.join(args.checkpoint_dir, f'fig_for_5x5_scale.png'))
+    plt.savefig(os.path.join(args.checkpoint_dir, f'fig_for_5x5_scale.png'), dpi=300)
     plt.show()
